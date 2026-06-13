@@ -114,7 +114,13 @@ Make sure all coordinate percentages are relative from 0 to 100. Let's begin.`;
     try {
       rawResponse = await invokeVisionModel(gradingPrompt, imageUrls, 2000);
     } catch (err: any) {
-      console.error("[api/grade] AWS Bedrock call failed:", err);
+      console.error("[api/grade] AWS Bedrock call failed:", {
+        name: err.name,
+        message: err.message,
+        stack: err.stack,
+        httpStatusCode: err.$metadata?.httpStatusCode,
+        requestId: err.$metadata?.requestId,
+      });
       return NextResponse.json(
         { error: "AI grading service is temporarily unavailable." },
         { status: 500 }
@@ -160,7 +166,13 @@ Make sure all coordinate percentages are relative from 0 to 100. Let's begin.`;
     return NextResponse.json(parsedResult, { status: 200 });
 
   } catch (globalErr: any) {
-    console.error("[api/grade] Global endpoint error:", globalErr);
+    console.error("[api/grade] Global endpoint error:", {
+      name: globalErr.name,
+      message: globalErr.message,
+      stack: globalErr.stack,
+      httpStatusCode: globalErr.$metadata?.httpStatusCode,
+      requestId: globalErr.$metadata?.requestId,
+    });
     return NextResponse.json(
       { error: "An internal server error occurred while processing the grade request." },
       { status: 500 }
