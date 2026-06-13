@@ -32,7 +32,7 @@ export async function POST(
 ): Promise<NextResponse<UploadResponse | ErrorResponse>> {
   try {
     // Validate environment variables
-    const bucketName = process.env.S3_BUCKET_NAME;
+    const bucketName = process.env.AWS_S3_BUCKET_NAME || process.env.S3_BUCKET_NAME;
     const region = process.env.AWS_REGION;
 
     if (!bucketName || !region) {
