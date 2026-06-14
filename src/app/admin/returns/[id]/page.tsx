@@ -20,7 +20,8 @@ import {
   Loader2, 
   AlertTriangle,
   HelpCircle,
-  ThumbsUp
+  ThumbsUp,
+  X
 } from "lucide-react";
 
 export default function AdminReturnDetailPage() {
@@ -35,6 +36,9 @@ export default function AdminReturnDetailPage() {
 
   // Dynamic overrides dropdown toggle
   const [overrideSelect, setOverrideSelect] = useState<string>("");
+
+  // Lightbox state
+  const [expandedImage, setExpandedImage] = useState<{ url: string, imageFlaws?: any[], originalIndex: number } | null>(null);
 
   useEffect(() => {
     fetchReturnDetails();
@@ -398,6 +402,23 @@ export default function AdminReturnDetailPage() {
 
   const gradeClasses = record.grade ? gradeColors[record.grade as keyof typeof gradeColors] : "";
 
+  // SORTING & CONTEXT-AWARE FLAW FILTERING
+  // Map images to their specific flaws, calculate a damage score, and sort (most damaged first).
+  const processedPhotos = photos.map((url, originalIndex) => {
+    // Find flaws that were specifically tagged for this image index by the AI
+    const imageFlaws = flaws.filter((f: any) => f.image_index === originalIndex);
+    
+    // Calculate damage severity score for sorting
+    let damageScore = 0;
+    imageFlaws.forEach((f: any) => {
+      if (f.severity === "major") damageScore += 100;
+      else if (f.severity === "moderate") damageScore += 10;
+      else if (f.severity === "minor") damageScore += 1;
+    });
+
+    return { url, originalIndex, imageFlaws, damageScore };
+  }).sort((a, b) => b.damageScore - a.damageScore); // Highest damage first
+
   return (
     <main className="min-h-screen bg-gray-50/50 p-6 md:p-8 font-sans">
       <div className="max-w-5xl mx-auto">
@@ -473,29 +494,43 @@ export default function AdminReturnDetailPage() {
             {/* Uploaded Return Images */}
             <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
               <h2 className="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wider">Uploaded Return Photos</h2>
-              {photos.length === 0 ? (
+              {processedPhotos.length === 0 ? (
                 <p className="text-xs text-gray-400 italic">No photos submitted by buyer.</p>
               ) : (
                 <div className="grid grid-cols-2 gap-4">
-                  {photos.map((url, index) => (
-                    <div key={index} className="aspect-square relative rounded-lg overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center">
+                  {processedPhotos.map((photoItem, displayIndex) => (
+                    <div 
+                      key={photoItem.originalIndex} 
+                      className="aspect-square relative rounded-lg overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center cursor-pointer group hover:ring-2 hover:ring-blue-500 transition-all"
+                      onClick={() => setExpandedImage(photoItem)}
+                    >
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors z-20" />
                       {hasInspectionResults ? (
                         <AnnotatedImage
-                          imageUrl={url}
-                          flaws={flaws}
+                          imageUrl={photoItem.url}
+                          flaws={photoItem.imageFlaws} // Only pass flaws for this exact image
                           width={400}
                           height={400}
                         />
                       ) : (
                         <img 
-                          src={url} 
-                          alt={`Return Capture ${index + 1}`}
+                          src={photoItem.url} 
+                          alt={`Return Capture ${photoItem.originalIndex + 1}`}
                           className="w-full h-full object-cover"
                         />
                       )}
-                      <span className="absolute bottom-2 left-2 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded font-bold z-10">
-                        Angle {index + 1}
-                      </span>
+                      
+                      {/* Image Labels */}
+                      <div className="absolute bottom-2 left-2 flex gap-1 z-10">
+                        <span className="bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded font-bold">
+                          Angle {photoItem.originalIndex + 1}
+                        </span>
+                        {photoItem.damageScore > 0 && (
+                          <span className="bg-red-500/90 text-white text-[9px] px-1.5 py-0.5 rounded font-bold">
+                            {photoItem.imageFlaws.length} Defect{photoItem.imageFlaws.length > 1 ? 's' : ''}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -681,6 +716,50 @@ export default function AdminReturnDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Lightbox Modal */}
+      {expandedImage && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 md:p-12 animate-in fade-in duration-200"
+          onClick={() => setExpandedImage(null)}
+        >
+          <div 
+            className="relative w-full max-w-4xl aspect-square bg-gray-900 rounded-2xl overflow-hidden flex items-center justify-center shadow-2xl" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              className="absolute top-4 right-4 bg-black/50 hover:bg-black text-white rounded-full p-2 z-50 transition-colors"
+              onClick={() => setExpandedImage(null)}
+            >
+              <X className="w-6 h-6" />
+            </button>
+            {hasInspectionResults ? (
+              <AnnotatedImage
+                imageUrl={expandedImage.url}
+                flaws={expandedImage.imageFlaws || []}
+                width={1000}
+                height={1000}
+              />
+            ) : (
+              <img 
+                src={expandedImage.url} 
+                alt="Enlarged Return Capture"
+                className="w-full h-full object-contain"
+              />
+            )}
+            <div className="absolute bottom-6 left-6 flex gap-3 z-50">
+              <span className="bg-black/80 text-white text-sm px-4 py-2 rounded-lg font-bold shadow-lg backdrop-blur-md">
+                Angle {expandedImage.originalIndex + 1}
+              </span>
+              {expandedImage.imageFlaws && expandedImage.imageFlaws.length > 0 && (
+                <span className="bg-red-600 text-white text-sm px-4 py-2 rounded-lg font-bold shadow-lg shadow-red-900/50">
+                  {expandedImage.imageFlaws.length} Defect{expandedImage.imageFlaws.length > 1 ? 's' : ''} Highlighted
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

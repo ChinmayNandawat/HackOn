@@ -9,6 +9,7 @@ export interface GradeRequest {
 export interface GradingFlaw {
   name: string;
   severity: "minor" | "moderate" | "major";
+  image_index: number; // 0 to 3, representing which image this flaw is on
   x_percent: number; // 0 to 100
   y_percent: number; // 0 to 100
   width_percent: number; // 0 to 100
@@ -80,6 +81,7 @@ export async function POST(
     // 3. Construct Claude Vision Prompt
     const gradingPrompt = `You are an expert Amazon returns quality inspector with 10 years of experience grading returned products.
 Analyze all the provided images of this returned product in the category "${productCategory}" carefully to identify any cosmetic or functional flaws.
+You are given an array of up to 4 images. They are indexed 0, 1, 2, 3 in the order they appear.
 
 Return a strict, valid JSON object containing the inspection result. Follow these rules:
 1. Return ONLY the raw JSON object. Do NOT wrap it in markdown code blocks like \`\`\`json, do NOT output any introductory text, explanation, or notes.
@@ -91,17 +93,25 @@ Return a strict, valid JSON object containing the inspection result. Follow thes
     {
       "name": "string describing the flaw (e.g. scratch on screen, scuff on corner)",
       "severity": "minor" | "moderate" | "major",
-      "x_percent": number (0 to 100, left edge of bounding box as percentage of width),
-      "y_percent": number (0 to 100, top edge of bounding box as percentage of height),
-      "width_percent": number (0 to 100),
-      "height_percent": number (0 to 100)
+      "image_index": number (0, 1, 2, or 3 representing the EXACT image the flaw appears in),
+      "x_percent": number (STRICTLY A NUMBER from 0 to 100, do not include '%' symbol),
+      "y_percent": number (STRICTLY A NUMBER from 0 to 100, do not include '%' symbol),
+      "width_percent": number (STRICTLY A NUMBER from 0 to 100, do not include '%' symbol),
+      "height_percent": number (STRICTLY A NUMBER from 0 to 100, do not include '%' symbol)
     }
   ],
   "confidence": "high" | "medium" | "low",
   "summary": "a one sentence plain English description of overall condition"
 }
 
-3. Grade rules:
+3. Bounding Box Strict Rules (CRITICAL):
+- EXHAUSTIVE DETECTION: You MUST list EVERY individual defect as a separate object in the 'flaws' array. It is normal to return 3 to 10 distinct flaws for a damaged product. Do NOT group multiple scratches, smudges, or dents into a single flaw.
+- PIXEL-LEVEL TARGETING: Do NOT draw a box around an entire component (like 'screen', 'panel', 'sole', or 'body'). You MUST draw the box ONLY around the exact pixels of the specific crack, scratch, smudge, tear, or dent. 
+- TIGHT BOXES: The bounding box MUST tightly wrap ONLY the localized flaw. 
+- SIZE LIMIT: The width_percent and height_percent MUST be small numbers (typically between 1 and 12). If you output a width or height greater than 20, it is an automatic failure. Shrink the box to target only the damage.
+- HIGH SURETY ONLY: Only highlight a flaw if you are absolutely sure it is damage. Ignore glare, reflections, or normal design features.
+
+4. Grade rules:
 - Grade A: Like new condition with no visible defects, score 85 to 100.
 - Grade B: Good condition with minor cosmetic defects, score 65 to 84.
 - Grade C: Fair condition with visible damage that affects appearance but not function, score 40 to 64.

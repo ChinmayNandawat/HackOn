@@ -50,11 +50,16 @@ export default function AnnotatedImage({
       }
 
       flaws.forEach((flaw) => {
-        // Calculate pixel coordinates from percentage values
-        const x = (flaw.x_percent / 100) * canvas.width;
-        const y = (flaw.y_percent / 100) * canvas.height;
-        const w = (flaw.width_percent / 100) * canvas.width;
-        const h = (flaw.height_percent / 100) * canvas.height;
+        // Calculate pixel coordinates from percentage values. Fallback to parseFloat if AI returns a string like '10%'
+        const xP = parseFloat(flaw.x_percent as any) || 0;
+        const yP = parseFloat(flaw.y_percent as any) || 0;
+        const wP = parseFloat(flaw.width_percent as any) || 20;
+        const hP = parseFloat(flaw.height_percent as any) || 20;
+
+        const x = (xP / 100) * canvas.width;
+        const y = (yP / 100) * canvas.height;
+        const w = (wP / 100) * canvas.width;
+        const h = (hP / 100) * canvas.height;
 
         // Choose color based on severity: major is red, moderate is amber, minor is gray
         let color = "#6B7280"; // minor: gray
