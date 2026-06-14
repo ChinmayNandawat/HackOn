@@ -2,18 +2,24 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import ProductHealthCard from "@/components/ProductHealthCard";
 import BuyRefurbishedButton from "@/components/BuyRefurbishedButton";
+import ReturnPreventionBanner from "@/components/ReturnPreventionBanner";
+import { getReturnRiskData } from "@/lib/mock-prevention";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
 
-export default async function ProductPage({ params }: { params: { id: string } }) {
+export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  const productId = resolvedParams.id;
+
   let product = null;
   let errorMsg = null;
+  let refurbishedAlternative: any = null;
 
   try {
     const { data, error } = await supabase
       .from("products")
       .select("*")
-      .eq("id", params.id)
+      .eq("id", productId)
       .single();
 
     if (error) {
@@ -24,6 +30,26 @@ export default async function ProductPage({ params }: { params: { id: string } }
       }
     } else {
       product = data;
+    }
+    
+    // Fetch a refurbished alternative if this is a new product
+    if (product && !product.is_refurbished) {
+      const { data: altData } = await supabase
+        .from("products")
+        .select("id, estimated_resale_price, health_data")
+        .eq("parent_product_id", productId)
+        .eq("is_refurbished", true)
+        .limit(1)
+        .maybeSingle();
+        
+      if (altData) {
+        refurbishedAlternative = {
+          id: altData.id,
+          name: product?.name || "Refurbished Version",
+          price: altData.estimated_resale_price || 0,
+          imageUrl: product?.image_url || null
+        };
+      }
     }
   } catch (err: unknown) {
     console.error("Failed to fetch product:", err);
@@ -59,6 +85,9 @@ export default async function ProductPage({ params }: { params: { id: string } }
   }
 
   const isRefurbished = product.is_refurbished === true;
+  
+  // Get risk data
+  const riskData = getReturnRiskData(product.id, product.return_risk_score);
 
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-8 space-y-8 font-sans pb-20">
@@ -98,6 +127,16 @@ export default async function ProductPage({ params }: { params: { id: string } }
           )}
         </div>
       </div>
+
+      {/* RETURN PREVENTION BANNER */}
+      {!isRefurbished && (
+        <ReturnPreventionBanner 
+          riskPercent={riskData.riskPercent}
+          reason={riskData.reason}
+          suggestion={riskData.suggestion}
+          refurbishedAlternative={refurbishedAlternative}
+        />
+      )}
 
       {/* Main Image */}
       <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden border border-gray-200">
