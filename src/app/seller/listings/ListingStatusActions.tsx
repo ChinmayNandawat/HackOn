@@ -1,53 +1,28 @@
-"use client";
-
-import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 export default function ListingStatusActions({ productId, initialStatus }: { productId: string, initialStatus: string }) {
-  const [status, setStatus] = useState(initialStatus || "active");
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
-
-  const handleMarkAsSold = async () => {
-    setLoading(true);
-    try {
-      const { error } = await supabase.from("products").update({ relist_status: 'sold' }).eq('id', productId);
-      if (error) throw error;
-      setStatus('sold');
-      router.refresh();
-    } catch (err) {
-      console.error("Failed to mark as sold:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // initialStatus comes directly from the DB product.relist_status
+  // 'active' or 'sold'
 
   const badgeClass = 
-    status === 'active' ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-none px-3" :
-    status === 'sold' ? "bg-blue-100 text-blue-800 hover:bg-blue-100 border-none px-3" :
-    "bg-amber-100 text-amber-800 hover:bg-amber-100 border-none px-3";
+    initialStatus === 'active' ? "bg-emerald-100 text-emerald-800 border-none px-3 font-bold uppercase tracking-wider" :
+    initialStatus === 'sold' ? "bg-slate-200 text-slate-600 border-none px-3 font-bold uppercase tracking-wider" :
+    "bg-amber-100 text-amber-800 border-none px-3 font-bold uppercase tracking-wider";
 
   return (
     <div className="flex flex-col items-end gap-3 text-right">
       <Badge className={badgeClass}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {initialStatus.charAt(0).toUpperCase() + initialStatus.slice(1)}
       </Badge>
       
       <div className="flex items-center gap-2">
         <Link href={`/product/${productId}`}>
-          <Button variant="outline" size="sm" className="font-bold text-slate-600">
+          <Button variant="outline" size="sm" className="font-bold text-slate-600 hover:bg-slate-100">
             View Listing
           </Button>
         </Link>
-        {status === 'active' && (
-          <Button size="sm" onClick={handleMarkAsSold} disabled={loading} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
-            {loading ? "..." : "Mark as Sold"}
-          </Button>
-        )}
       </div>
     </div>
   );

@@ -15,6 +15,7 @@ export interface Product {
     summary?: string | null;
     generatedDescription?: string | null;
     sellerNote?: string | null;
+    return_photo_urls?: string[];
   };
   estimated_resale_price?: number | null;
   relist_status?: string | null;

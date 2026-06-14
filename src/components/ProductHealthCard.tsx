@@ -31,6 +31,23 @@ export default function ProductHealthCard({ product, showFullDetail = true }: Pr
   const score = health_data?.score || 0;
   const confidence = health_data?.confidence || "Unknown";
   const flaws = health_data?.flaws || [];
+  const return_photo_urls = health_data?.return_photo_urls || [];
+
+  // Determine which image to show with annotations
+  let annotatedImageUrl = image_url;
+  let flawsToDraw = flaws;
+
+  if (return_photo_urls.length > 0 && flaws.length > 0) {
+    // Find the image index that actually has the flaws (usually 3 for the damage close-up)
+    // Default to the first flaw's index
+    const targetIndex = flaws[0].image_index ?? 0;
+    
+    if (return_photo_urls[targetIndex]) {
+      annotatedImageUrl = return_photo_urls[targetIndex];
+      // Only draw flaws that actually belong to this specific image!
+      flawsToDraw = flaws.filter((f: any) => f.image_index === targetIndex || f.image_index === undefined);
+    }
+  }
 
   // Derived prices
   const origPrice = Number(original_price) || 0;
@@ -113,8 +130,8 @@ export default function ProductHealthCard({ product, showFullDetail = true }: Pr
         {showFullDetail && (
           <div className="flex flex-col items-center border border-gray-100 bg-gray-50/50 rounded-xl p-3">
             <AnnotatedImage 
-              imageUrl={image_url} 
-              flaws={flaws} 
+              imageUrl={annotatedImageUrl} 
+              flaws={flawsToDraw} 
               width={380} 
               height={380} 
             />

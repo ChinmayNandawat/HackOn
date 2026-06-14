@@ -120,7 +120,7 @@ export async function GET(req: NextRequest) {
         .select("*")
         .eq("session_id", sessionId);
 
-      if (!logsError && logsData && logsData.length > 0) {
+      if (!logsError && logsData) {
         const totalCredits = logsData.reduce((sum, log) => sum + (Number(log.credits_earned) || 0), 0);
         const totalCo2 = logsData.reduce((sum, log) => sum + (Number(log.co2_saved_kg) || 0), 0);
         const actionsTaken = logsData.length;
@@ -142,18 +142,17 @@ export async function GET(req: NextRequest) {
     }
 
     if (!personalStats) {
-      console.log("[api/impact] Falling back to mocked personal stats");
-      const { tier, next_tier_credits, tier_progress_percent } = calculateTier(340);
+      const { tier, next_tier_credits, tier_progress_percent } = calculateTier(0);
       personalStats = {
-        total_credits: 340,
-        personal_co2_saved: 8.2,
-        items_diverted: 3,
-        actions_taken: 7,
+        total_credits: 0,
+        personal_co2_saved: 0,
+        items_diverted: 0,
+        actions_taken: 0,
         tier,
         next_tier_credits,
         tier_progress_percent
       };
-      isMocked = true;
+      isMocked = false;
     }
 
     const responseData: ImpactApiResponse = {
@@ -168,7 +167,7 @@ export async function GET(req: NextRequest) {
     console.error("[api/impact] GET Error:", error);
     
     // Always fall back to mock data on read failures
-    const { tier, next_tier_credits, tier_progress_percent } = calculateTier(340);
+    const { tier, next_tier_credits, tier_progress_percent } = calculateTier(0);
     const fallbackResponse: ImpactApiResponse = {
       global: {
         total_returns_processed: 0,
@@ -178,16 +177,16 @@ export async function GET(req: NextRequest) {
         last_updated: new Date().toISOString()
       },
       personal: {
-        total_credits: 340,
-        personal_co2_saved: 8.2,
-        items_diverted: 3,
-        actions_taken: 7,
+        total_credits: 0,
+        personal_co2_saved: 0,
+        items_diverted: 0,
+        actions_taken: 0,
         tier,
         next_tier_credits,
         tier_progress_percent
       },
       credits_breakdown: CREDITS_RULES,
-      is_mocked: true
+      is_mocked: false
     };
     return NextResponse.json(fallbackResponse, { status: 200 });
   }

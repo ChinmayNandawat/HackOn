@@ -49,9 +49,29 @@ export default function NewReturnPage() {
   // Load products to select
   useEffect(() => {
     async function loadProducts() {
-      // Fetch only the 3 products that act as our mock "orders"
-      const { data } = await supabase.from("products").select("*").limit(3);
-      if (data) setProducts(data);
+      // Fetch actual products the user has ordered
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*, products(*)")
+        .eq("buyer_id", "00000000-0000-0000-0000-000000000002")
+        .order("created_at", { ascending: false });
+        
+      if (!error && data) {
+        const orderedProducts = data
+          .map((order: any) => Array.isArray(order.products) ? order.products[0] : order.products)
+          .filter(Boolean);
+          
+        // Deduplicate in case they ordered the same item multiple times
+        const uniqueProducts: any[] = [];
+        const seenIds = new Set();
+        for (const p of orderedProducts) {
+          if (!seenIds.has(p.id)) {
+            seenIds.add(p.id);
+            uniqueProducts.push(p);
+          }
+        }
+        setProducts(uniqueProducts);
+      }
       setLoadingProducts(false);
       
       // Auto-select product if coming from orders page
