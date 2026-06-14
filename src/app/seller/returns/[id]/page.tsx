@@ -69,7 +69,7 @@ export default function AdminReturnDetailPage() {
           created_at,
           products (
             id,
-            name:title,
+            title,
             original_price,
             category,
             image_url,
@@ -101,7 +101,7 @@ export default function AdminReturnDetailPage() {
         created_at: rawItem.created_at,
         products: rawItem.products ? {
           id: rawItem.products.id,
-          name: rawItem.products.name,
+          title: rawItem.products.title,
           original_price: Number(rawItem.products.original_price),
           category: rawItem.products.category,
           image_url: rawItem.products.image_url,
@@ -216,7 +216,7 @@ export default function AdminReturnDetailPage() {
           ai_score: gradeResult.score,
           ai_confidence: gradeResult.confidence.charAt(0).toUpperCase() + gradeResult.confidence.slice(1),
           ai_routing_decision: routeResult.decision,
-          status: "decision_ready", // Mapping 'inspected' -> 'decision_ready'
+          status: "inspected",
           flaws_json: combinedFlawsJson,
         })
         .eq("id", id);
@@ -228,7 +228,7 @@ export default function AdminReturnDetailPage() {
         if (!prev) return null;
         return {
           ...prev,
-          status: "decision_ready",
+          status: "inspected",
           grade: gradeResult.grade,
           score: gradeResult.score,
           confidence: gradeResult.confidence.charAt(0).toUpperCase() + (gradeResult.confidence.slice(1) as any),
@@ -416,9 +416,8 @@ export default function AdminReturnDetailPage() {
         <div className="bg-white p-6 max-w-md w-full border border-red-200 shadow rounded-xl text-center">
           <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-3" />
           <h1 className="text-lg font-bold text-gray-800">Return Detail Failed</h1>
-          <p className="text-sm text-gray-500 mt-2">{error}</p>
           <button 
-            onClick={() => router.push("/admin/returns")}
+            onClick={() => router.push("/seller/returns")}
             className="mt-6 px-4 py-2 bg-gray-800 text-white text-sm font-semibold rounded-lg hover:bg-gray-700"
           >
             Back to Dashboard
@@ -431,7 +430,7 @@ export default function AdminReturnDetailPage() {
   if (!record) return null;
 
   const product = record.products;
-  const title = product?.name || "Unknown Product";
+  const title = product?.title || "Unknown Product";
   const category = product?.category || "N/A";
   const originalPrice = product?.original_price || 0;
   const photos = record.image_urls || [];
@@ -445,14 +444,14 @@ export default function AdminReturnDetailPage() {
   // Status mapping UI
   const statusLabels: Record<string, string> = {
     processing: "Pending Inspection",
-    decision_ready: "Inspected",
+    inspected: "Inspected",
     completed: "Resolved / finalized",
     relisted: "Relisted as Refurbished",
   };
 
   const statusClasses: Record<string, string> = {
     processing: "bg-amber-50 text-amber-700 border-amber-200",
-    decision_ready: "bg-blue-50 text-blue-700 border-blue-200",
+    inspected: "bg-blue-50 text-blue-700 border-blue-200",
     completed: "bg-green-50 text-green-700 border-green-200",
     relisted: "bg-emerald-50 text-emerald-700 border-emerald-200",
   };
@@ -489,8 +488,8 @@ export default function AdminReturnDetailPage() {
       <div className="max-w-5xl mx-auto">
         {/* Back Link */}
         <Link 
-          href="/admin/returns"
-          className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-800 font-bold mb-6 w-fit cursor-pointer"
+          href="/seller/returns" 
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to returns list

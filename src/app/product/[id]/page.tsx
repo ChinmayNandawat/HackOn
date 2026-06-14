@@ -45,7 +45,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       if (altData) {
         refurbishedAlternative = {
           id: altData.id,
-          name: product?.name || "Refurbished Version",
+          title: product?.title || "Refurbished Version",
           price: altData.estimated_resale_price || 0,
           imageUrl: product?.image_url || null
         };
@@ -99,7 +99,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           {product.category}
         </Link>
         <span>→</span>
-        <span className="text-gray-900 truncate">{product.name}</span>
+        <span className="text-gray-900 truncate">{product.title}</span>
       </nav>
 
       {/* Header Info */}
@@ -108,7 +108,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           {product.category}
         </span>
         <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
-          {product.name}
+          {product.title}
         </h1>
         <div className="flex items-end gap-3 mt-4">
           {isRefurbished ? (
@@ -143,7 +143,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img 
           src={product.image_url || 'https://via.placeholder.com/600'} 
-          alt={product.name} 
+          alt={product.title} 
           className="w-full h-full object-cover"
         />
       </div>

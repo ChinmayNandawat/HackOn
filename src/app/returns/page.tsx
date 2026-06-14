@@ -38,7 +38,8 @@ export default function BuyerReturnsPage() {
       // Fetch returns
       const { data, error } = await supabase
         .from('returns')
-        .select('*, products(name, original_price, category, image_url)')
+        .select('*, products(title, original_price, category, image_url)')
+        .eq('buyer_id', '00000000-0000-0000-0000-000000000002')
         .order('created_at', { ascending: false });
 
       if (!error && data) {
@@ -137,6 +138,15 @@ export default function BuyerReturnsPage() {
     return 10;
   };
 
+  const getCompletedOutcomeText = (ret: ReturnRecord) => {
+    if (ret.status === 'relisted') return "Your return was accepted, and the item has been listed as refurbished to find a new home.";
+    if (ret.routing_decision === 'donate') return "Your return was processed, and your item was successfully donated to a local charity.";
+    if (ret.routing_decision === 'recycle') return "Your return was processed, and the item was responsibly recycled.";
+    if (ret.routing_decision?.includes('keep')) return "You kept the item and received a partial refund. Thank you for reducing carbon emissions!";
+    if (ret.status === 'rejected') return "Your return request was declined after inspection.";
+    return "Your return has been fully processed and a refund has been issued.";
+  };
+
   // derived state
   const pendingCount = returns.filter(r => r.status === 'processing' || r.status === 'inspected').length;
 
@@ -214,7 +224,7 @@ export default function BuyerReturnsPage() {
                     {/* Thumbnail */}
                     <div className="w-24 h-24 shrink-0 bg-slate-100 rounded-xl overflow-hidden border border-slate-200 mb-4 md:mb-0 hidden sm:block">
                       {thumb ? (
-                        <img src={thumb} alt={product?.name} className="w-full h-full object-cover" />
+                        <img src={thumb} alt={product?.title} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">No img</div>
                       )}
@@ -226,7 +236,7 @@ export default function BuyerReturnsPage() {
                         <div className="flex justify-between items-start">
                           <div>
                             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{product?.category || "Product"}</p>
-                            <h3 className="text-lg font-black text-slate-900 leading-tight mt-1">{product?.name || "Unknown Item"}</h3>
+                            <h3 className="text-lg font-black text-slate-900 leading-tight mt-1">{product?.title || "Unknown Item"}</h3>
                           </div>
                           <span className="text-xs font-medium text-slate-400 flex items-center gap-1">
                             <Clock className="w-3 h-3" /> Submitted {daysAgo} ago
@@ -299,7 +309,7 @@ export default function BuyerReturnsPage() {
 
                             {actionErrorId?.id === ret.id && (
                               <div className="flex items-center gap-2 text-red-600 text-sm font-bold mt-2">
-                                <AlertCircle className="w-4 h-4" /> {actionErrorId.msg}
+                                <AlertCircle className="w-4 h-4" /> {actionErrorId?.msg}
                               </div>
                             )}
                           </div>
@@ -335,7 +345,7 @@ export default function BuyerReturnsPage() {
                             <CheckCircle2 className="w-8 h-8 text-blue-500 shrink-0" />
                             <div>
                               <h4 className="font-black text-blue-900">Completed</h4>
-                              <p className="text-sm font-bold text-blue-700 mt-0.5">This return has been fully processed.</p>
+                              <p className="text-sm font-bold text-blue-700 mt-0.5">{getCompletedOutcomeText(ret)}</p>
                             </div>
                           </div>
                         )}

@@ -49,9 +49,19 @@ export default function NewReturnPage() {
   // Load products to select
   useEffect(() => {
     async function loadProducts() {
-      const { data } = await supabase.from("products").select("*").limit(10);
+      // Fetch only the 3 products that act as our mock "orders"
+      const { data } = await supabase.from("products").select("*").limit(3);
       if (data) setProducts(data);
       setLoadingProducts(false);
+      
+      // Auto-select product if coming from orders page
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        const pid = params.get("productId");
+        if (pid) {
+          setSelectedProductId(pid);
+        }
+      }
     }
     loadProducts();
   }, []);
@@ -145,6 +155,7 @@ export default function NewReturnPage() {
     
     try {
       const { error } = await supabase.from("returns").insert({
+        buyer_id: "00000000-0000-0000-0000-000000000002",
         product_id: selectedProductId,
         status: "processing",
         reason: returnReason,
@@ -200,7 +211,7 @@ export default function NewReturnPage() {
                   >
                     <option value="">-- Choose an item --</option>
                     {products.map(p => (
-                      <option key={p.id} value={p.id}>{p.title || p.name}</option>
+                      <option key={p.id} value={p.id}>{p.title}</option>
                     ))}
                   </select>
                 )}

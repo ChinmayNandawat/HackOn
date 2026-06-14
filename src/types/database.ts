@@ -1,6 +1,6 @@
 export interface Product {
   id: string;
-  name: string;
+  title: string;
   original_price: number;
   category: string;
   image_url: string;
@@ -24,7 +24,7 @@ export interface Product {
 export interface Return {
   id: string;
   product_id: string;
-  status: string;
+  status: 'processing' | 'inspected' | 'accepted' | 'standard_refund' | 'relisted' | 'rejected' | 'completed';
   return_reason: string;
   image_urls: string[];
   grade: string | null;

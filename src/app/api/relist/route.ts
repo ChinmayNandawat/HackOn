@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Step 2: Fetch the return record
-    let returnData: Record<string, unknown>;
+    let returnData: any;
     try {
       const { data, error } = await supabase
         .from('returns')

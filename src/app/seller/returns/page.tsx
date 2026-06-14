@@ -12,14 +12,15 @@ import {
   Layers, 
   AlertCircle 
 } from "lucide-react";
+import SellerNav from "@/components/SellerNav";
 
 export default function AdminReturnsListPage() {
   const [returns, setReturns] = useState<ReturnWithProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Client-side Filter state: 'all' | 'processing' | 'decision_ready' | 'completed'
-  const [filter, setFilter] = useState<"all" | "processing" | "decision_ready" | "completed">("all");
+  // Client-side Filter state: 'all' | 'processing' | 'inspected' | 'relisted'
+  const [filter, setFilter] = useState<"all" | "processing" | "inspected" | "relisted">("all");
 
   // Metrics state
   const [metrics, setMetrics] = useState({
@@ -53,7 +54,7 @@ export default function AdminReturnsListPage() {
           created_at,
           products (
             id,
-            name:title,
+            title,
             original_price,
             category,
             image_url,
@@ -81,7 +82,7 @@ export default function AdminReturnsListPage() {
         created_at: rawItem.created_at,
         products: rawItem.products ? {
           id: rawItem.products.id,
-          name: rawItem.products.name,
+          title: rawItem.products.title,
           original_price: Number(rawItem.products.original_price),
           category: rawItem.products.category,
           image_url: rawItem.products.image_url,
@@ -169,12 +170,14 @@ export default function AdminReturnsListPage() {
     <main className="min-h-screen bg-gray-50/50 p-6 md:p-8 font-sans">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
-        <header className="mb-8">
+        <header className="mb-4">
           <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Returns Dashboard</h1>
           <p className="text-sm text-gray-500 mt-1">
             Analyze, grade, and route returned inventory.
           </p>
         </header>
+
+        <SellerNav />
 
         {error && (
           <div className="mb-8 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-3 text-sm">
@@ -259,17 +262,17 @@ export default function AdminReturnsListPage() {
               Pending
             </button>
             <button
-              onClick={() => setFilter("decision_ready")}
+              onClick={() => setFilter("inspected")}
               className={`px-4 py-1.5 rounded-md text-xs font-bold transition ${
-                filter === "decision_ready" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-800"
+                filter === "inspected" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-800"
               }`}
             >
               Inspected
             </button>
             <button
-              onClick={() => setFilter("completed")}
+              onClick={() => setFilter("relisted")}
               className={`px-4 py-1.5 rounded-md text-xs font-bold transition ${
-                filter === "completed" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-800"
+                filter === "relisted" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-800"
               }`}
             >
               Relisted
@@ -308,24 +311,35 @@ export default function AdminReturnsListPage() {
             // Returns Cards List
             filteredReturns.map((item) => {
               const product = item.products;
-              const title = product?.name || "Unknown Product";
+              const title = product?.title || "Unknown Product";
               const category = product?.category || "N/A";
               const originalPrice = product?.original_price || 0;
               const hasThumbnail = item.image_urls && item.image_urls.length > 0;
               const firstImage = hasThumbnail ? item.image_urls[0] : null;
 
-              // Color codes for status: processing (amber), decision_ready (blue), completed (green)
-              const statusClasses = {
+              // Color codes for status
+              const statusClasses: Record<string, string> = {
                 processing: "bg-amber-50 text-amber-700 border-amber-200",
-                decision_ready: "bg-blue-50 text-blue-700 border-blue-200",
+                inspected: "bg-blue-50 text-blue-700 border-blue-200",
+                relisted: "bg-emerald-50 text-emerald-700 border-emerald-200",
                 completed: "bg-green-50 text-green-700 border-green-200",
-              }[item.status];
+                accepted: "bg-teal-50 text-teal-700 border-teal-200",
+                standard_refund: "bg-purple-50 text-purple-700 border-purple-200",
+                rejected: "bg-red-50 text-red-700 border-red-200",
+              };
 
-              const statusLabels = {
+              const statusLabels: Record<string, string> = {
                 processing: "Pending",
-                decision_ready: "Inspected",
-                completed: "Relisted",
-              }[item.status];
+                inspected: "Inspected",
+                relisted: "Relisted",
+                completed: "Completed",
+                accepted: "Accepted",
+                standard_refund: "Refunded",
+                rejected: "Rejected",
+              };
+              
+              const currentStatusClass = statusClasses[item.status] || "bg-gray-50 text-gray-700 border-gray-200";
+              const currentStatusLabel = statusLabels[item.status] || item.status;
 
               // Color codes for Grade (A green, B teal, C amber, D red)
               const gradeClasses = item.grade ? {
@@ -338,7 +352,7 @@ export default function AdminReturnsListPage() {
               return (
                 <Link
                   key={item.id}
-                  href={`/admin/returns/${item.id}`}
+                  href={`/seller/returns/${item.id}`}
                   className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-start gap-4 hover:border-blue-300 hover:shadow-md transition group block"
                 >
                   {/* Thumbnail */}
@@ -362,8 +376,8 @@ export default function AdminReturnsListPage() {
                       </h3>
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {/* Status Badge */}
-                        <span className={`px-2 py-0.5 rounded border text-[10px] font-bold ${statusClasses}`}>
-                          {statusLabels}
+                        <span className={`px-2 py-0.5 rounded border text-[10px] font-bold ${currentStatusClass}`}>
+                          {currentStatusLabel}
                         </span>
 
                         {/* Grade Badge */}

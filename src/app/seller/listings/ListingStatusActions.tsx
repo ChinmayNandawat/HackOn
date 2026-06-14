@@ -38,9 +38,11 @@ export default function ListingStatusActions({ productId, initialStatus }: { pro
       </Badge>
       
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" asChild className="font-bold text-slate-600">
-          <Link href={`/product/${productId}`}>View Listing</Link>
-        </Button>
+        <Link href={`/product/${productId}`}>
+          <Button variant="outline" size="sm" className="font-bold text-slate-600">
+            View Listing
+          </Button>
+        </Link>
         {status === 'active' && (
           <Button size="sm" onClick={handleMarkAsSold} disabled={loading} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
             {loading ? "..." : "Mark as Sold"}
