@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     try {
       const { data, error } = await supabase
         .from('returns')
-        .select('*, products(id, name, category, original_price, image_url)')
+        .select('*, products(id, title, category, original_price, image_url)')
         .eq('id', returnId)
         .single();
 
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (returnData.routing_decision !== 'relist_as_refurbished' && returnData.routing_decision !== 'needs_repair_then_relist') {
+    if (returnData.ai_routing_decision !== 'relist_as_refurbished' && returnData.ai_routing_decision !== 'needs_repair_then_relist') {
       return NextResponse.json<RelistResponse>(
         { success: false, error: "This return is not approved for relisting based on AI routing decision." },
         { status: 400 }
@@ -73,16 +73,17 @@ export async function POST(req: NextRequest) {
     }
 
     // Step 3: Generate listing content using Bedrock
-    const flawsList = Array.isArray(returnData.flaws) ? returnData.flaws.map((f: Record<string, string>) => `- ${f.type || 'Flaw'} at ${f.location || 'unknown'}: ${f.description || ''}`).join('\n') : "No major cosmetic flaws reported.";
+    const actualFlaws = returnData.flaws_json?.flaws || [];
+    const flawsList = Array.isArray(actualFlaws) ? actualFlaws.map((f: Record<string, string>) => `- ${f.name || 'Flaw'} at severity ${f.severity || 'unknown'}`).join('\n') : "No major cosmetic flaws reported.";
     
     const prompt = `Act as an expert Amazon product listing copywriter. 
 Create a refurbished product listing for the following item:
-- Product Name: ${product.name}
+- Product Name: ${product.title}
 - Category: ${product.category}
 - Original Price: ₹${product.original_price}
-- AI Grade: ${returnData.grade || 'Unknown'}
-- AI Score: ${returnData.score || 'Unknown'}/100
-- AI Confidence Level: ${returnData.confidence || 'Unknown'}
+- AI Grade: ${returnData.ai_grade || 'Unknown'}
+- AI Score: ${returnData.ai_score || 'Unknown'}/100
+- AI Confidence Level: ${returnData.ai_confidence || 'Unknown'}
 - Cosmetic Flaws identified:
 ${flawsList}
 
@@ -93,7 +94,7 @@ Return ONLY a valid JSON object with absolutely no markdown wrapping, no HTML, a
   "sellerNote": "One sentence note to build buyer trust, mentioning the AI verification and 30 day guarantee"
 }`;
 
-    let generatedTitle = `${product.name} - Refurbished Grade ${returnData.grade || 'Unknown'}`;
+    let generatedTitle = `${product.title} - Refurbished Grade ${returnData.ai_grade || 'Unknown'}`;
     let generatedDescription = "AI inspected and verified refurbished product.";
     let sellerNote = "30-day AI Verified guarantee included.";
 
@@ -114,22 +115,25 @@ Return ONLY a valid JSON object with absolutely no markdown wrapping, no HTML, a
 
     // Step 4: Insert new product row
     const newProductPayload = {
-      name: generatedTitle,
+      title: generatedTitle,
+      description: generatedDescription,
       category: product.category,
       original_price: product.original_price,
+      current_price: returnData.flaws_json?.estimated_resale_price || Math.floor(product.original_price * 0.8),
       image_url: product.image_url,
+      condition: 'refurbished',
       is_refurbished: true,
       parent_product_id: product.id,
       health_data: {
-        grade: returnData.grade,
-        score: returnData.score,
-        flaws: returnData.flaws,
-        confidence: returnData.confidence,
-        summary: returnData.routing_reasoning,
+        grade: returnData.ai_grade,
+        score: returnData.ai_score,
+        flaws: returnData.flaws_json?.flaws || [],
+        confidence: returnData.ai_confidence,
+        summary: returnData.flaws_json?.routing_reasoning || "",
         generatedDescription,
         sellerNote
       },
-      estimated_resale_price: returnData.estimated_resale_price,
+      estimated_resale_price: returnData.flaws_json?.estimated_resale_price || 0,
       relist_status: 'active',
       relisted_at: new Date().toISOString()
     };
@@ -149,7 +153,7 @@ Return ONLY a valid JSON object with absolutely no markdown wrapping, no HTML, a
     } catch (insertError: unknown) {
       console.error("[api/relist] Product insertion failed:", insertError);
       return NextResponse.json<RelistResponse>(
-        { success: false, error: "Failed to create new refurbished listing: " + (insertError instanceof Error ? insertError.message : String(insertError)) },
+        { success: false, error: "Failed to create new refurbished listing: " + (insertError instanceof Error ? insertError.message : JSON.stringify(insertError)) },
         { status: 500 }
       );
     }
