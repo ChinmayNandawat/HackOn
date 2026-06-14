@@ -1,5 +1,4 @@
-import pkg from "@next/env";
-const { loadEnvConfig } = pkg;
+import { loadEnvConfig } from "@next/env";
 loadEnvConfig(process.cwd());
 
 import { createClient } from "@supabase/supabase-js";

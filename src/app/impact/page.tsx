@@ -1,38 +1,151 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { ImpactResponse } from "@/types/impact";
+import SustainabilityTier from "@/components/SustainabilityTier";
+import { Card } from "@/components/ui/card";
+import { PackageOpen, Cloud, Sparkles, RefreshCcw, ShieldCheck, HeartHandshake } from "lucide-react";
 
-export default function ImpactDashboard() {
+export default async function ImpactPage({ searchParams }: { searchParams: Promise<{ sessionId?: string }> }) {
+  const resolvedParams = await searchParams;
+  const sessionId = resolvedParams.sessionId;
+  let impactData: ImpactResponse;
+
+  try {
+    const url = new URL(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/impact`);
+    if (sessionId) url.searchParams.set("sessionId", sessionId);
+
+    const res = await fetch(url.toString(), { cache: 'no-store' });
+    
+    if (!res.ok) throw new Error("API not ready");
+    impactData = await res.json();
+  } catch (err) {
+    console.error("Failed to fetch impact data:", err);
+    // The API handles fallback, but if the fetch itself totally fails (e.g., network error), provide a minimal shell.
+    impactData = {
+      personal: { items_diverted: 0, personal_co2_saved: 0, total_credits: 0, tier: "Bronze", next_tier_credits: 100, tier_progress_percent: 0, actions_taken: 0 },
+      global: { total_returns_processed: 0, total_co2_saved_kg: 0, total_money_saved_inr: 0, total_items_diverted: 0, last_updated: "" },
+      credits_breakdown: {},
+      is_mocked: true
+    } as unknown as ImpactResponse;
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">My Impact</h1>
-        <div className="bg-gradient-to-r from-green-400 to-emerald-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
-          Gold Tier
+    <div className="max-w-4xl mx-auto p-4 md:p-8 font-sans space-y-12 pb-20">
+      
+      {/* Header */}
+      <div className="space-y-2 text-center md:text-left mt-8 md:mt-4">
+        <h1 className="text-3xl md:text-4xl font-black text-emerald-950 tracking-tight">My Impact</h1>
+        <p className="text-emerald-700 font-medium">See how your choices are helping build a circular economy.</p>
+      </div>
+
+      {/* Personal Metrics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-6 border-emerald-100 bg-gradient-to-br from-white to-emerald-50/40 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+          <PackageOpen className="absolute -right-4 -bottom-4 w-24 h-24 text-emerald-100/60 group-hover:scale-110 transition-transform duration-500" />
+          <div className="flex justify-between items-start relative z-10">
+            <div className="space-y-1">
+              <div className="text-4xl font-black text-emerald-900">{impactData.personal.items_diverted}</div>
+              <div className="text-sm font-bold text-emerald-700/80 leading-tight">Products Diverted<br/>from Landfill</div>
+            </div>
+            <PackageOpen className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+          </div>
+        </Card>
+
+        <Card className="p-6 border-emerald-100 bg-gradient-to-br from-white to-emerald-50/40 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+          <Cloud className="absolute -right-4 -bottom-4 w-24 h-24 text-emerald-100/60 group-hover:scale-110 transition-transform duration-500" />
+          <div className="flex justify-between items-start relative z-10">
+            <div className="space-y-1">
+              <div className="text-4xl font-black text-emerald-900">{(impactData.personal.personal_co2_saved || 0).toFixed(1)}<span className="text-xl ml-1 text-emerald-800">kg</span></div>
+              <div className="text-sm font-bold text-emerald-700/80 leading-tight">Total CO₂ Emissions<br/>Saved</div>
+            </div>
+            <Cloud className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+          </div>
+        </Card>
+
+        <Card className="p-6 border-emerald-100 bg-gradient-to-br from-white to-emerald-50/40 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+          <Sparkles className="absolute -right-4 -bottom-4 w-24 h-24 text-emerald-100/60 group-hover:scale-110 transition-transform duration-500" />
+          <div className="flex justify-between items-start relative z-10">
+            <div className="space-y-1">
+              <div className="text-4xl font-black text-emerald-900">{impactData.personal.total_credits}</div>
+              <div className="text-sm font-bold text-emerald-700/80 leading-tight">Green Credits<br/>Earned</div>
+            </div>
+            <Sparkles className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+          </div>
+        </Card>
+      </div>
+
+      {/* Sustainability Tier */}
+      <SustainabilityTier 
+        credits={impactData.personal.total_credits} 
+        tier={impactData.personal.tier}
+        nextTierCredits={impactData.personal.next_tier_credits}
+        progressPercent={impactData.personal.tier_progress_percent}
+      />
+
+      {/* Global Impact Counters */}
+      <div className="bg-emerald-950 rounded-2xl p-8 md:p-10 shadow-2xl text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-800 rounded-full blur-[100px] -z-0 translate-x-1/3 -translate-y-1/3 opacity-50" />
+        <div className="relative z-10">
+          <h2 className="text-xl font-bold text-emerald-50 mb-8 tracking-tight border-b border-emerald-800/60 pb-4 inline-block">Our Collective Impact</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 divide-y md:divide-y-0 md:divide-x divide-emerald-800/50">
+            <div className="pt-6 md:pt-0 md:px-6 first:pl-0 first:pt-0 space-y-2">
+              <div className="text-4xl font-black text-emerald-100 tracking-tight">{impactData.global.total_returns_processed?.toLocaleString('en-IN') || 0}</div>
+              <div className="text-xs font-bold text-emerald-400 uppercase tracking-widest">AI Returns Processed</div>
+            </div>
+            <div className="pt-6 md:pt-0 md:px-6 space-y-2">
+              <div className="text-4xl font-black text-emerald-100 tracking-tight">{impactData.global.total_co2_saved_kg?.toLocaleString('en-IN') || 0} <span className="text-xl text-emerald-300/80">kg</span></div>
+              <div className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Total CO₂ Saved</div>
+            </div>
+            <div className="pt-6 md:pt-0 md:px-6 space-y-2">
+              <div className="text-4xl font-black text-emerald-100 tracking-tight">₹{(impactData.global.total_money_saved_inr || 0).toLocaleString('en-IN')}</div>
+              <div className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Money Saved by Customers</div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-emerald-50 border-emerald-200">
-          <CardContent className="p-6 text-center">
-            <p className="text-emerald-800 text-sm font-medium">Items Diverted</p>
-            <p className="text-4xl font-bold text-emerald-600 mt-2">3</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="p-6 text-center">
-            <p className="text-blue-800 text-sm font-medium">CO₂ Saved</p>
-            <p className="text-4xl font-bold text-blue-600 mt-2">7.2 kg</p>
-          </CardContent>
-        </Card>
+      {/* Gamification Tooltips Section */}
+      <div className="space-y-6 pt-4">
+        <h3 className="text-xl font-bold text-emerald-950 tracking-tight">How to Earn Green Credits</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          
+          <div className="bg-white border border-emerald-100 p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow group">
+            <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+              <RefreshCcw className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="font-bold text-emerald-950 text-base">Keep + Refund</h4>
+              <p className="text-sm text-emerald-700/80 mt-2 font-medium leading-relaxed">
+                Earn credits when you choose to keep a slightly-flawed item with a partial refund instead of shipping it back.
+              </p>
+            </div>
+          </div>
 
-        <Card className="bg-amber-50 border-amber-200">
-          <CardContent className="p-6 text-center">
-            <p className="text-amber-800 text-sm font-medium">Green Credits</p>
-            <p className="text-4xl font-bold text-amber-600 mt-2">150</p>
-            <p className="text-amber-700 text-xs mt-1">Value: ₹75</p>
-          </CardContent>
-        </Card>
+          <div className="bg-white border border-emerald-100 p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow group">
+            <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="font-bold text-emerald-950 text-base">Buy Refurbished</h4>
+              <p className="text-sm text-emerald-700/80 mt-2 font-medium leading-relaxed">
+                Earn generous credits every time you purchase an AI-verified refurbished item over a brand new one.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white border border-emerald-100 p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow group">
+            <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+              <HeartHandshake className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="font-bold text-emerald-950 text-base">Donate Items</h4>
+              <p className="text-sm text-emerald-700/80 mt-2 font-medium leading-relaxed">
+                Earn bonus credits when you authorize a highly damaged return to be routed to local charity instead of the landfill.
+              </p>
+            </div>
+          </div>
+
+        </div>
       </div>
+
     </div>
   );
 }
