@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:impact": "npx ts-node --project tsconfig.json src/scripts/seed-demo-impact.ts"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock": "^3.1068.0",

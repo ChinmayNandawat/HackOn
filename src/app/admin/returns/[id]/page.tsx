@@ -268,6 +268,18 @@ export default function AdminReturnDetailPage() {
 
       if (updateError) throw updateError;
 
+      // START IMPACT POST (Fire and forget)
+      fetch('/api/impact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: 'admin-session-001',
+          actionType: 'return_processed',
+          productId: record.product_id
+        })
+      }).catch(console.error);
+      // END IMPACT POST
+
       setRecord((prev) => {
         if (!prev) return null;
         return {
@@ -521,7 +533,7 @@ export default function AdminReturnDetailPage() {
               <div className="space-y-4 text-xs">
                 <div>
                   <span className="text-gray-400 font-bold block mb-1">Return Reason</span>
-                  <p className="text-gray-700 bg-gray-50 p-3 rounded-lg italic">"{record.return_reason}"</p>
+                  <p className="text-gray-700 bg-gray-50 p-3 rounded-lg italic">&quot;{record.return_reason}&quot;</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -646,7 +658,7 @@ export default function AdminReturnDetailPage() {
                   </div>
 
                   <p className="text-xs text-gray-500 max-w-sm italic border-t border-gray-100 pt-3 w-full">
-                    "{record.routing_reasoning ? "Persisted details" : record.return_reason}"
+                    &quot;{record.routing_reasoning ? "Persisted details" : record.return_reason}&quot;
                   </p>
                 </div>
 

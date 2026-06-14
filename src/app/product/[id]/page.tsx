@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import ProductHealthCard from "@/components/ProductHealthCard";
+import BuyRefurbishedButton from "@/components/BuyRefurbishedButton";
 import ReturnPreventionBanner from "@/components/ReturnPreventionBanner";
 import { getReturnRiskData } from "@/lib/mock-prevention";
 import { Button } from "@/components/ui/button";
@@ -162,11 +163,19 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         </div>
       )}
 
-      {/* Add to Cart Button */}
+      {/* Add to Cart / Buy Button */}
       <div className="pt-6">
-        <Button className="w-full py-7 text-lg font-black tracking-wide rounded-xl shadow-xl hover:scale-[1.01] transition-transform active:scale-95 bg-gray-900 hover:bg-gray-800 text-white">
-          Add to Cart
-        </Button>
+        {isRefurbished ? (
+          <BuyRefurbishedButton 
+            productId={product.id}
+            originalPrice={product.original_price}
+            estimatedResalePrice={product.estimated_resale_price || 0}
+          />
+        ) : (
+          <Button className="w-full py-7 text-lg font-black tracking-wide rounded-xl shadow-xl hover:scale-[1.01] transition-transform active:scale-95 bg-gray-900 hover:bg-gray-800 text-white">
+            Add to Cart
+          </Button>
+        )}
       </div>
     </div>
   );
