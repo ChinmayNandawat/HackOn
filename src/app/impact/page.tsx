@@ -1,24 +1,18 @@
 import { ImpactResponse } from "@/types/impact";
-import SustainabilityTier from "@/components/SustainabilityTier";
-import { Card } from "@/components/ui/card";
-import { PackageOpen, Cloud, Sparkles, RefreshCcw, ShieldCheck, HeartHandshake } from "lucide-react";
+import PersonalImpactStats from "@/components/PersonalImpactStats";
+import { RefreshCcw, ShieldCheck, HeartHandshake } from "lucide-react";
 
-export default async function ImpactPage({ searchParams }: { searchParams: Promise<{ sessionId?: string }> }) {
-  const resolvedParams = await searchParams;
-  const sessionId = resolvedParams.sessionId;
+export default async function ImpactPage() {
   let impactData: ImpactResponse;
 
   try {
     const url = new URL(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/impact`);
-    if (sessionId) url.searchParams.set("sessionId", sessionId);
-
     const res = await fetch(url.toString(), { cache: 'no-store' });
     
     if (!res.ok) throw new Error("API not ready");
     impactData = await res.json();
   } catch (err) {
-    console.error("Failed to fetch impact data:", err);
-    // The API handles fallback, but if the fetch itself totally fails (e.g., network error), provide a minimal shell.
+    console.error("Failed to fetch global impact data:", err);
     impactData = {
       personal: { items_diverted: 0, personal_co2_saved: 0, total_credits: 0, tier: "Bronze", next_tier_credits: 100, tier_progress_percent: 0, actions_taken: 0 },
       global: { total_returns_processed: 0, total_co2_saved_kg: 0, total_money_saved_inr: 0, total_items_diverted: 0, last_updated: "" },
@@ -36,49 +30,8 @@ export default async function ImpactPage({ searchParams }: { searchParams: Promi
         <p className="text-emerald-700 font-medium">See how your choices are helping build a circular economy.</p>
       </div>
 
-      {/* Personal Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-6 border-emerald-100 bg-gradient-to-br from-white to-emerald-50/40 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-          <PackageOpen className="absolute -right-4 -bottom-4 w-24 h-24 text-emerald-100/60 group-hover:scale-110 transition-transform duration-500" />
-          <div className="flex justify-between items-start relative z-10">
-            <div className="space-y-1">
-              <div className="text-4xl font-black text-emerald-900">{impactData.personal.items_diverted}</div>
-              <div className="text-sm font-bold text-emerald-700/80 leading-tight">Products Diverted<br/>from Landfill</div>
-            </div>
-            <PackageOpen className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-          </div>
-        </Card>
-
-        <Card className="p-6 border-emerald-100 bg-gradient-to-br from-white to-emerald-50/40 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-          <Cloud className="absolute -right-4 -bottom-4 w-24 h-24 text-emerald-100/60 group-hover:scale-110 transition-transform duration-500" />
-          <div className="flex justify-between items-start relative z-10">
-            <div className="space-y-1">
-              <div className="text-4xl font-black text-emerald-900">{(impactData.personal.personal_co2_saved || 0).toFixed(1)}<span className="text-xl ml-1 text-emerald-800">kg</span></div>
-              <div className="text-sm font-bold text-emerald-700/80 leading-tight">Total CO₂ Emissions<br/>Saved</div>
-            </div>
-            <Cloud className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-          </div>
-        </Card>
-
-        <Card className="p-6 border-emerald-100 bg-gradient-to-br from-white to-emerald-50/40 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-          <Sparkles className="absolute -right-4 -bottom-4 w-24 h-24 text-emerald-100/60 group-hover:scale-110 transition-transform duration-500" />
-          <div className="flex justify-between items-start relative z-10">
-            <div className="space-y-1">
-              <div className="text-4xl font-black text-emerald-900">{impactData.personal.total_credits}</div>
-              <div className="text-sm font-bold text-emerald-700/80 leading-tight">Green Credits<br/>Earned</div>
-            </div>
-            <Sparkles className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-          </div>
-        </Card>
-      </div>
-
-      {/* Sustainability Tier */}
-      <SustainabilityTier 
-        credits={impactData.personal.total_credits} 
-        tier={impactData.personal.tier}
-        nextTierCredits={impactData.personal.next_tier_credits}
-        progressPercent={impactData.personal.tier_progress_percent}
-      />
+      {/* Personal Metrics & Tier (Client-Side for Session) */}
+      <PersonalImpactStats />
 
       {/* Global Impact Counters */}
       <div className="bg-emerald-950 rounded-2xl p-8 md:p-10 shadow-2xl text-white relative overflow-hidden">
