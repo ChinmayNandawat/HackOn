@@ -10,6 +10,7 @@ export default function Navbar() {
       <div className="flex items-center gap-4">
         {/* Buyer Links */}
         <Link href="/orders" className="text-sm font-medium text-slate-600 hover:text-slate-900">Orders</Link>
+        <Link href="/returns" className="text-sm font-medium text-slate-600 hover:text-slate-900">Returns</Link>
         <Link href="/impact" className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-emerald-700 bg-emerald-50 rounded-full hover:bg-emerald-100 transition-colors">
           <Leaf className="w-4 h-4" />
           My Impact
