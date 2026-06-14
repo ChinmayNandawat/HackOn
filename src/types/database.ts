@@ -5,6 +5,20 @@ export interface Product {
   category: string;
   image_url: string;
   created_at: string;
+  is_refurbished?: boolean;
+  parent_product_id?: string | null;
+  health_data?: {
+    grade?: string | null;
+    score?: number | null;
+    flaws?: any[] | null;
+    confidence?: string | null;
+    summary?: string | null;
+    generatedDescription?: string | null;
+    sellerNote?: string | null;
+  };
+  estimated_resale_price?: number | null;
+  relist_status?: string | null;
+  relisted_at?: string | null;
 }
 
 export interface Return {
