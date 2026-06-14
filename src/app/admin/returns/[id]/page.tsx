@@ -21,7 +21,9 @@ import {
   AlertTriangle,
   HelpCircle,
   ThumbsUp,
-  X
+  X,
+  Store,
+  Tag
 } from "lucide-react";
 
 export default function AdminReturnDetailPage() {
@@ -33,6 +35,9 @@ export default function AdminReturnDetailPage() {
   const [inspecting, setInspecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isRelisting, setIsRelisting] = useState(false);
+  const [relistSuccess, setRelistSuccess] = useState<{ newProductId: string, title: string } | null>(null);
+  const [relistError, setRelistError] = useState<string | null>(null);
 
   // Dynamic overrides dropdown toggle
   const [overrideSelect, setOverrideSelect] = useState<string>("");
@@ -277,6 +282,52 @@ export default function AdminReturnDetailPage() {
     }
   };
 
+  // Action Bar: Relist Decision
+  const handleRelist = async () => {
+    if (!record) return;
+    
+    // Guard
+    if (record.grade === null) {
+      setError("Run AI Inspection first before relisting");
+      return;
+    }
+
+    setIsRelisting(true);
+    setRelistError(null);
+    setRelistSuccess(null);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const response = await fetch('/api/relist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ returnId: id }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Failed to relist product");
+      }
+      
+      setRelistSuccess({ newProductId: data.newProductId, title: data.generatedTitle });
+      
+      setRecord((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          status: "relisted",
+        };
+      });
+      
+    } catch (err: any) {
+      console.error("Relist error:", err);
+      setRelistError(err.message || "An unexpected error occurred during relisting");
+      // Intentionally not setting isRelisting to false here so the 'Try Again' button handles it
+    }
+  };
+
   // Action Bar: Override Decision
   const handleOverrideDecision = async (newDecision: string) => {
     if (!record || !newDecision) return;
@@ -380,17 +431,19 @@ export default function AdminReturnDetailPage() {
   const resalePrice = record.estimated_resale_price || 0;
 
   // Status mapping UI
-  const statusLabels = {
+  const statusLabels: Record<string, string> = {
     processing: "Pending Inspection",
     decision_ready: "Inspected",
     completed: "Resolved / finalized",
-  }[record.status];
+    relisted: "Relisted as Refurbished",
+  };
 
-  const statusClasses = {
+  const statusClasses: Record<string, string> = {
     processing: "bg-amber-50 text-amber-700 border-amber-200",
     decision_ready: "bg-blue-50 text-blue-700 border-blue-200",
     completed: "bg-green-50 text-green-700 border-green-200",
-  }[record.status];
+    relisted: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  };
 
   // Grade color matching
   const gradeColors = {
@@ -483,8 +536,8 @@ export default function AdminReturnDetailPage() {
                   </div>
                   <div>
                     <span className="text-gray-400 font-bold block mb-1">Current Status</span>
-                    <span className={`px-2 py-0.5 rounded border font-bold inline-block mt-1 ${statusClasses}`}>
-                      {statusLabels}
+                    <span className={`px-2 py-0.5 rounded border font-bold inline-block mt-1 ${statusClasses[record.status] || "bg-gray-50 text-gray-700 border-gray-200"}`}>
+                      {statusLabels[record.status] || record.status}
                     </span>
                   </div>
                 </div>
@@ -672,42 +725,101 @@ export default function AdminReturnDetailPage() {
                 </div>
 
                 {/* Section 4: Action Bar */}
-                {record.status !== "completed" ? (
+                {record.status !== "completed" && record.status !== "relisted" ? (
                   <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Dashboard Actions</h3>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Accept Button */}
-                      <button
-                        onClick={handleAcceptDecision}
-                        className="py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition"
-                      >
-                        <ThumbsUp className="w-4 h-4" />
-                        Accept Decision
-                      </button>
+                      {/* Action Button Logic */}
+                      {relistSuccess ? (
+                        <div className="col-span-1 sm:col-span-2 bg-green-50 p-4 border border-green-200 rounded-xl text-center">
+                          <Check className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                          <h3 className="font-bold text-green-700 text-sm">Successfully Listed!</h3>
+                          <p className="text-xs text-green-600 mt-1 mb-3 font-semibold">{relistSuccess.title}</p>
+                          <Link
+                            href={`/product/${relistSuccess.newProductId}`}
+                            className="inline-block py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold text-xs"
+                          >
+                            View Listing
+                          </Link>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {(record.routing_decision === "relist_as_refurbished" || record.routing_decision === "needs_repair_then_relist") ? (
+                            <button
+                              onClick={handleRelist}
+                              disabled={isRelisting}
+                              className="w-full py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition disabled:bg-gray-300 disabled:text-gray-500 disabled:scale-100"
+                            >
+                              {isRelisting ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  Creating listing...
+                                </>
+                              ) : (
+                                <>
+                                  <Store className="w-4 h-4" />
+                                  Relist as Refurbished
+                                </>
+                              )}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={handleAcceptDecision}
+                              className="w-full py-2.5 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-bold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition"
+                            >
+                              <ThumbsUp className="w-4 h-4" />
+                              Accept Decision
+                            </button>
+                          )}
+
+                          {relistError && (
+                            <div className="bg-red-50 p-3 border border-red-200 rounded-lg text-center mt-2">
+                              <p className="text-red-700 text-xs font-bold mb-2">{relistError}</p>
+                              <button
+                                onClick={() => { setRelistError(null); setIsRelisting(false); }}
+                                className="text-[10px] uppercase font-bold px-3 py-1 bg-white border border-red-200 text-red-600 rounded hover:bg-red-50 transition-colors"
+                              >
+                                Try Again
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* Override Select Dropdown */}
-                      <div className="relative">
-                        <select
-                          value={overrideSelect}
-                          onChange={(e) => handleOverrideDecision(e.target.value)}
-                          className="w-full py-2.5 px-3 bg-white border border-gray-200 hover:border-gray-300 text-gray-700 rounded-lg font-bold text-xs appearance-none focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
-                        >
-                          <option value="" disabled>Override Decision...</option>
-                          <option value="relist_as_refurbished">Relist as Refurbished</option>
-                          <option value="needs_repair_then_relist">Send for Repair</option>
-                          <option value="donate">Donate</option>
-                          <option value="recycle">Recycle</option>
-                        </select>
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-                          <HelpCircle className="w-3.5 h-3.5" />
+                      {!relistSuccess && (
+                        <div className="relative">
+                          <select
+                            value={overrideSelect}
+                            onChange={(e) => handleOverrideDecision(e.target.value)}
+                            className="w-full py-2.5 px-3 bg-white border border-gray-200 hover:border-gray-300 text-gray-700 rounded-lg font-bold text-xs appearance-none focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer h-[40px]"
+                          >
+                            <option value="" disabled>Override Decision...</option>
+                            <option value="relist_as_refurbished">Relist as Refurbished</option>
+                            <option value="needs_repair_then_relist">Send for Repair</option>
+                            <option value="donate">Donate</option>
+                            <option value="recycle">Recycle</option>
+                          </select>
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                            <HelpCircle className="w-3.5 h-3.5" />
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-green-50 p-4 border border-green-200 text-green-700 font-bold rounded-xl text-center text-xs">
+                  <div className="bg-green-50 p-4 border border-green-200 text-green-700 font-bold rounded-xl text-center text-xs flex flex-col items-center justify-center gap-2">
+                    <Check className="w-6 h-6 text-green-500" />
                     Return Finalized & Resolved
+                    {relistSuccess && (
+                      <Link
+                        href={`/product/${relistSuccess.newProductId}`}
+                        className="mt-2 inline-block py-1.5 px-3 bg-green-600 text-white rounded hover:bg-green-700 font-bold text-xs"
+                      >
+                        View Listing
+                      </Link>
+                    )}
                   </div>
                 )}
 

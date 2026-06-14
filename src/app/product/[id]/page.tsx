@@ -1,34 +1,133 @@
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
+import ProductHealthCard from "@/components/ProductHealthCard";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, AlertTriangle } from "lucide-react";
 
-export default function ProductPage({ params }: { params: { id: string } }) {
-  return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="h-64 bg-slate-200 rounded-lg flex items-center justify-center">
-        Product Image Placeholder
+export default async function ProductPage({ params }: { params: { id: string } }) {
+  let product = null;
+  let errorMsg = null;
+
+  try {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("id", params.id)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        product = null;
+      } else {
+        throw error;
+      }
+    } else {
+      product = data;
+    }
+  } catch (err: unknown) {
+    console.error("Failed to fetch product:", err);
+    errorMsg = "Failed to load product details. Please try again.";
+  }
+
+  // Error State
+  if (errorMsg) {
+    return (
+      <div className="max-w-2xl mx-auto mt-20 p-8 bg-red-50 border border-red-200 rounded-2xl text-center">
+        <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <h2 className="text-xl font-bold text-red-900 mb-2">Something went wrong</h2>
+        <p className="text-red-700 mb-6">{errorMsg}</p>
+        <Link href="/" className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold text-sm hover:bg-red-700">
+          Go Back
+        </Link>
       </div>
-      
-      <div className="space-y-4">
-        <h1 className="text-3xl font-bold">Product Name</h1>
-        <p className="text-xl">₹2,500</p>
-        
-        {/* Return Prevention Banner Placeholder */}
-        <Card className="bg-amber-50 border-amber-200">
-          <CardContent className="p-4">
-            <p className="text-amber-800 font-medium flex items-center gap-2">
-              <span className="text-xl">⚠️</span> High Return Risk
-            </p>
-            <p className="text-sm text-amber-700 mt-1">
-              73% of buyers return this because it runs small. We recommend Size 10 instead.
-            </p>
-            <Link href="/product/refurb" className="text-sm text-amber-900 underline mt-2 block">
-              View a Grade-A refurbished version for 40% off
-            </Link>
-          </CardContent>
-        </Card>
+    );
+  }
 
-        <Button className="w-full" size="lg">Add to Cart</Button>
+  // Not Found State
+  if (!product) {
+    return (
+      <div className="max-w-2xl mx-auto mt-20 p-8 text-center bg-gray-50 border border-gray-200 rounded-2xl">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Product Not Found</h2>
+        <p className="text-gray-500 mb-6">We couldn&apos;t find the product you&apos;re looking for.</p>
+        <Link href="/" className="px-4 py-2 bg-gray-900 text-white rounded-lg font-bold text-sm inline-flex items-center gap-2 hover:bg-gray-800">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Marketplace
+        </Link>
+      </div>
+    );
+  }
+
+  const isRefurbished = product.is_refurbished === true;
+
+  return (
+    <div className="max-w-2xl mx-auto p-4 md:p-8 space-y-8 font-sans pb-20">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-xs md:text-sm text-gray-500 font-semibold mb-2">
+        <Link href="/" className="hover:text-gray-900 transition-colors">Home</Link>
+        <span>→</span>
+        <Link href={`/?category=${encodeURIComponent(product.category)}`} className="hover:text-gray-900 transition-colors">
+          {product.category}
+        </Link>
+        <span>→</span>
+        <span className="text-gray-900 truncate">{product.name}</span>
+      </nav>
+
+      {/* Header Info */}
+      <div className="space-y-2">
+        <span className="inline-block px-2.5 py-1 bg-gray-100 text-gray-600 rounded-md text-[10px] font-extrabold uppercase tracking-widest">
+          {product.category}
+        </span>
+        <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
+          {product.name}
+        </h1>
+        <div className="flex items-end gap-3 mt-4">
+          {isRefurbished ? (
+            <>
+              <span className="text-4xl font-black text-emerald-600">
+                ₹{(product.estimated_resale_price || 0).toLocaleString("en-IN")}
+              </span>
+              <span className="text-lg font-bold text-gray-400 line-through mb-1">
+                ₹{(product.original_price || 0).toLocaleString("en-IN")}
+              </span>
+            </>
+          ) : (
+            <span className="text-4xl font-black text-gray-900">
+              ₹{(product.original_price || 0).toLocaleString("en-IN")}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Main Image */}
+      <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden border border-gray-200">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img 
+          src={product.image_url || 'https://via.placeholder.com/600'} 
+          alt={product.name} 
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      {/* Transparency Report / Health Card */}
+      {isRefurbished && (
+        <div className="space-y-6 pt-4">
+          <div className="flex items-center gap-4 opacity-80">
+            <div className="h-px bg-gray-300 flex-1" />
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-500">
+              Product Transparency Report
+            </h3>
+            <div className="h-px bg-gray-300 flex-1" />
+          </div>
+          
+          <ProductHealthCard product={product} showFullDetail={true} />
+        </div>
+      )}
+
+      {/* Add to Cart Button */}
+      <div className="pt-6">
+        <Button className="w-full py-7 text-lg font-black tracking-wide rounded-xl shadow-xl hover:scale-[1.01] transition-transform active:scale-95 bg-gray-900 hover:bg-gray-800 text-white">
+          Add to Cart
+        </Button>
       </div>
     </div>
   );
