@@ -128,7 +128,7 @@ export default function MarketplaceClient({ products }: { products: Product[] })
               <Card className={`hover:shadow-md transition cursor-pointer ${isRefurb ? 'border-green-200' : ''} ${isLocalDeal ? 'ring-2 ring-amber-400' : ''}`}>
                 <div className="h-48 bg-slate-200 relative flex items-center justify-center overflow-hidden">
                   {product.image_url ? (
-                    <img src={product.image_url} alt={product.title} className="object-cover w-full h-full" />
+                    <img src={product.image_url} alt={product.title} className="object-contain w-full h-full p-2 mix-blend-multiply" />
                   ) : (
                     <span className="text-slate-400 font-medium">No Image</span>
                   )}

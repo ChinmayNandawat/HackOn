@@ -65,6 +65,10 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
      }
   }
 
+  const displayImage = (product.health_data?.return_photo_urls && product.health_data.return_photo_urls.length > 0)
+    ? product.health_data.return_photo_urls[0]
+    : product.image_url || 'https://via.placeholder.com/600';
+
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-8 space-y-8 font-sans pb-20">
       {/* Breadcrumb */}
@@ -124,11 +128,11 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
       )}
 
       {/* Main Image */}
-      <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden border border-gray-200 relative">
+      <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden border border-gray-200 relative flex items-center justify-center">
         <img 
-          src={product.image_url || 'https://via.placeholder.com/600'} 
+          src={displayImage} 
           alt={product.title} 
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain p-4 mix-blend-multiply"
         />
         {isLocalDeal && (
           <div className="absolute top-4 left-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black px-4 py-2 rounded-lg shadow-lg">
