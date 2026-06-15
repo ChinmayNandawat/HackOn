@@ -19,8 +19,8 @@ export default function AdminReturnsListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Client-side Filter state: 'all' | 'processing' | 'inspected' | 'relisted'
-  const [filter, setFilter] = useState<"all" | "processing" | "inspected" | "relisted">("all");
+  // Client-side Filter state: 'all' | 'processing' | 'inspected' | 'relisted' | 'donated'
+  const [filter, setFilter] = useState<"all" | "processing" | "inspected" | "relisted" | "donated">("all");
 
   // Metrics state
   const [metrics, setMetrics] = useState({
@@ -166,6 +166,7 @@ export default function AdminReturnsListPage() {
   // Filter returns based on state
   const filteredReturns = returns.filter((item) => {
     if (filter === "all") return true;
+    if (filter === "donated") return item.status === "completed" && item.routing_decision === "donate";
     return item.status === filter;
   });
 
@@ -279,6 +280,14 @@ export default function AdminReturnsListPage() {
               }`}
             >
               Relisted
+            </button>
+            <button
+              onClick={() => setFilter("donated")}
+              className={`px-4 py-1.5 rounded-md text-xs font-bold transition ${
+                filter === "donated" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-800"
+              }`}
+            >
+              Donated
             </button>
           </div>
 

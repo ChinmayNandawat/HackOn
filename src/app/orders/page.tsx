@@ -132,9 +132,9 @@ export default function OrdersPage() {
 
   const getCompletedOutcomeText = (ret: any) => {
     if (ret.status === "relisted") return "Your return was accepted, and the item has been listed as refurbished to find a new home.";
-    if (ret.routing_decision === "donate") return "Your return was processed, and your item was successfully donated to a local charity.";
-    if (ret.routing_decision === "recycle") return "Your return was processed, and the item was responsibly recycled.";
-    if (ret.routing_decision?.includes("keep")) return "You kept the item and received a partial refund. Thank you for reducing carbon emissions!";
+    if (ret.ai_routing_decision === "donate") return "Your return was processed, and your item was successfully donated to a local charity.";
+    if (ret.ai_routing_decision === "recycle") return "Your return was processed, and the item was responsibly recycled.";
+    if (ret.ai_routing_decision?.includes("keep")) return "You kept the item and received a partial refund. Thank you for reducing carbon emissions!";
     if (ret.status === "rejected") return "Your return request was declined after inspection.";
     return "Your return has been fully processed and a refund has been issued.";
   };
@@ -190,8 +190,8 @@ export default function OrdersPage() {
             if (!product) return null;
             
             const ret = returnsMap[product.id];
-            const isKeep = ret?.routing_decision?.includes("keep");
-            const creditsEarned = getCreditsForDecision(ret?.routing_decision || "");
+            const isKeep = ret?.ai_routing_decision?.includes("keep");
+            const creditsEarned = getCreditsForDecision(ret?.ai_routing_decision || "");
 
             return (
               <Card key={order.id} className="overflow-hidden border-slate-200 shadow-sm hover:shadow-md transition-shadow">
@@ -236,7 +236,7 @@ export default function OrdersPage() {
                     <div className="border-t border-slate-100 bg-slate-50/50 p-6 flex flex-col gap-4">
                       <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
                         <AlertCircle className="w-4 h-4" /> 
-                        <span>Return requested {formatDistanceToNow(new Date(ret.created_at))} ago for reason: <span className="italic text-slate-700">"{ret.return_reason}"</span></span>
+                        <span>Return requested {formatDistanceToNow(new Date(ret.created_at))} ago for reason: <span className="italic text-slate-700">"{ret.reason}"</span></span>
                       </div>
                       
                       {/* STATE 1: PROCESSING */}
@@ -254,14 +254,14 @@ export default function OrdersPage() {
                       )}
 
                       {/* STATE 2: INSPECTED / DECISION READY */}
-                      {ret.status === "inspected" && ret.routing_decision && (
+                      {ret.status === "inspected" && ret.ai_routing_decision && (
                         <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 space-y-4">
                           <div className="flex items-start gap-3">
                             <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 font-bold">!</div>
                             <div>
                               <h4 className="font-black text-blue-950 text-lg">Decision Ready</h4>
-                              <p className="text-sm font-bold text-blue-800 mt-1">{getDecisionText(ret.routing_decision, ret.flaws_json?.refund_offer_amount)}</p>
-                              <p className="text-xs text-blue-600/80 mt-1">{ret.routing_reasoning}</p>
+                              <p className="text-sm font-bold text-blue-800 mt-1">{getDecisionText(ret.ai_routing_decision, ret.flaws_json?.refund_offer_amount)}</p>
+                              <p className="text-xs text-blue-600/80 mt-1">{ret.flaws_json?.routing_reasoning}</p>
                             </div>
                           </div>
 
@@ -281,22 +281,34 @@ export default function OrdersPage() {
                           </div>
 
                           {isKeep && ret.flaws_json?.offer_sent_to_buyer ? (
-                            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-blue-200/50 mt-4">
-                              <Button 
-                                onClick={() => handleAcceptDecision(ret)}
-                                disabled={actionLoadingId === ret.id}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-                              >
-                                {actionLoadingId === ret.id ? "Processing..." : "Accept Decision"}
-                              </Button>
-                              <Button 
-                                onClick={() => handleStandardRefund(ret)}
-                                disabled={actionLoadingId === ret.id}
-                                variant="outline"
-                                className="font-bold text-slate-600 bg-white"
-                              >
-                                Request Standard Refund
-                              </Button>
+                            <div className="flex flex-col gap-4 pt-4 border-t border-blue-200/50 mt-4">
+                              <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl shadow-sm">
+                                <h4 className="font-black text-emerald-900 text-lg flex items-center gap-2">
+                                  <Sparkles className="w-5 h-5 text-emerald-600" />
+                                  Partial Refund Offer Received!
+                                </h4>
+                                <p className="text-emerald-800 mt-1">
+                                  The seller has offered you a partial refund of <span className="font-black text-xl">₹{ret.flaws_json.refund_offer_amount}</span> to keep the item. 
+                                  Accepting this offer reduces carbon emissions by avoiding return shipping!
+                                </p>
+                              </div>
+                              <div className="flex flex-col sm:flex-row gap-3">
+                                <Button 
+                                  onClick={() => handleAcceptDecision(ret)}
+                                  disabled={actionLoadingId === ret.id}
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex-1 py-6 text-base"
+                                >
+                                  {actionLoadingId === ret.id ? "Processing..." : `Accept ₹${ret.flaws_json.refund_offer_amount} Refund`}
+                                </Button>
+                                <Button 
+                                  onClick={() => handleStandardRefund(ret)}
+                                  disabled={actionLoadingId === ret.id}
+                                  variant="outline"
+                                  className="font-bold text-slate-600 bg-white flex-1 py-6"
+                                >
+                                  Reject Offer (Standard Return)
+                                </Button>
+                              </div>
                             </div>
                           ) : isKeep && !ret.flaws_json?.offer_sent_to_buyer ? (
                             <div className="pt-4 border-t border-blue-200/50 mt-4">
