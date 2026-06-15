@@ -2,6 +2,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import ProductHealthCard from "@/components/ProductHealthCard";
 import BuyRefurbishedButton from "@/components/BuyRefurbishedButton";
+import BuyNewButton from "@/components/BuyNewButton";
 import ReturnPreventionBanner from "@/components/ReturnPreventionBanner";
 import { getReturnRiskData } from "@/lib/mock-prevention";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       if (altData) {
         refurbishedAlternative = {
           id: altData.id,
-          name: product?.name || "Refurbished Version",
+          title: product?.title || "Refurbished Version",
           price: altData.estimated_resale_price || 0,
           imageUrl: product?.image_url || null
         };
@@ -99,7 +100,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           {product.category}
         </Link>
         <span>→</span>
-        <span className="text-gray-900 truncate">{product.name}</span>
+        <span className="text-gray-900 truncate">{product.title}</span>
       </nav>
 
       {/* Header Info */}
@@ -108,7 +109,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           {product.category}
         </span>
         <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
-          {product.name}
+          {product.title}
         </h1>
         <div className="flex items-end gap-3 mt-4">
           {isRefurbished ? (
@@ -143,7 +144,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img 
           src={product.image_url || 'https://via.placeholder.com/600'} 
-          alt={product.name} 
+          alt={product.title} 
           className="w-full h-full object-cover"
         />
       </div>
@@ -165,16 +166,18 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
       {/* Add to Cart / Buy Button */}
       <div className="pt-6">
-        {isRefurbished ? (
+        {product.relist_status === 'sold' ? (
+          <Button disabled className="w-full py-7 text-lg font-black tracking-wide rounded-xl shadow-xl bg-slate-200 text-slate-500 opacity-70">
+            Sold Out
+          </Button>
+        ) : isRefurbished ? (
           <BuyRefurbishedButton 
             productId={product.id}
             originalPrice={product.original_price}
             estimatedResalePrice={product.estimated_resale_price || 0}
           />
         ) : (
-          <Button className="w-full py-7 text-lg font-black tracking-wide rounded-xl shadow-xl hover:scale-[1.01] transition-transform active:scale-95 bg-gray-900 hover:bg-gray-800 text-white">
-            Add to Cart
-          </Button>
+          <BuyNewButton productId={product.id} />
         )}
       </div>
     </div>

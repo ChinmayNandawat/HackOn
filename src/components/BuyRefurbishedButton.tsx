@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { getOrCreateSessionId } from "@/lib/session";
 import { CheckCircle2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 interface Props {
   productId: string;
@@ -13,36 +14,56 @@ interface Props {
 
 export default function BuyRefurbishedButton({ productId, originalPrice, estimatedResalePrice }: Props) {
   const [showToast, setShowToast] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const discountPercent = Math.round(((originalPrice - estimatedResalePrice) / originalPrice) * 100);
 
-  const handleBuy = () => {
-    // Fire and forget POST to impact API
-    fetch("/api/impact", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sessionId: getOrCreateSessionId(),
-        actionType: "buy_refurbished",
-        productId: productId
-      })
-    }).catch(console.error);
+  const handleBuy = async () => {
+    setLoading(true);
+    try {
+      // 1. Create order (assuming dummy buyer_id for MVP: '00000000-0000-0000-0000-000000000002')
+      await supabase.from("orders").insert({
+        buyer_id: "00000000-0000-0000-0000-000000000002",
+        product_id: productId,
+        status: "completed"
+      });
 
-    setShowToast(true);
+      // 2. Mark product as sold
+      await supabase.from("products").update({ relist_status: "sold" }).eq("id", productId);
 
-    // Hide toast after 3 seconds
-    setTimeout(() => {
-      setShowToast(false);
-    }, 3000);
+      // 3. Fire and forget POST to impact API
+      fetch("/api/impact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: "ssr-session",
+          actionType: "buy_refurbished",
+          productId: productId
+        })
+      }).catch(console.error);
+
+      setShowToast(true);
+
+      // Hide toast and redirect to orders
+      setTimeout(() => {
+        setShowToast(false);
+        router.push("/orders");
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to buy:", err);
+      setLoading(false);
+    }
   };
 
   return (
     <div className="relative">
       <Button 
         onClick={handleBuy}
-        className="w-full py-7 text-lg font-black tracking-wide rounded-xl shadow-xl hover:scale-[1.01] transition-transform active:scale-95 bg-emerald-600 hover:bg-emerald-700 text-white"
+        disabled={loading}
+        className="w-full py-7 text-lg font-black tracking-wide rounded-xl shadow-xl hover:scale-[1.01] transition-transform active:scale-95 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-70"
       >
-        Buy Refurbished — Save {discountPercent}%
+        {loading ? "Processing..." : `Buy Refurbished — Save ${discountPercent}%`}
       </Button>
 
       {/* Toast Notification */}

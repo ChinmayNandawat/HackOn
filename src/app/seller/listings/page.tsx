@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import ListingStatusActions from "./ListingStatusActions";
+import SellerNav from "@/components/SellerNav";
 import { FileText, Tag, TrendingUp, IndianRupee } from "lucide-react";
 
 export const revalidate = 0;
@@ -17,7 +18,7 @@ export default async function SellerListings() {
   let avgDiscount = 45;
   let listings: any[] = [{
     id: "demo-1",
-    name: "Smart Watch (Refurbished)",
+    title: "Smart Watch (Refurbished)",
     category: "Electronics",
     original_price: 3000,
     estimated_resale_price: 1500,
@@ -106,7 +107,7 @@ export default async function SellerListings() {
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto pb-12">
-      <div className="flex justify-between items-end border-b pb-4">
+      <div className="flex justify-between items-end mb-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">My Refurbished Listings</h1>
           <p className="text-slate-500 mt-1">Manage your active, pending, and sold inventory.</p>
@@ -117,6 +118,8 @@ export default async function SellerListings() {
           <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100 font-bold">Live Data</Badge>
         )}
       </div>
+
+      <SellerNav />
       
       {/* Metrics Bar */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -163,7 +166,7 @@ export default async function SellerListings() {
             <p className="text-xs text-slate-500 mt-1 mb-4 max-w-xs">
               Process a return and click Relist as Refurbished to create your first listing.
             </p>
-            <Link href="/admin/returns" className="text-blue-600 font-bold hover:underline text-sm">
+            <Link href="/seller/returns" className="text-blue-600 font-bold hover:underline text-sm">
               Go to Returns Dashboard &rarr;
             </Link>
           </div>
@@ -182,7 +185,7 @@ export default async function SellerListings() {
                   {/* Left Side: Image & Core Info */}
                   <div className="p-5 flex-1 flex gap-5 items-center sm:border-r border-slate-100">
                     {item.image_url ? (
-                      <img src={item.image_url} alt={item.name} className="w-20 h-20 rounded-lg object-cover border border-slate-200 shrink-0" />
+                      <img src={item.image_url} alt={item.title} className="w-20 h-20 rounded-lg object-cover border border-slate-200 shrink-0" />
                     ) : (
                       <div className="w-20 h-20 bg-slate-100 border border-slate-200 rounded-lg flex items-center justify-center text-slate-400 text-xs shrink-0 font-bold">No Img</div>
                     )}
@@ -196,7 +199,7 @@ export default async function SellerListings() {
                           </Badge>
                         )}
                       </div>
-                      <h3 className="font-black text-slate-900 text-lg truncate">{item.name}</h3>
+                      <h3 className="font-black text-slate-900 text-lg truncate">{item.title}</h3>
                       
                       <div className="flex items-center gap-3 mt-2 flex-wrap">
                         <div className="flex items-baseline gap-1.5">

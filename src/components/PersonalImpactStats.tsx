@@ -5,10 +5,10 @@ import { Card } from "@/components/ui/card";
 import { PackageOpen, Cloud, Sparkles } from "lucide-react";
 import SustainabilityTier from "@/components/SustainabilityTier";
 import { getOrCreateSessionId } from "@/lib/session";
-import { ImpactResponse } from "@/types/impact";
+import { ImpactApiResponse, PersonalStats } from "@/types/impact";
 
 export default function PersonalImpactStats() {
-  const [data, setData] = useState<ImpactResponse["personal"] | null>(null);
+  const [data, setData] = useState<PersonalStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,7 +17,7 @@ export default function PersonalImpactStats() {
         const sessionId = getOrCreateSessionId();
         const res = await fetch(`/api/impact?sessionId=${sessionId}`);
         if (!res.ok) throw new Error("Failed to fetch personal impact");
-        const json: ImpactResponse = await res.json();
+        const json: ImpactApiResponse = await res.json();
         setData(json.personal);
       } catch (err) {
         console.error("Personal impact fetch error:", err);

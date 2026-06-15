@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
+import SellerNav from "@/components/SellerNav";
 
 export default async function SellerAnalytics() {
   let isMocked = false;
@@ -153,7 +154,7 @@ export default async function SellerAnalytics() {
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto pb-12">
-      <div className="flex justify-between items-end border-b pb-4">
+      <div className="flex justify-between items-end mb-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">Analytics & Intelligence</h1>
           <p className="text-slate-500 mt-1">AI-driven insights from your return data</p>
@@ -164,6 +165,8 @@ export default async function SellerAnalytics() {
           <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100 font-bold">Live Data</Badge>
         )}
       </div>
+
+      <SellerNav />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="shadow-sm border-slate-200">

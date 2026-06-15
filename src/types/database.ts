@@ -1,6 +1,6 @@
 export interface Product {
   id: string;
-  name: string;
+  title: string;
   original_price: number;
   category: string;
   image_url: string;
@@ -15,6 +15,7 @@ export interface Product {
     summary?: string | null;
     generatedDescription?: string | null;
     sellerNote?: string | null;
+    return_photo_urls?: string[];
   };
   estimated_resale_price?: number | null;
   relist_status?: string | null;
@@ -24,7 +25,8 @@ export interface Product {
 export interface Return {
   id: string;
   product_id: string;
-  status: string;
+  buyer_id: string;
+  status: 'processing' | 'inspected' | 'accepted' | 'standard_refund' | 'relisted' | 'rejected' | 'completed';
   return_reason: string;
   image_urls: string[];
   grade: string | null;
@@ -34,6 +36,7 @@ export interface Return {
   routing_decision: string | null;
   routing_reasoning: string | null;
   estimated_resale_price: number | null;
+  flaws_json?: any;
   created_at: string;
 }
 

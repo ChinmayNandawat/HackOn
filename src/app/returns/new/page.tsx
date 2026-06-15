@@ -49,9 +49,39 @@ export default function NewReturnPage() {
   // Load products to select
   useEffect(() => {
     async function loadProducts() {
-      const { data } = await supabase.from("products").select("*").limit(10);
-      if (data) setProducts(data);
+      // Fetch actual products the user has ordered
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*, products(*)")
+        .eq("buyer_id", "00000000-0000-0000-0000-000000000002")
+        .order("created_at", { ascending: false });
+        
+      if (!error && data) {
+        const orderedProducts = data
+          .map((order: any) => Array.isArray(order.products) ? order.products[0] : order.products)
+          .filter(Boolean);
+          
+        // Deduplicate in case they ordered the same item multiple times
+        const uniqueProducts: any[] = [];
+        const seenIds = new Set();
+        for (const p of orderedProducts) {
+          if (!seenIds.has(p.id)) {
+            seenIds.add(p.id);
+            uniqueProducts.push(p);
+          }
+        }
+        setProducts(uniqueProducts);
+      }
       setLoadingProducts(false);
+      
+      // Auto-select product if coming from orders page
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        const pid = params.get("productId");
+        if (pid) {
+          setSelectedProductId(pid);
+        }
+      }
     }
     loadProducts();
   }, []);
@@ -144,15 +174,32 @@ export default function NewReturnPage() {
     setSubmitError("");
     
     try {
-      const { error } = await supabase.from("returns").insert({
+      // 1. Create the return request
+      const { data: insertData, error: insertError } = await supabase.from("returns").insert({
+        buyer_id: "00000000-0000-0000-0000-000000000002",
         product_id: selectedProductId,
         status: "processing",
         reason: returnReason,
         return_photo_urls: angleOrder.map(key => photos[key].s3Url),
+      }).select("id").single();
+      
+      if (insertError) throw insertError;
+      if (!insertData || !insertData.id) throw new Error("Failed to retrieve new return ID.");
+      
+      // 2. Automatically run the AI Inspection pipeline
+      const processRes = await fetch("/api/process-return-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ returnId: insertData.id }),
       });
+
+      if (!processRes.ok) {
+        // We do not want to block the buyer if AI is temporarily down,
+        // it just means the seller will see it as "processing" and can manually run it later or we can retry.
+        console.warn("AI processing failed, but return was submitted:", await processRes.text());
+      }
       
-      if (error) throw error;
-      
+      // 3. Redirect to success
       router.push("/returns/success");
       
     } catch (err: any) {
@@ -200,7 +247,7 @@ export default function NewReturnPage() {
                   >
                     <option value="">-- Choose an item --</option>
                     {products.map(p => (
-                      <option key={p.id} value={p.id}>{p.title || p.name}</option>
+                      <option key={p.id} value={p.id}>{p.title}</option>
                     ))}
                   </select>
                 )}
@@ -342,7 +389,7 @@ export default function NewReturnPage() {
                   {submitting ? (
                     <>
                       <span className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin"></span>
-                      Submitting Return...
+                      Running AI Inspection...
                     </>
                   ) : "Submit Return Request"}
                 </button>

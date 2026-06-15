@@ -1,9 +1,9 @@
-import { ImpactResponse } from "@/types/impact";
+import { ImpactApiResponse } from "@/types/impact";
 import PersonalImpactStats from "@/components/PersonalImpactStats";
 import { RefreshCcw, ShieldCheck, HeartHandshake } from "lucide-react";
 
 export default async function ImpactPage() {
-  let impactData: ImpactResponse;
+  let impactData: ImpactApiResponse;
 
   try {
     const url = new URL(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/impact`);
@@ -14,11 +14,30 @@ export default async function ImpactPage() {
   } catch (err) {
     console.error("Failed to fetch global impact data:", err);
     impactData = {
-      personal: { items_diverted: 0, personal_co2_saved: 0, total_credits: 0, tier: "Bronze", next_tier_credits: 100, tier_progress_percent: 0, actions_taken: 0 },
-      global: { total_returns_processed: 0, total_co2_saved_kg: 0, total_money_saved_inr: 0, total_items_diverted: 0, last_updated: "" },
-      credits_breakdown: {},
+      global: { 
+        total_returns_processed: 0, 
+        total_co2_saved_kg: 0, 
+        total_money_saved_inr: 0,
+        total_items_diverted: 0,
+        last_updated: new Date().toISOString()
+      },
+      personal: { 
+        total_credits: 0, 
+        personal_co2_saved: 0, 
+        items_diverted: 0, 
+        actions_taken: 0, 
+        tier: "Bronze", 
+        next_tier_credits: 100, 
+        tier_progress_percent: 0 
+      },
+      credits_breakdown: {
+        keep_and_refund: { credits: 0, co2_saved_kg: 0, description: "" },
+        buy_refurbished: { credits: 0, co2_saved_kg: 0, description: "" },
+        donate: { credits: 0, co2_saved_kg: 0, description: "" },
+        return_processed: { credits: 0, co2_saved_kg: 0, description: "" }
+      },
       is_mocked: true
-    } as unknown as ImpactResponse;
+    };
   }
 
   return (

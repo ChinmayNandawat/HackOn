@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Step 2: Fetch the return record
-    let returnData: Record<string, unknown>;
+    let returnData: any;
     try {
       const { data, error } = await supabase
         .from('returns')
@@ -120,7 +120,7 @@ Return ONLY a valid JSON object with absolutely no markdown wrapping, no HTML, a
       category: product.category,
       original_price: product.original_price,
       current_price: returnData.flaws_json?.estimated_resale_price || Math.floor(product.original_price * 0.8),
-      image_url: product.image_url,
+      image_url: Array.isArray(returnData.return_photo_urls) && returnData.return_photo_urls.length > 0 ? returnData.return_photo_urls[0] : product.image_url,
       condition: 'refurbished',
       is_refurbished: true,
       parent_product_id: product.id,
@@ -131,7 +131,8 @@ Return ONLY a valid JSON object with absolutely no markdown wrapping, no HTML, a
         confidence: returnData.ai_confidence,
         summary: returnData.flaws_json?.routing_reasoning || "",
         generatedDescription,
-        sellerNote
+        sellerNote,
+        return_photo_urls: returnData.return_photo_urls || []
       },
       estimated_resale_price: returnData.flaws_json?.estimated_resale_price || 0,
       relist_status: 'active',
