@@ -70,18 +70,18 @@ async function main() {
 
   // Define exactly 12 rows as requested (7 specific actions + 5 padding)
   const actions = [
-    { action_type: 'return_processed', credits_earned: 10, co2_saved_kg: 0 },
-    { action_type: 'return_processed', credits_earned: 10, co2_saved_kg: 0 },
+    { action_type: 'return_processed', credits_earned: 0, co2_saved_kg: 0 },
+    { action_type: 'return_processed', credits_earned: 0, co2_saved_kg: 0 },
     { action_type: 'buy_refurbished', credits_earned: 30, co2_saved_kg: 1.8 },
     { action_type: 'buy_refurbished', credits_earned: 30, co2_saved_kg: 1.8 },
     { action_type: 'buy_refurbished', credits_earned: 30, co2_saved_kg: 1.8 },
-    { action_type: 'donate', credits_earned: 80, co2_saved_kg: 0.5 },
+    { action_type: 'donate', credits_earned: 0, co2_saved_kg: 0.5 },
     { action_type: 'keep_and_refund', credits_earned: 50, co2_saved_kg: 2.4 },
-    { action_type: 'return_processed', credits_earned: 10, co2_saved_kg: 0 },
+    { action_type: 'return_processed', credits_earned: 0, co2_saved_kg: 0 },
     { action_type: 'buy_refurbished', credits_earned: 30, co2_saved_kg: 1.8 },
-    { action_type: 'return_processed', credits_earned: 10, co2_saved_kg: 0 },
-    { action_type: 'return_processed', credits_earned: 10, co2_saved_kg: 0 },
-    { action_type: 'donate', credits_earned: 80, co2_saved_kg: 0.5 }
+    { action_type: 'return_processed', credits_earned: 0, co2_saved_kg: 0 },
+    { action_type: 'return_processed', credits_earned: 0, co2_saved_kg: 0 },
+    { action_type: 'donate', credits_earned: 0, co2_saved_kg: 0.5 }
   ];
 
   let totalDemoCredits = 0;

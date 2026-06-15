@@ -153,6 +153,7 @@ export default function AdminReturnDetailPage() {
 
       let actionType = "return_processed";
       if (record.routing_decision === "donate") actionType = "donate";
+      if (record.routing_decision === "recycle") actionType = "recycle";
       if (record.routing_decision === "keep_and_refund") actionType = "keep_and_refund";
 
       // START IMPACT POST (Fire and forget)
@@ -266,7 +267,7 @@ export default function AdminReturnDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: record.buyer_id,
-          actionType: 'return_processed',
+          actionType: 'relist',
           productId: record.product_id
         })
       }).catch(console.error);

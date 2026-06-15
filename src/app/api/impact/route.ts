@@ -36,8 +36,10 @@ export interface ImpactApiResponse {
 const CREDITS_RULES = {
   keep_and_refund: { credits: 50, co2_saved_kg: 2.4, description: "Keep item for partial refund" },
   buy_refurbished: { credits: 30, co2_saved_kg: 1.8, description: "Purchase a refurbished item" },
-  donate: { credits: 80, co2_saved_kg: 0.5, description: "Donate item to charity" },
-  return_processed: { credits: 10, co2_saved_kg: 0, description: "Standard return processed via ReLife" },
+  donate: { credits: 0, co2_saved_kg: 0.5, description: "Donate item to charity" },
+  recycle: { credits: 0, co2_saved_kg: 0.8, description: "Recycle item responsibly" },
+  relist: { credits: 0, co2_saved_kg: 1.2, description: "Item relisted as refurbished" },
+  return_processed: { credits: 0, co2_saved_kg: 0, description: "Standard return processed via ReLife" },
   reject: { credits: 0, co2_saved_kg: 0, description: "Return request declined" },
 };
 
@@ -240,7 +242,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (stats) {
-      const isDiverted = ['buy_refurbished', 'donate'].includes(actionType);
+      const isDiverted = ['buy_refurbished', 'donate', 'relist', 'recycle'].includes(actionType);
       await supabase
         .from("platform_stats")
         .update({

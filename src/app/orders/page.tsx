@@ -126,9 +126,8 @@ export default function OrdersPage() {
 
   const getCreditsForDecision = (decision: string) => {
     if (decision === "keep_and_refund" || decision === "keep_refund") return 50;
-    if (decision === "donate") return 80;
-    if (decision === "reject") return 0;
-    return 10;
+    if (decision === "buy_refurbished") return 30;
+    return 0;
   };
 
   const getCompletedOutcomeText = (ret: any) => {
