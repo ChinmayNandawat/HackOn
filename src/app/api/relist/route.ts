@@ -113,13 +113,43 @@ Return ONLY a valid JSON object with absolutely no markdown wrapping, no HTML, a
       // Fallback values are already set
     }
 
+    // Feature: Local-Availability Deal Window
+    const LOCAL_DEAL_WINDOW_HOURS = 24;
+
+    // Deterministic location based on returnId last char code
+    const CITIES = ["Mumbai", "Delhi", "Bangalore", "Chennai"];
+    const charCode = returnId.length > 0 ? returnId.charCodeAt(returnId.length - 1) : 0;
+    const mockLocation = CITIES[charCode % CITIES.length];
+
+    // Standard Price is the normal refurbished price (before any extra local discount)
+    const standardPrice = returnData.flaws_json?.estimated_resale_price || Math.floor(product.original_price * 0.8);
+    
+    // Calculate a scaled discount: 10% for <5000, 8% for 5000-20000, 5% for >20000
+    let discountPercent = 0.05;
+    if (standardPrice < 5000) {
+      discountPercent = 0.10;
+    } else if (standardPrice < 20000) {
+      discountPercent = 0.08;
+    }
+
+    const localDealPrice = Math.floor(standardPrice * (1 - discountPercent));
+    
+    // current_price is set to localDealPrice initially since it starts as a local deal
+    const currentPrice = localDealPrice;
+    
+    const localOnlyUntil = new Date(Date.now() + LOCAL_DEAL_WINDOW_HOURS * 60 * 60 * 1000).toISOString();
+
     // Step 4: Insert new product row
     const newProductPayload = {
       title: generatedTitle,
       description: generatedDescription,
       category: product.category,
       original_price: product.original_price,
-      current_price: returnData.flaws_json?.estimated_resale_price || Math.floor(product.original_price * 0.8),
+      current_price: currentPrice,
+      local_deal_price: localDealPrice,
+      standard_price: standardPrice,
+      location: mockLocation,
+      local_only_until: localOnlyUntil,
       image_url: Array.isArray(returnData.return_photo_urls) && returnData.return_photo_urls.length > 0 ? returnData.return_photo_urls[0] : product.image_url,
       condition: 'refurbished',
       is_refurbished: true,

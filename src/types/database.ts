@@ -20,6 +20,10 @@ export interface Product {
   estimated_resale_price?: number | null;
   relist_status?: string | null;
   relisted_at?: string | null;
+  location?: string | null;
+  local_only_until?: string | null;
+  local_deal_price?: number | null;
+  standard_price?: number | null;
 }
 
 export interface Return {
