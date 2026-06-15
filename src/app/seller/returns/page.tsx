@@ -43,6 +43,7 @@ export default function AdminReturnsListPage() {
         .select(`
           id,
           product_id,
+          buyer_id,
           status,
           return_reason:reason,
           image_urls:return_photo_urls,
@@ -69,6 +70,7 @@ export default function AdminReturnsListPage() {
       const mappedData: ReturnWithProduct[] = (data || []).map((rawItem: any) => ({
         id: rawItem.id,
         product_id: rawItem.product_id,
+        buyer_id: rawItem.buyer_id,
         status: rawItem.status,
         return_reason: rawItem.return_reason,
         image_urls: rawItem.image_urls || [],
@@ -79,6 +81,7 @@ export default function AdminReturnsListPage() {
         routing_decision: rawItem.routing_decision,
         routing_reasoning: rawItem.flaws_json?.routing_reasoning || null,
         estimated_resale_price: rawItem.flaws_json?.estimated_resale_price || null,
+        offer_sent_to_buyer: rawItem.flaws_json?.offer_sent_to_buyer || false,
         created_at: rawItem.created_at,
         products: rawItem.products ? {
           id: rawItem.products.id,
@@ -339,7 +342,9 @@ export default function AdminReturnsListPage() {
               };
               
               const currentStatusClass = statusClasses[item.status] || "bg-gray-50 text-gray-700 border-gray-200";
-              const currentStatusLabel = statusLabels[item.status] || item.status;
+              const currentStatusLabel = (item.status === "inspected" && item.routing_decision === "keep_and_refund" && (item as any).offer_sent_to_buyer)
+                ? "Offer Sent"
+                : statusLabels[item.status] || item.status;
 
               // Color codes for Grade (A green, B teal, C amber, D red)
               const gradeClasses = item.grade ? {

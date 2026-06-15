@@ -83,6 +83,8 @@ export async function POST(req: NextRequest) {
       flaws: gradeResult.flaws || [],
       routing_reasoning: routeResult.reasoning,
       estimated_resale_price: routeResult.estimatedResalePrice || 0,
+      suggested_refund_amount: routeResult.estimatedRefundAmount || 0,
+      offer_sent_to_buyer: false,
     };
 
     const { error: updateErr } = await supabase

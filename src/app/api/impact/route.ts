@@ -38,6 +38,7 @@ const CREDITS_RULES = {
   buy_refurbished: { credits: 30, co2_saved_kg: 1.8, description: "Purchase a refurbished item" },
   donate: { credits: 80, co2_saved_kg: 0.5, description: "Donate item to charity" },
   return_processed: { credits: 10, co2_saved_kg: 0, description: "Standard return processed via ReLife" },
+  reject: { credits: 0, co2_saved_kg: 0, description: "Return request declined" },
 };
 
 function calculateTier(totalCredits: number) {

@@ -25,6 +25,7 @@ export interface Product {
 export interface Return {
   id: string;
   product_id: string;
+  buyer_id: string;
   status: 'processing' | 'inspected' | 'accepted' | 'standard_refund' | 'relisted' | 'rejected' | 'completed';
   return_reason: string;
   image_urls: string[];
@@ -35,6 +36,7 @@ export interface Return {
   routing_decision: string | null;
   routing_reasoning: string | null;
   estimated_resale_price: number | null;
+  flaws_json?: any;
   created_at: string;
 }
 

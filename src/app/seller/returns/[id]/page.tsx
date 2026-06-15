@@ -21,6 +21,8 @@ import {
   AlertTriangle,
   HelpCircle,
   ThumbsUp,
+  ThumbsDown,
+  Info,
   X,
   Store,
   Tag
@@ -40,6 +42,10 @@ export default function AdminReturnDetailPage() {
 
   // Dynamic overrides dropdown toggle
   const [overrideSelect, setOverrideSelect] = useState<string>("");
+
+  // Refund offer state
+  const [refundOfferAmount, setRefundOfferAmount] = useState<string>("");
+  const [isSendingOffer, setIsSendingOffer] = useState(false);
 
   // Lightbox state
   const [expandedImage, setExpandedImage] = useState<{ url: string, imageFlaws?: any[], originalIndex: number } | null>(null);
@@ -87,6 +93,7 @@ export default function AdminReturnDetailPage() {
       const mappedRecord: ReturnWithProduct = {
         id: rawItem.id,
         product_id: rawItem.product_id,
+        buyer_id: rawItem.buyer_id,
         status: rawItem.status,
         return_reason: rawItem.return_reason,
         image_urls: rawItem.image_urls || [],
@@ -97,6 +104,7 @@ export default function AdminReturnDetailPage() {
         routing_decision: rawItem.routing_decision,
         routing_reasoning: rawItem.flaws_json?.routing_reasoning || null,
         estimated_resale_price: rawItem.flaws_json?.estimated_resale_price || null,
+        flaws_json: rawItem.flaws_json || null,
         created_at: rawItem.created_at,
         products: rawItem.products ? {
           id: rawItem.products.id,
@@ -111,6 +119,9 @@ export default function AdminReturnDetailPage() {
       setRecord(mappedRecord);
       if (mappedRecord.routing_decision) {
         setOverrideSelect(mappedRecord.routing_decision);
+      }
+      if (mappedRecord.flaws_json?.suggested_refund_amount) {
+        setRefundOfferAmount(String(mappedRecord.flaws_json?.refund_offer_amount || mappedRecord.flaws_json?.suggested_refund_amount || 0));
       }
     } catch (err: any) {
       console.error("[api/route-decision] Fetch return detail error:", err);
@@ -140,13 +151,17 @@ export default function AdminReturnDetailPage() {
 
       if (updateError) throw updateError;
 
+      let actionType = "return_processed";
+      if (record.routing_decision === "donate") actionType = "donate";
+      if (record.routing_decision === "keep_and_refund") actionType = "keep_and_refund";
+
       // START IMPACT POST (Fire and forget)
       fetch('/api/impact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sessionId: 'admin-session-001',
-          actionType: 'return_processed',
+          sessionId: record.buyer_id,
+          actionType,
           productId: record.product_id
         })
       }).catch(console.error);
@@ -163,6 +178,46 @@ export default function AdminReturnDetailPage() {
     } catch (err: any) {
       console.error("[api/route-decision] Accept Error:", err);
       setError("Failed to finalize return status: " + err.message);
+    }
+  };
+
+  // Action Bar: Send Refund Offer
+  const handleSendOffer = async () => {
+    if (!record || !refundOfferAmount) return;
+    setIsSendingOffer(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const currentFlawsJson = record.flaws_json || {};
+      const updatedFlawsJson = {
+        ...currentFlawsJson,
+        refund_offer_amount: Number(refundOfferAmount),
+        offer_sent_to_buyer: true
+      };
+
+      const { error: updateError } = await supabase
+        .from("returns")
+        .update({
+          flaws_json: updatedFlawsJson,
+        })
+        .eq("id", id);
+
+      if (updateError) throw updateError;
+
+      setRecord((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          flaws_json: updatedFlawsJson,
+        };
+      });
+      setSuccessMessage(`Partial refund offer of ₹${refundOfferAmount} sent to buyer!`);
+    } catch (err: any) {
+      console.error("Send Offer Error:", err);
+      setError("Failed to send offer: " + err.message);
+    } finally {
+      setIsSendingOffer(false);
     }
   };
 
@@ -204,11 +259,59 @@ export default function AdminReturnDetailPage() {
           status: "relisted",
         };
       });
+
+      // START IMPACT POST (Fire and forget)
+      fetch('/api/impact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: record.buyer_id,
+          actionType: 'return_processed',
+          productId: record.product_id
+        })
+      }).catch(console.error);
+      // END IMPACT POST
       
     } catch (err: any) {
       console.error("Relist error:", err);
       setRelistError(err.message || "An unexpected error occurred during relisting");
       // Intentionally not setting isRelisting to false here so the 'Try Again' button handles it
+    }
+  };
+
+  // Action Bar: Reject Decision
+  const handleRejectDecision = async () => {
+    if (!record) return;
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const { error: updateError } = await supabase
+        .from("returns")
+        .update({ status: "rejected" })
+        .eq("id", id);
+
+      if (updateError) throw updateError;
+
+      // IMPACT POST (0 credits for reject)
+      fetch('/api/impact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: record.buyer_id,
+          actionType: 'reject',
+          productId: record.product_id
+        })
+      }).catch(console.error);
+
+      setRecord((prev) => {
+        if (!prev) return null;
+        return { ...prev, status: "rejected" };
+      });
+      setSuccessMessage("Return request has been declined.");
+    } catch (err: any) {
+      console.error("[api/route-decision] Reject Error:", err);
+      setError("Failed to reject return: " + err.message);
     }
   };
 
@@ -568,6 +671,7 @@ export default function AdminReturnDetailPage() {
                         {record.routing_decision === "needs_repair_then_relist" && "Send for Repair"}
                         {record.routing_decision === "donate" && "Donate"}
                         {record.routing_decision === "recycle" && "Recycle"}
+                        {record.routing_decision === "keep_and_refund" && "Keep & Partial Refund"}
                       </span>
                     </div>
                   </div>
@@ -587,7 +691,7 @@ export default function AdminReturnDetailPage() {
                 </div>
 
                 {/* Section 4: Action Bar */}
-                {record.status !== "completed" && record.status !== "relisted" ? (
+                {record.status !== "completed" && record.status !== "relisted" && record.status !== "rejected" ? (
                   <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Dashboard Actions</h3>
                     
@@ -625,13 +729,64 @@ export default function AdminReturnDetailPage() {
                                 </>
                               )}
                             </button>
+                          ) : record.routing_decision === "keep_and_refund" ? (
+                            <div className="w-full">
+                              {record.status === "standard_refund" ? (
+                                <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg text-center flex flex-col gap-2">
+                                  <p className="text-slate-700 font-bold text-xs">Buyer Rejected Offer & Requested Standard Refund</p>
+                                  <button onClick={handleAcceptDecision} className="w-full py-2 bg-slate-800 text-white rounded hover:bg-slate-900 font-bold text-xs">
+                                    Approve & Complete
+                                  </button>
+                                </div>
+                              ) : record.status === "accepted" ? (
+                                <div className="bg-green-50 border border-green-200 p-3 rounded-lg text-center flex flex-col gap-2">
+                                  <p className="text-green-700 font-bold text-xs">Buyer Accepted Offer of ₹{record.flaws_json?.refund_offer_amount}</p>
+                                  <button onClick={handleAcceptDecision} className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 font-bold text-xs">
+                                    Approve & Complete
+                                  </button>
+                                </div>
+                              ) : record.flaws_json?.offer_sent_to_buyer ? (
+                                <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-lg text-center">
+                                  <p className="text-emerald-700 font-bold text-xs">Offer Sent to Buyer: ₹{record.flaws_json.refund_offer_amount}</p>
+                                  <p className="text-[10px] text-emerald-600 mt-1">Awaiting buyer response.</p>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col gap-2">
+                                  <label className="text-xs font-bold text-gray-700">Refund Offer Amount (₹)</label>
+                                  <input 
+                                    type="number"
+                                    value={refundOfferAmount}
+                                    onChange={(e) => setRefundOfferAmount(e.target.value)}
+                                    className="w-full py-2 px-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                    placeholder="e.g. 500"
+                                  />
+                                  <p className="text-[10px] text-gray-500 italic">AI Suggested: ₹{record.flaws_json?.suggested_refund_amount || 0}</p>
+                                  <button
+                                    onClick={handleSendOffer}
+                                    disabled={isSendingOffer || !refundOfferAmount}
+                                    className="w-full py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition disabled:bg-gray-300"
+                                  >
+                                    {isSendingOffer ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                                    Send Offer to Buyer
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          ) : record.routing_decision === "reject" ? (
+                            <button
+                              onClick={handleRejectDecision}
+                              className="w-full py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-bold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition"
+                            >
+                              <ThumbsDown className="w-4 h-4" />
+                              Decline Return
+                            </button>
                           ) : (
                             <button
                               onClick={handleAcceptDecision}
                               className="w-full py-2.5 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-bold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition"
                             >
                               <ThumbsUp className="w-4 h-4" />
-                              Accept Decision
+                              Approve & Finalize
                             </button>
                           )}
 
@@ -650,7 +805,7 @@ export default function AdminReturnDetailPage() {
                       )}
 
                       {/* Override Select Dropdown */}
-                      {!relistSuccess && (
+                      {!relistSuccess && !record.flaws_json?.offer_sent_to_buyer && record.status !== "accepted" && record.status !== "standard_refund" && (
                         <div className="relative">
                           <select
                             value={overrideSelect}
@@ -660,8 +815,10 @@ export default function AdminReturnDetailPage() {
                             <option value="" disabled>Override Decision...</option>
                             <option value="relist_as_refurbished">Relist as Refurbished</option>
                             <option value="needs_repair_then_relist">Send for Repair</option>
+                            <option value="keep_and_refund">Keep & Partial Refund</option>
                             <option value="donate">Donate</option>
                             <option value="recycle">Recycle</option>
+                            <option value="reject">Reject Return</option>
                           </select>
                           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
                             <HelpCircle className="w-3.5 h-3.5" />

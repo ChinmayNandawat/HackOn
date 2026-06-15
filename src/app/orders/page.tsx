@@ -19,12 +19,12 @@ export default function OrdersPage() {
   const [actionErrorId, setActionErrorId] = useState<{ id: string; msg: string } | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
+  const BUYER_ID = "00000000-0000-0000-0000-000000000002";
+
   useEffect(() => {
     async function loadData() {
-      const sessionId = getOrCreateSessionId();
-      
       try {
-        const impactRes = await fetch(`/api/impact?sessionId=${sessionId}`);
+        const impactRes = await fetch(`/api/impact?sessionId=${BUYER_ID}`);
         if (impactRes.ok) {
           const impactData = await impactRes.json();
           setCredits(impactData.personal?.total_credits || 0);
@@ -37,14 +37,14 @@ export default function OrdersPage() {
       const { data: ordersData } = await supabase
         .from("orders")
         .select("*, products(id, title, image_url, category)")
-        .eq("buyer_id", "00000000-0000-0000-0000-000000000002")
+        .eq("buyer_id", BUYER_ID)
         .order("created_at", { ascending: false });
 
       // Fetch returns
       const { data: returnsData } = await supabase
         .from("returns")
         .select("*")
-        .eq("buyer_id", "00000000-0000-0000-0000-000000000002");
+        .eq("buyer_id", BUYER_ID);
 
       if (ordersData) setOrders(ordersData);
       
@@ -67,24 +67,6 @@ export default function OrdersPage() {
     setActionErrorId(null);
     
     try {
-      const sessionId = getOrCreateSessionId();
-      let actionType = "return_processed";
-      if (ret.routing_decision?.includes("keep")) {
-        actionType = "keep_and_refund";
-      } else if (ret.routing_decision === "donate") {
-        actionType = "donate";
-      }
-
-      await fetch("/api/impact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId,
-          actionType,
-          productId: ret.product_id
-        })
-      });
-
       const { error } = await supabase
         .from("returns")
         .update({ status: "accepted" })
@@ -97,14 +79,7 @@ export default function OrdersPage() {
         [ret.product_id]: { ...prev[ret.product_id], status: "accepted" }
       }));
       
-      setToastMsg("Decision accepted! Green Credits added to your account 🌱");
-      
-      const impactRes = await fetch(`/api/impact?sessionId=${sessionId}`);
-      if (impactRes.ok) {
-        const impactData = await impactRes.json();
-        setCredits(impactData.personal?.total_credits || 0);
-      }
-
+      setToastMsg("Offer accepted! Waiting for seller to finalize.");
       setTimeout(() => setToastMsg(null), 3000);
     } catch (err: any) {
       console.error(err);
@@ -138,17 +113,21 @@ export default function OrdersPage() {
     }
   };
 
-  const getDecisionText = (decision: string) => {
-    if (decision === "relist_as_refurbished") return "Return approved — please ship the item back";
-    if (decision === "needs_repair_then_relist") return "Return approved — please ship the item back for refurbishment";
-    if (decision === "keep_and_refund" || decision === "keep_refund") return "Keep your item — a partial refund will be issued to your account";
-    if (decision === "donate") return "Your item will be donated to a good cause — thank you.";
-    return "Return processed.";
+  const getDecisionText = (decision: string, amount?: number) => {
+    if (decision === "relist_as_refurbished") return "Return approved — pending seller confirmation.";
+    if (decision === "needs_repair_then_relist") return "Return approved — pending seller confirmation.";
+    if (decision === "keep_and_refund" || decision === "keep_refund") {
+      return amount ? `Keep your item — the seller has offered a partial refund of ₹${amount}.` : "The seller is reviewing your return to offer a partial refund.";
+    }
+    if (decision === "donate") return "Item marked for donation — pending seller confirmation.";
+    if (decision === "reject") return "Inspection found no valid defects. Pending final seller confirmation.";
+    return "Return processed — pending seller confirmation.";
   };
 
   const getCreditsForDecision = (decision: string) => {
     if (decision === "keep_and_refund" || decision === "keep_refund") return 50;
     if (decision === "donate") return 80;
+    if (decision === "reject") return 0;
     return 10;
   };
 
@@ -282,16 +261,18 @@ export default function OrdersPage() {
                             <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 font-bold">!</div>
                             <div>
                               <h4 className="font-black text-blue-950 text-lg">Decision Ready</h4>
-                              <p className="text-sm font-bold text-blue-800 mt-1">{getDecisionText(ret.routing_decision)}</p>
+                              <p className="text-sm font-bold text-blue-800 mt-1">{getDecisionText(ret.routing_decision, ret.flaws_json?.refund_offer_amount)}</p>
                               <p className="text-xs text-blue-600/80 mt-1">{ret.routing_reasoning}</p>
                             </div>
                           </div>
 
                           <div className="flex flex-wrap gap-2 pt-2">
-                            <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 font-bold px-3 py-1 text-xs">
-                              <Sparkles className="w-3 h-3 mr-1 inline-block" />
-                              +{creditsEarned} Green Credits if you accept
-                            </Badge>
+                            {creditsEarned > 0 && (
+                              <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 font-bold px-3 py-1 text-xs">
+                                <Sparkles className="w-3 h-3 mr-1 inline-block" />
+                                +{creditsEarned} Green Credits upon finalization
+                              </Badge>
+                            )}
                             {isKeep && (
                               <Badge className="bg-sky-100 text-sky-800 hover:bg-sky-100 border border-sky-200 font-bold px-3 py-1 text-xs">
                                 <Cloud className="w-3 h-3 mr-1 inline-block" />
@@ -300,23 +281,32 @@ export default function OrdersPage() {
                             )}
                           </div>
 
-                          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-blue-200/50 mt-4">
-                            <Button 
-                              onClick={() => handleAcceptDecision(ret)}
-                              disabled={actionLoadingId === ret.id}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-                            >
-                              {actionLoadingId === ret.id ? "Processing..." : "Accept Decision"}
-                            </Button>
-                            <Button 
-                              onClick={() => handleStandardRefund(ret)}
-                              disabled={actionLoadingId === ret.id}
-                              variant="outline"
-                              className="font-bold text-slate-600 bg-white"
-                            >
-                              Request Standard Refund
-                            </Button>
-                          </div>
+                          {isKeep && ret.flaws_json?.offer_sent_to_buyer ? (
+                            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-blue-200/50 mt-4">
+                              <Button 
+                                onClick={() => handleAcceptDecision(ret)}
+                                disabled={actionLoadingId === ret.id}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                              >
+                                {actionLoadingId === ret.id ? "Processing..." : "Accept Decision"}
+                              </Button>
+                              <Button 
+                                onClick={() => handleStandardRefund(ret)}
+                                disabled={actionLoadingId === ret.id}
+                                variant="outline"
+                                className="font-bold text-slate-600 bg-white"
+                              >
+                                Request Standard Refund
+                              </Button>
+                            </div>
+                          ) : isKeep && !ret.flaws_json?.offer_sent_to_buyer ? (
+                            <div className="pt-4 border-t border-blue-200/50 mt-4">
+                              <p className="text-sm font-semibold text-blue-800 flex items-center gap-2">
+                                <Clock className="w-4 h-4 animate-spin-slow" />
+                                Pending Seller Offer... Action buttons will appear shortly.
+                              </p>
+                            </div>
+                          ) : null}
 
                           {actionErrorId?.id === ret.id && (
                             <div className="flex items-center gap-2 text-red-600 text-sm font-bold mt-2">
@@ -357,6 +347,12 @@ export default function OrdersPage() {
                           <div>
                             <h4 className="font-black text-blue-900">Completed</h4>
                             <p className="text-sm font-bold text-blue-700 mt-0.5">{getCompletedOutcomeText(ret)}</p>
+                            {creditsEarned > 0 && ret.status !== "rejected" && (
+                              <p className="text-xs font-bold text-emerald-700 mt-2 flex items-center gap-1">
+                                <Sparkles className="w-3 h-3" />
+                                +{creditsEarned} Green Credits awarded
+                              </p>
+                            )}
                           </div>
                         </div>
                       )}
