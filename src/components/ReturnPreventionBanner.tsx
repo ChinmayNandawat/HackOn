@@ -21,7 +21,7 @@ export default function ReturnPreventionBanner({
   suggestion,
   refurbishedAlternative,
 }: ReturnPreventionBannerProps) {
-  if (riskPercent < 30) return null;
+  if (riskPercent < 25) return null;
 
   return (
     <div className="bg-amber-50 border-l-4 border-amber-500 rounded-r-xl p-5 shadow-sm space-y-3 relative overflow-hidden my-4">

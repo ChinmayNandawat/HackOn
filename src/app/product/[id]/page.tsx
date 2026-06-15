@@ -82,7 +82,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   }
 
   // Get risk data
-  const riskData = getReturnRiskData(product.id, product.return_risk_score);
+  const riskData = getReturnRiskData(product.id, product.return_risk_score, product.category);
 
   return (
     <ProductDetailClient 

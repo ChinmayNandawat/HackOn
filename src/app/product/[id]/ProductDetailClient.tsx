@@ -118,7 +118,7 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
       </div>
 
       {/* RETURN PREVENTION BANNER */}
-      {!isRefurbished && (
+      {!isRefurbished && (product.category === 'Shoes' || product.category === 'Footwear') && (
         <ReturnPreventionBanner 
           riskPercent={riskData.riskPercent}
           reason={riskData.reason}

@@ -5,15 +5,23 @@ export interface ReturnRiskData {
 }
 
 // TODO: replace with /api/prevent once Member B ships it
-export function getReturnRiskData(productId: string, existingRiskScore?: number | null): ReturnRiskData {
-  // Use the database's return_risk_score if available, otherwise mock it between 10-60
-  const riskPercent = existingRiskScore || Math.floor(Math.random() * 50) + 10;
+export function getReturnRiskData(productId: string, existingRiskScore?: number | null, category?: string): ReturnRiskData {
+  // For demo: Ensure Shoes trigger the prevention banner.
+  let riskPercent = existingRiskScore;
   
-  if (riskPercent >= 30) {
+  if (category === 'Shoes' || category === 'Footwear') {
+    // If the database score is missing or too low, mock it to 25% for the demo
+    riskPercent = (existingRiskScore && existingRiskScore >= 25) ? existingRiskScore : 25;
+  } else {
+    // Default low risk for electronics/other to hide the banner
+    riskPercent = existingRiskScore || 5;
+  }
+  
+  if (riskPercent >= 25) {
     return {
       riskPercent,
-      reason: "Runs small in the shoulders",
-      suggestion: "sizing up for a better fit",
+      reason: "Runs narrow in the toe box",
+      suggestion: "sizing up a size",
     };
   }
   
