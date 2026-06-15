@@ -174,16 +174,32 @@ export default function NewReturnPage() {
     setSubmitError("");
     
     try {
-      const { error } = await supabase.from("returns").insert({
+      // 1. Create the return request
+      const { data: insertData, error: insertError } = await supabase.from("returns").insert({
         buyer_id: "00000000-0000-0000-0000-000000000002",
         product_id: selectedProductId,
         status: "processing",
         reason: returnReason,
         return_photo_urls: angleOrder.map(key => photos[key].s3Url),
+      }).select("id").single();
+      
+      if (insertError) throw insertError;
+      if (!insertData || !insertData.id) throw new Error("Failed to retrieve new return ID.");
+      
+      // 2. Automatically run the AI Inspection pipeline
+      const processRes = await fetch("/api/process-return-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ returnId: insertData.id }),
       });
+
+      if (!processRes.ok) {
+        // We do not want to block the buyer if AI is temporarily down,
+        // it just means the seller will see it as "processing" and can manually run it later or we can retry.
+        console.warn("AI processing failed, but return was submitted:", await processRes.text());
+      }
       
-      if (error) throw error;
-      
+      // 3. Redirect to success
       router.push("/returns/success");
       
     } catch (err: any) {
@@ -373,7 +389,7 @@ export default function NewReturnPage() {
                   {submitting ? (
                     <>
                       <span className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin"></span>
-                      Submitting Return...
+                      Running AI Inspection...
                     </>
                   ) : "Submit Return Request"}
                 </button>

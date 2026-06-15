@@ -9,7 +9,8 @@ interface Product {
   id: string;
   title: string;
   original_price?: number;
-  current_price: number;
+  estimated_resale_price?: number;
+  current_price?: number; // fallback
   condition: string;
   is_refurbished?: boolean;
   grade?: string;
@@ -80,7 +81,7 @@ export default function MarketplaceClient({ products }: { products: Product[] })
                   <h3 className="font-semibold text-lg line-clamp-1">{product.title}</h3>
                   <div className="flex items-center gap-2 mt-1">
                     <p className={isRefurb ? 'text-green-700 font-bold' : 'text-slate-900 font-semibold'}>
-                      ₹{product.current_price}
+                      ₹{(isRefurb ? product.estimated_resale_price : product.original_price) || product.current_price || 0}
                     </p>
                     {isRefurb && product.original_price && (
                       <p className="text-slate-400 line-through text-sm">₹{product.original_price}</p>

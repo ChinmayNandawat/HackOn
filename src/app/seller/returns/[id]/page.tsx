@@ -32,7 +32,6 @@ export default function AdminReturnDetailPage() {
 
   const [record, setRecord] = useState<ReturnWithProduct | null>(null);
   const [loading, setLoading] = useState(true);
-  const [inspecting, setInspecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isRelisting, setIsRelisting] = useState(false);
@@ -121,134 +120,7 @@ export default function AdminReturnDetailPage() {
     }
   };
 
-  // Run S3 vision grading and economic routing sequential API pipeline
-  const runFullAIInspection = async () => {
-    if (!record) return;
-
-    const imageUrls = record.image_urls;
-    if (!imageUrls || imageUrls.length === 0) {
-      setError("No images available for inspection");
-      return;
-    }
-
-    setInspecting(true);
-    setError(null);
-    setSuccessMessage(null);
-
-    // Optimistic UI update: immediately update status to processing in Supabase
-    try {
-      const { error: optimisticError } = await supabase
-        .from("returns")
-        .update({ status: "processing" })
-        .eq("id", id);
-
-      if (optimisticError) throw optimisticError;
-
-      setRecord((prev) => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          status: "processing",
-        };
-      });
-    } catch (err: any) {
-      console.error("[api/route-decision] Optimistic update failed:", err);
-      setError("Failed to set status to processing: " + err.message);
-      setInspecting(false);
-      return;
-    }
-
-    try {
-      const product = record.products;
-      const category = product?.category || "Unknown";
-      const originalPrice = product?.original_price || 0;
-
-      // 1. Call vision grading API
-      const gradeResponse = await fetch("/api/grade", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageUrls: imageUrls,
-          productCategory: category,
-        }),
-      });
-
-      if (!gradeResponse.ok) {
-        const gradeErr = await gradeResponse.json();
-        throw new Error(gradeErr.error || "AI grading vision analysis failed.");
-      }
-
-      const gradeResult = await gradeResponse.json();
-
-      // 2. Call route decision API
-      const routeResponse = await fetch("/api/route-decision", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          grade: gradeResult.grade,
-          score: gradeResult.score,
-          productCategory: category,
-          originalPrice: originalPrice,
-          flawSummary: gradeResult.summary,
-          confidence: gradeResult.confidence.toLowerCase(),
-        }),
-      });
-
-      if (!routeResponse.ok) {
-        const routeErr = await routeResponse.json();
-        throw new Error(routeErr.error || "AI routing logic analysis failed.");
-      }
-
-      const routeResult = await routeResponse.json();
-
-      // 3. Save combined result payload to Supabase
-      // Storing reasoning and price inside flaws_json since columns are missing from DB
-      const combinedFlawsJson = {
-        flaws: gradeResult.flaws || [],
-        routing_reasoning: routeResult.reasoning,
-        estimated_resale_price: routeResult.estimatedResalePrice || 0,
-      };
-
-      const { error: updateError } = await supabase
-        .from("returns")
-        .update({
-          ai_grade: gradeResult.grade,
-          ai_score: gradeResult.score,
-          ai_confidence: gradeResult.confidence.charAt(0).toUpperCase() + gradeResult.confidence.slice(1),
-          ai_routing_decision: routeResult.decision,
-          status: "inspected",
-          flaws_json: combinedFlawsJson,
-        })
-        .eq("id", id);
-
-      if (updateError) throw updateError;
-
-      // Update local react state
-      setRecord((prev) => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          status: "inspected",
-          grade: gradeResult.grade,
-          score: gradeResult.score,
-          confidence: gradeResult.confidence.charAt(0).toUpperCase() + (gradeResult.confidence.slice(1) as any),
-          routing_decision: routeResult.decision,
-          flaws: gradeResult.flaws || [],
-          routing_reasoning: routeResult.reasoning,
-          estimated_resale_price: routeResult.estimatedResalePrice || 0,
-          flaws_json: combinedFlawsJson,
-        };
-      });
-      setOverrideSelect(routeResult.decision);
-      setSuccessMessage("AI Inspection completed successfully!");
-
-    } catch (err: any) {
-      console.error("[api/route-decision] Inspection Pipeline Error:", err);
-      setError(err?.message || "An unexpected error occurred during AI inspection.");
-    } finally {
-      setInspecting(false);
-    }
-  };
+  // We removed the manual runFullAIInspection function as this is now automated during the buyer submission flow!
 
   // Action Bar: Accept Decision
   const handleAcceptDecision = async () => {
@@ -604,28 +476,7 @@ export default function AdminReturnDetailPage() {
 
           {/* RIGHT COLUMN: AI Command Center */}
           <div className="space-y-6">
-            {/* AI Call Trigger Button */}
-            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm text-center">
-              <h2 className="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wider block text-left">AI Grading Command</h2>
-              
-              <button
-                onClick={runFullAIInspection}
-                disabled={inspecting}
-                className="w-full py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 active:scale-[0.98] transition flex items-center justify-center gap-2 text-sm font-bold disabled:bg-gray-300 disabled:text-gray-500 disabled:scale-100"
-              >
-                {inspecting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Inspecting product...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 text-amber-400 fill-amber-400" />
-                    {hasInspectionResults ? "Run Re-Inspection" : "Run Full AI Inspection"}
-                  </>
-                )}
-              </button>
-            </div>
+            {/* The AI Call Trigger Button was removed since it is now fully automated. */}
 
             {/* AI Results Display */}
             {hasInspectionResults && (
