@@ -26,13 +26,13 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="border-b bg-white p-4 flex justify-between items-center sticky top-0 z-50">
-      <div className="flex items-center gap-6">
+    <nav className="border-b bg-white p-3 sm:p-4 flex flex-col md:flex-row justify-between items-center sticky top-0 z-50 gap-3 md:gap-0">
+      <div className="flex items-center justify-between w-full md:w-auto gap-4">
         <Link href="/" className="text-xl font-bold text-slate-900">
           ReLife
         </Link>
-        <div className="flex items-center gap-1.5 text-sm text-slate-600 bg-slate-100 px-3 py-1.5 rounded-full">
-          <MapPin className="w-4 h-4 text-emerald-600" />
+        <div className="flex items-center gap-1 text-xs sm:text-sm text-slate-600 bg-slate-100 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full">
+          <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-600" />
           <select 
             className="bg-transparent border-none outline-none font-medium text-slate-700 cursor-pointer"
             value={location}
@@ -44,16 +44,16 @@ export default function Navbar() {
           </select>
         </div>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 no-scrollbar">
         {/* Buyer Links */}
-        <Link href="/orders" className="text-sm font-medium text-slate-600 hover:text-slate-900">Orders</Link>
-        <Link href="/impact" className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-emerald-700 bg-emerald-50 rounded-full hover:bg-emerald-100 transition-colors">
-          <Leaf className="w-4 h-4" />
+        <Link href="/orders" className="text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 whitespace-nowrap">Orders</Link>
+        <Link href="/impact" className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-bold text-emerald-700 bg-emerald-50 rounded-full hover:bg-emerald-100 transition-colors whitespace-nowrap">
+          <Leaf className="w-3 h-3 sm:w-4 sm:h-4" />
           My Impact
         </Link>
-        <span className="text-slate-300 ml-2">|</span>
+        <span className="text-slate-300 ml-1 sm:ml-2">|</span>
         {/* Seller Links */}
-        <Link href="/seller" className="text-sm font-medium text-blue-600 hover:text-blue-800">Seller Dashboard</Link>
+        <Link href="/seller" className="text-xs sm:text-sm font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap">Seller Dashboard</Link>
       </div>
     </nav>
   );

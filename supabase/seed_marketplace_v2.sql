@@ -37,14 +37,24 @@ INSERT INTO public.products (
   is_refurbished, 
   relist_status
 ) VALUES 
-('00000000-0000-0000-0000-000000000001', 'Sparx Mens Flip Flop 7 UK', 'Comfortable, durable and stylish everyday flip flops by Sparx.', 499.00, 499.00, 'Footwear', 'https://m.media-amazon.com/images/I/61dgP8XDIoL._SY695_.jpg', 'new', 10, FALSE, 'active'),
+('00000000-0000-0000-0000-000000000001', 'Portronics Mport One USB C Hub Dock', 'Multi-port USB C hub for all your connectivity needs.', 1299.00, 1299.00, 'Electronics', 'https://m.media-amazon.com/images/I/41N7a-z09fL.jpg', 'new', 5, FALSE, 'active'),
 
-('00000000-0000-0000-0000-000000000001', 'Puma Unisex Adult Max Slide', 'Sleek design and premium comfort for your casual wear.', 1499.00, 1499.00, 'Footwear', 'https://m.media-amazon.com/images/I/51utcv6JMNL._SY695_.jpg', 'new', 12, FALSE, 'active'),
+('00000000-0000-0000-0000-000000000001', 'Samsung 22" (54.6 cm) S3 Flat Monitor', 'Crisp, clear visuals with Samsung S3 Flat Monitor.', 6500.00, 6500.00, 'Electronics', 'https://m.media-amazon.com/images/I/71JwKnROg8L._SX679_.jpg', 'new', 8, FALSE, 'active'),
 
-('00000000-0000-0000-0000-000000000001', 'Apple iPhone 16e 128GB', 'The latest iPhone 16e features an advanced camera system, incredible battery life, and powerful performance.', 65900.00, 65900.00, 'Electronics', 'https://m.media-amazon.com/images/I/31YrZL046rL._SX342_SY445_QL70_FMwebp_.jpg', 'new', 15, FALSE, 'active'),
+('00000000-0000-0000-0000-000000000001', 'DIGIROOT iPad Pencil', 'High-precision stylus pen for iPad.', 1999.00, 1999.00, 'Electronics', 'https://m.media-amazon.com/images/I/51UBr3cmxOL._SX679_.jpg', 'new', 5, FALSE, 'active'),
 
-('00000000-0000-0000-0000-000000000001', 'Apple iPad 11" A16 Chip', 'Powerful and versatile. The new iPad 11-inch with the A16 Bionic chip handles everything with ease.', 39900.00, 39900.00, 'Electronics', 'https://m.media-amazon.com/images/I/41vE9cIx29L._SY300_SX300_QL70_FMwebp_.jpg', 'new', 10, FALSE, 'active'),
+('00000000-0000-0000-0000-000000000001', 'Original Air Conditioner Remote Control', 'Universal replacement remote control for Air Conditioners.', 500.00, 500.00, 'Electronics', 'https://m.media-amazon.com/images/I/51UBr3cmxOL._SX679_.jpg', 'new', 2, FALSE, 'active'),
 
-('00000000-0000-0000-0000-000000000001', 'Apple MacBook Air M2', 'Supercharged by M2. Features a strikingly thin design, brilliant Liquid Retina display, and incredible performance.', 89900.00, 89900.00, 'Electronics', 'https://m.media-amazon.com/images/I/61dLund7bhL._SX679_.jpg', 'new', 8, FALSE, 'active'),
+('00000000-0000-0000-0000-000000000001', 'Zebronics Zeb-Crystal Clear Web Camera', 'Crystal clear video calls with Zebronics Web Camera.', 899.00, 899.00, 'Electronics', 'https://m.media-amazon.com/images/I/71qnZFqFM9L._SX679_.jpg', 'new', 4, FALSE, 'active'),
 
-('00000000-0000-0000-0000-000000000001', 'Nike Mens Downshifter 14 Running Shoes', 'Reliable and comfortable running shoes that provide excellent support for your daily miles.', 3495.00, 3495.00, 'Footwear', 'https://m.media-amazon.com/images/I/61U2wikE1gL._AC_SX679_.jpg', 'new', 18, FALSE, 'active');
+('00000000-0000-0000-0000-000000000001', 'Boat Nirvana Ion ANC Pro, Hi-Res Audio', 'Immersive audio experience with Active Noise Cancellation.', 2999.00, 2999.00, 'Electronics', 'https://m.media-amazon.com/images/I/71plvQVaULL._SX679_.jpg', 'new', 6, FALSE, 'active'),
+
+('00000000-0000-0000-0000-000000000001', 'Richy Toys White Dog Cute Plush', 'Adorable white dog plush toy, incredibly soft.', 499.00, 499.00, 'Home', 'https://m.media-amazon.com/images/I/71jJv5eE7XL._SX679_.jpg', 'new', 2, FALSE, 'active'),
+
+('00000000-0000-0000-0000-000000000001', 'Samsung Original 25W USB Type-C Travel Adaptor', 'Super fast charging 25W adapter by Samsung.', 1199.00, 1199.00, 'Electronics', 'https://m.media-amazon.com/images/I/512UVkoMMEL._SX679_.jpg', 'new', 3, FALSE, 'active'),
+
+('00000000-0000-0000-0000-000000000001', 'Tribit XFree Go', 'High fidelity wireless headphones with exceptional battery life.', 2599.00, 2599.00, 'Electronics', 'https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcThD-DFFUevDTgQPtgmmcQ7uRBCCk4Hj8qolh2zlNew3FaauBIg2H_wX5arSUOpeFLy9dhG4VkjxBR3oWi9jNUFA0cl99Ukg-jPN4yCmym_', 'new', 5, FALSE, 'active'),
+
+('00000000-0000-0000-0000-000000000001', 'EvoFox Elite X Gaming Controller for PC', 'Precision gaming controller with ergonomic design.', 1499.00, 1499.00, 'Electronics', 'https://m.media-amazon.com/images/I/41zsXOJslQL._SX342_SY445_QL70_FMwebp_.jpg', 'new', 6, FALSE, 'active'),
+
+('00000000-0000-0000-0000-000000000001', 'Nothing Phone (2a) (White, 128 GB)', 'Innovative transparent design with powerful performance.', 23999.00, 23999.00, 'Electronics', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTyUayGmK0LkHzsw9fFdk9VnYPj2DNpX2K64WGf149Wxg&s=10', 'new', 12, FALSE, 'active');

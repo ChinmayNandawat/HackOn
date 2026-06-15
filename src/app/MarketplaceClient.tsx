@@ -106,7 +106,7 @@ export default function MarketplaceClient({ products }: { products: Product[] })
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
         {filteredProducts.map((product) => {
           const isRefurb = product.condition === 'refurbished' || product.is_refurbished;
           
@@ -125,35 +125,35 @@ export default function MarketplaceClient({ products }: { products: Product[] })
 
           return (
             <Link href={`/product/${product.id}`} key={product.id}>
-              <Card className={`hover:shadow-md transition cursor-pointer ${isRefurb ? 'border-green-200' : ''} ${isLocalDeal ? 'ring-2 ring-amber-400' : ''}`}>
-                <div className="h-48 bg-slate-200 relative flex items-center justify-center overflow-hidden">
+              <Card className={`hover:shadow-md transition cursor-pointer h-full flex flex-col ${isRefurb ? 'border-green-200' : ''} ${isLocalDeal ? 'ring-2 ring-amber-400' : ''}`}>
+                <div className="h-32 sm:h-48 bg-slate-200 relative flex items-center justify-center overflow-hidden shrink-0">
                   {product.image_url ? (
-                    <img src={product.image_url} alt={product.title} className="object-contain w-full h-full p-2 mix-blend-multiply" />
+                    <img src={product.image_url} alt={product.title} className="object-contain w-full h-full p-2 sm:p-4 mix-blend-multiply" />
                   ) : (
-                    <span className="text-slate-400 font-medium">No Image</span>
+                    <span className="text-slate-400 font-medium text-xs sm:text-sm">No Image</span>
                   )}
                   {isRefurb && (
                     <>
-                      <Badge className="absolute top-2 right-2 bg-green-500 hover:bg-green-600 z-10">AI Verified ✓</Badge>
+                      <Badge className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-green-500 hover:bg-green-600 z-10 text-[10px] sm:text-xs px-1.5 py-0 sm:px-2.5 sm:py-0.5">AI Verified ✓</Badge>
                       {(product.grade || product.health_data?.grade) && (
-                        <Badge className="absolute top-2 left-2 bg-slate-900 hover:bg-slate-800 z-10">Grade {product.grade || product.health_data?.grade}</Badge>
+                        <Badge className="absolute top-1 left-1 sm:top-2 sm:left-2 bg-slate-900 hover:bg-slate-800 z-10 text-[10px] sm:text-xs px-1.5 py-0 sm:px-2.5 sm:py-0.5">Grade {product.grade || product.health_data?.grade}</Badge>
                       )}
                       {isLocalDeal && (
-                        <Badge className="absolute bottom-2 left-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 border-none text-white font-bold px-2.5 py-1 flex items-center shadow-lg z-10">
+                        <Badge className="absolute bottom-1 left-1 sm:bottom-2 sm:left-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 border-none text-white font-bold px-1.5 py-0.5 sm:px-2.5 sm:py-1 flex items-center shadow-lg z-10 text-[10px] sm:text-xs">
                           Local Deal <CountdownTimer targetDate={product.local_only_until!} />
                         </Badge>
                       )}
                     </>
                   )}
                 </div>
-                <CardContent className="p-4 relative">
-                  <h3 className="font-semibold text-lg line-clamp-1">{product.title}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <p className={isRefurb ? (isLocalDeal ? 'text-amber-600 font-black text-xl' : 'text-green-700 font-bold text-lg') : 'text-slate-900 font-semibold'}>
+                <CardContent className="p-3 sm:p-4 relative flex flex-col flex-1 justify-between">
+                  <h3 className="font-semibold text-sm sm:text-lg line-clamp-2 sm:line-clamp-1 min-h-[40px] sm:min-h-0 leading-tight sm:leading-normal mb-1 sm:mb-0">{product.title}</h3>
+                  <div className="flex flex-col xl:flex-row xl:items-center gap-0.5 sm:gap-2 mt-auto">
+                    <p className={isRefurb ? (isLocalDeal ? 'text-amber-600 font-black text-sm sm:text-xl' : 'text-green-700 font-bold text-sm sm:text-lg') : 'text-slate-900 font-semibold text-sm sm:text-base'}>
                       ₹{displayPrice.toLocaleString("en-IN")}
                     </p>
                     {isRefurb && product.original_price && (
-                      <p className="text-slate-400 line-through text-sm">₹{product.original_price.toLocaleString("en-IN")}</p>
+                      <p className="text-slate-400 line-through text-[10px] sm:text-sm">₹{product.original_price.toLocaleString("en-IN")}</p>
                     )}
                   </div>
                 </CardContent>
