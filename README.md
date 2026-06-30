@@ -38,7 +38,7 @@ ReLife is an intelligent ecosystem where returned or unused products automatical
 4.  **Product Trust Layer:** Interactive Product Health Cards mapping exact flaw coordinates.
 
 ### 🚀 Live Demo & Workflow
-*   **Live Application URL:** [https://relife-hackon.vercel.app](https://relife-hackon.vercel.app)
+*   **Live Application URL:** [https://hack-on-kappa.vercel.app/](https://hack-on-kappa.vercel.app/)
 *   **Demo Accounts:** 
     *   **Buyer Persona:** Session initializes automatically (`Conscious Shopper`).
     *   **Seller Persona:** Click **Seller Dashboard** in the navbar.
