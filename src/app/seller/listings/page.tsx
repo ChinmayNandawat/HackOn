@@ -5,7 +5,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import ListingStatusActions from "./ListingStatusActions";
 import SellerNav from "@/components/SellerNav";
-import { FileText, Tag, TrendingUp, IndianRupee } from "lucide-react";
+import { FileText, Tag, TrendingUp, IndianRupee, BarChart3 } from "lucide-react";
 
 export const revalidate = 0;
 
@@ -15,7 +15,7 @@ export default async function SellerListings() {
   // Static Fallbacks
   let totalActive = 1;
   let totalRevenue = 1500;
-  let avgDiscount = 45;
+  let sellThroughRate = 67;
   let listings: any[] = [{
     id: "demo-1",
     title: "Smart Watch (Refurbished)",
@@ -61,8 +61,7 @@ export default async function SellerListings() {
       // 3. Process the data
       let activeCount = 0;
       let revenueSum = 0;
-      let totalDiscountPct = 0;
-      let discountCount = 0;
+      let soldCount = 0;
 
       listings = products.map(p => {
         const status = p.relist_status || "active";
@@ -79,9 +78,8 @@ export default async function SellerListings() {
           revenueSum += estimated;
         }
 
-        if (savingsPct > 0) {
-          totalDiscountPct += savingsPct;
-          discountCount++;
+        if (status === 'sold') {
+          soldCount++;
         }
 
         const relatedReturn = p.parent_product_id ? returnMap[p.parent_product_id] : null;
@@ -96,7 +94,7 @@ export default async function SellerListings() {
 
       totalActive = activeCount;
       totalRevenue = revenueSum;
-      avgDiscount = discountCount > 0 ? Math.round(totalDiscountPct / discountCount) : 0;
+      sellThroughRate = listings.length > 0 ? Math.round((soldCount / listings.length) * 100) : 0;
     } else {
       listings = [];
     }
@@ -148,11 +146,11 @@ export default async function SellerListings() {
         <Card className="shadow-sm border-slate-200">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-slate-500 text-sm font-bold uppercase tracking-wider">Avg Discount</p>
-              <p className="text-4xl font-black mt-2 text-indigo-600">{avgDiscount}%</p>
+              <p className="text-slate-500 text-sm font-bold uppercase tracking-wider">Sell-Through Rate</p>
+              <p className="text-4xl font-black mt-2 text-indigo-600">{sellThroughRate}%</p>
             </div>
             <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
-              <TrendingUp className="w-6 h-6" />
+              <BarChart3 className="w-6 h-6" />
             </div>
           </CardContent>
         </Card>

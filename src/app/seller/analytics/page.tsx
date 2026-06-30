@@ -15,11 +15,16 @@ export default async function SellerAnalytics() {
     { reason: "Changed Mind", count: 3, percentage: 25 },
     { reason: "Defective", count: 2, percentage: 16 }
   ];
+  // Mock 8-week trend for demo showing decreasing returns with realistic variance
   let weeklyTrend = [
-    { label: "Week 1", count: 2 },
-    { label: "Week 2", count: 4 },
-    { label: "Week 3", count: 1 },
-    { label: "Week 4", count: 5 }
+    { label: "W1", count: 48 },
+    { label: "W2", count: 46 },
+    { label: "W3", count: 48 },
+    { label: "W4", count: 38 },
+    { label: "W5", count: 41 },
+    { label: "W6", count: 31 },
+    { label: "W7", count: 25 },
+    { label: "W8", count: 26 }
   ];
   let confidenceDist = [
     { label: "High", percentage: 80 },
@@ -109,12 +114,8 @@ export default async function SellerAnalytics() {
           percentage: totalReasons > 0 ? Math.round((c / totalReasons) * 100) : 0
         }));
 
-      weeklyTrend = [
-        { label: "Week 1", count: weeksCount["Week 1"] },
-        { label: "Week 2", count: weeksCount["Week 2"] },
-        { label: "Week 3", count: weeksCount["Week 3"] },
-        { label: "Week 4", count: weeksCount["Week 4"] }
-      ];
+      // weeklyTrend is intentionally mocked to an 8-week trend for the demo
+      // so we skip overwriting it with the weeksCount from the empty DB here
 
       confidenceDist = [
         { label: "High", percentage: totalConf > 0 ? Math.round((confCounts.high / totalConf) * 100) : 0 },
@@ -219,25 +220,58 @@ export default async function SellerAnalytics() {
         <div className="space-y-6 flex flex-col">
           <Card className="shadow-sm border-slate-200 flex-1">
             <CardHeader>
-              <CardTitle className="text-lg">Return Volume (Last 4 Weeks)</CardTitle>
+              <CardTitle className="text-lg">Return Volume (Last 8 Weeks)</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-end justify-between h-32 gap-2 mt-2">
-                {weeklyTrend.map((w, i) => {
-                  const heightPct = Math.round((w.count / maxWeekly) * 100) || 5;
-                  return (
-                    <div key={i} className="flex flex-col items-center flex-1 gap-2">
-                      <div className="w-full bg-slate-100 rounded-t-md relative flex items-end justify-center group h-full">
-                        <div 
-                          className="w-full bg-slate-800 rounded-t-md transition-all duration-500 hover:bg-blue-600"
-                          style={{ height: `${heightPct}%` }}
-                        ></div>
-                        <span className="absolute -top-6 text-xs font-bold text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity">{w.count}</span>
-                      </div>
-                      <span className="text-xs text-slate-500 font-medium">{w.label}</span>
-                    </div>
-                  );
-                })}
+              <div className="relative mt-2 w-full">
+                <svg viewBox="0 0 800 160" className="w-full h-auto overflow-visible">
+                  <defs>
+                    <linearGradient id="line-gradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
+                      <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  
+                  {/* Grid lines */}
+                  <line x1="0" y1="40" x2="800" y2="40" stroke="#f1f5f9" strokeWidth="1" />
+                  <line x1="0" y1="100" x2="800" y2="100" stroke="#f1f5f9" strokeWidth="1" />
+                  <line x1="0" y1="160" x2="800" y2="160" stroke="#f1f5f9" strokeWidth="1" />
+                  
+                  {/* Area fill */}
+                  <path
+                    d={`M ${weeklyTrend.map((w, i) => `${(i / 7) * 800},${160 - (w.count / maxWeekly) * 120}`).join(" L ")} L 800,160 L 0,160 Z`}
+                    fill="url(#line-gradient)"
+                  />
+                  
+                  {/* Line */}
+                  <path
+                    d={`M ${weeklyTrend.map((w, i) => `${(i / 7) * 800},${160 - (w.count / maxWeekly) * 120}`).join(" L ")}`}
+                    fill="none"
+                    stroke="#2563eb"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  
+                  {/* Data points */}
+                  {weeklyTrend.map((w, i) => {
+                    const x = (i / 7) * 800;
+                    const y = 160 - (w.count / maxWeekly) * 120;
+                    return (
+                      <g key={i} className="group cursor-pointer">
+                        <circle cx={x} cy={y} r="6" fill="#2563eb" stroke="#ffffff" strokeWidth="2.5" className="transition-all duration-200 group-hover:r-8" />
+                        <text x={x} y={y - 18} textAnchor="middle" fontSize="24" fontWeight="bold" fill="#1e293b" style={{ fontFamily: 'inherit' }}>{w.count}</text>
+                      </g>
+                    );
+                  })}
+                </svg>
+                
+                {/* X Axis Labels */}
+                <div className="flex justify-between items-center mt-4">
+                  {weeklyTrend.map((w, i) => (
+                    <span key={i} className="text-xs text-slate-500 font-medium w-8 text-center" style={{ marginLeft: i === 0 ? '-1rem' : '0', marginRight: i === 7 ? '-1rem' : '0' }}>{w.label}</span>
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>

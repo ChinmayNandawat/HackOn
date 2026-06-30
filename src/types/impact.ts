@@ -11,7 +11,7 @@ export interface PersonalStats {
   personal_co2_saved: number;
   items_diverted: number;
   actions_taken: number;
-  tier: "Bronze" | "Silver" | "Gold";
+  tier: "Seed" | "Sapling" | "Tree";
   next_tier_credits: number | null;
   tier_progress_percent: number;
 }

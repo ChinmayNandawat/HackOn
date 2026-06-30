@@ -14,7 +14,7 @@ export interface PersonalStats {
   personal_co2_saved: number;
   items_diverted: number;
   actions_taken: number;
-  tier: "Bronze" | "Silver" | "Gold";
+  tier: "Seed" | "Sapling" | "Tree";
   next_tier_credits: number | null;
   tier_progress_percent: number;
 }
@@ -44,20 +44,20 @@ const CREDITS_RULES = {
 };
 
 function calculateTier(totalCredits: number) {
-  let tier: "Bronze" | "Silver" | "Gold" = "Bronze";
+  let tier: "Seed" | "Sapling" | "Tree" = "Seed";
   let next_tier_credits: number | null = null;
   let tier_progress_percent = 0;
 
   if (totalCredits < 100) {
-    tier = "Bronze";
+    tier = "Seed";
     next_tier_credits = 100 - totalCredits;
     tier_progress_percent = (totalCredits / 100) * 100;
   } else if (totalCredits < 500) {
-    tier = "Silver";
+    tier = "Sapling";
     next_tier_credits = 500 - totalCredits;
     tier_progress_percent = ((totalCredits - 100) / 400) * 100;
   } else {
-    tier = "Gold";
+    tier = "Tree";
     next_tier_credits = null;
     tier_progress_percent = 100;
   }
