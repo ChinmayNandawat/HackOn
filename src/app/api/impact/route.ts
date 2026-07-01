@@ -209,14 +209,42 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid actionType" }, { status: 400 });
     }
 
+    let creditsToAward = rule.credits;
+    let co2ToAward = rule.co2_saved_kg;
+    let farmingNote = null;
+
+    // Green Credits Refund Polish: Credit Farming Prevention Guard
+    if (actionType === 'keep_and_refund' && productId) {
+      try {
+        const { data: prodData } = await supabase
+          .from('products')
+          .select('is_refurbished, condition, title')
+          .eq('id', productId)
+          .single();
+        
+        const isRefurb = prodData && (
+          prodData.is_refurbished === true ||
+          prodData.condition === 'refurbished' ||
+          (prodData.title && /refurb/i.test(prodData.title))
+        );
+
+        if (isRefurb) {
+          creditsToAward = 0; // Do not award green credits for partial refunds on already refurbished items
+          farmingNote = "0 credits (Refurbished item partial refund — credit farming prevention rule active)";
+        }
+      } catch (e) {
+        console.error("[api/impact] Could not check product condition for credit farming guard:", e);
+      }
+    }
+
     // 1. Insert into green_credits_log
     const { data: newLog, error: insertError } = await supabase
       .from("green_credits_log")
       .insert({
         session_id: sessionId,
         action_type: actionType,
-        credits_earned: rule.credits,
-        co2_saved_kg: rule.co2_saved_kg,
+        credits_earned: creditsToAward,
+        co2_saved_kg: co2ToAward,
         product_id: productId || null
       })
       .select()
@@ -246,7 +274,7 @@ export async function POST(req: NextRequest) {
       await supabase
         .from("platform_stats")
         .update({
-          total_co2_saved_kg: Number(stats.total_co2_saved_kg || 0) + rule.co2_saved_kg,
+          total_co2_saved_kg: Number(stats.total_co2_saved_kg || 0) + co2ToAward,
           total_items_diverted: Number(stats.total_items_diverted || 0) + (isDiverted ? 1 : 0),
           last_updated: new Date().toISOString()
         })
@@ -257,7 +285,7 @@ export async function POST(req: NextRequest) {
       success: true,
       log: newLog,
       newTotalCredits,
-      message: `Successfully earned ${rule.credits} credits for ${actionType}`
+      message: farmingNote || `Successfully earned ${creditsToAward} credits for ${actionType}`
     }, { status: 200 });
 
   } catch (error: unknown) {

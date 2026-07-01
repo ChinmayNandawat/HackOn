@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import SellerNav from "@/components/SellerNav";
+import ReturnReductionROIGraph from "@/components/seller/ReturnReductionROIGraph";
+import CategorizedAIInsights from "@/components/seller/CategorizedAIInsights";
 
 export default async function SellerAnalytics() {
   let isMocked = false;
@@ -169,6 +171,8 @@ export default async function SellerAnalytics() {
 
       <SellerNav />
 
+      <ReturnReductionROIGraph />
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="shadow-sm border-slate-200">
           <CardContent className="p-6">
@@ -294,21 +298,7 @@ export default async function SellerAnalytics() {
         </div>
       </div>
 
-      {/* AI Insight Card */}
-      <Card className="bg-amber-50 border-amber-200 shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/50 rounded-full blur-3xl -z-0 translate-x-1/2 -translate-y-1/2"></div>
-        <CardContent className="p-6 relative z-10">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 border border-amber-200 shadow-sm">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-            </div>
-            <div>
-              <h3 className="font-bold text-amber-950 text-lg tracking-tight">AI Insight</h3>
-              <p className="text-amber-800 mt-1 font-medium leading-relaxed">{aiSuggestion}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <CategorizedAIInsights />
     </div>
   );
 }

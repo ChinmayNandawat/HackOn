@@ -72,6 +72,29 @@ export async function POST(req: NextRequest) {
        return NextResponse.json<RelistResponse>({ success: false, error: "Original product details missing from return record" }, { status: 404 });
     }
 
+    // Cycle Prevention Safety Check: Count previous returns for this product lineage
+    let returnCycleCount = Number(returnData.return_count || product.return_count || 0);
+    if (returnCycleCount === 0 && product.id) {
+      try {
+        const { count } = await supabase
+          .from('returns')
+          .select('id', { count: 'exact', head: true })
+          .eq('product_id', product.id);
+        if (typeof count === 'number') {
+          returnCycleCount = count;
+        }
+      } catch (e) {
+        console.error("[api/relist] Could not query return count:", e);
+      }
+    }
+
+    if (returnCycleCount >= 2) {
+      return NextResponse.json<RelistResponse>(
+        { success: false, error: "This item has already undergone 2 or more return cycles as refurbished. Automatic relisting stopped to prevent cycle loops; flagged for manual seller inspection." },
+        { status: 403 }
+      );
+    }
+
     // Step 3: Generate listing content using Bedrock
     const actualFlaws = returnData.flaws_json?.flaws || [];
     const flawsList = Array.isArray(actualFlaws) ? actualFlaws.map((f: Record<string, string>) => `- ${f.name || 'Flaw'} at severity ${f.severity || 'unknown'}`).join('\n') : "No major cosmetic flaws reported.";

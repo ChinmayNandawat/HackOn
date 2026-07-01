@@ -25,6 +25,32 @@ interface Product {
   health_data?: {
     grade?: string | null;
   };
+  relist_status?: string;
+  stock?: number;
+  return_count?: number;
+  batch_number?: number | string;
+}
+
+function cleanProductTitle(title: string): string {
+  if (!title) return "";
+  return title
+    .replace(/\s*-\s*Refurbished.*$/i, "")
+    .replace(/\s*\(Grade\s+[A-C]\)/i, "")
+    .replace(/\s*-\s*Grade\s+[A-C]/i, "")
+    .replace(/\s*-\s*Works\s+perfectly.*$/i, "")
+    .replace(/\s*\[Refurbished\]/i, "")
+    .replace(/^Refurbished\s*-\s*/i, "")
+    .replace(/\bRefurbished\b/i, "")
+    .trim();
+}
+
+function getBatchNumber(product: Product): number | string {
+  if (product.batch_number) return product.batch_number;
+  let sum = 0;
+  for (let i = 0; i < product.id.length; i++) {
+    sum += product.id.charCodeAt(i);
+  }
+  return (sum % 12) + 1;
 }
 
 function CountdownTimer({ targetDate }: { targetDate: string }) {
@@ -106,6 +132,13 @@ export default function MarketplaceClient({ products }: { products: Product[] })
   };
 
   const filteredProducts = products.filter((product) => {
+    // 1. Filter out sold out inventory or out of stock
+    if (product.relist_status === "sold" || product.relist_status === "archived") return false;
+    if (typeof product.stock === "number" && product.stock <= 0) return false;
+
+    // 2. Return cycle protection: if returned 2+ times as refurbished, hide from standard grid
+    if (typeof product.return_count === "number" && product.return_count >= 2) return false;
+
     // Handle Local Deal visibility rules
     if (product.local_only_until && now > 0) {
       const isDealActive = new Date(product.local_only_until).getTime() > now;
@@ -192,7 +225,16 @@ export default function MarketplaceClient({ products }: { products: Product[] })
                 </div>
                 <CardContent className="p-4 relative flex flex-col flex-1 justify-between gap-3">
                   <div>
-                    <h3 className="font-bold text-sm sm:text-base line-clamp-2 leading-snug text-slate-900 dark:text-white min-h-[40px]">{product.title}</h3>
+                    {isRefurb && (
+                      <div className="mb-1.5 flex items-center gap-1">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black tracking-wide bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">
+                          <span>♻️ Refurbished Batch #{getBatchNumber(product)}</span>
+                          <span>•</span>
+                          <span>Grade {product.grade || product.health_data?.grade || "A"}</span>
+                        </span>
+                      </div>
+                    )}
+                    <h3 className="font-bold text-sm sm:text-base line-clamp-2 leading-snug text-slate-900 dark:text-white min-h-[40px]">{cleanProductTitle(product.title) || product.title}</h3>
                     <div className="flex items-baseline gap-2 mt-2">
                       <p className={isRefurb ? (isLocalDeal ? 'text-amber-600 font-black text-lg sm:text-xl' : 'text-green-700 font-extrabold text-lg sm:text-xl') : 'text-slate-900 font-bold text-base sm:text-lg'}>
                         ₹{displayPrice.toLocaleString("en-IN")}
