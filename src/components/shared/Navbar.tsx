@@ -1,13 +1,15 @@
 "use client";
 
 import Link from 'next/link';
-import { Leaf, MapPin } from 'lucide-react';
+import { Leaf, MapPin, ShoppingBag } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useCart } from '@/context/CartContext';
 
 const CITIES = ["Mumbai", "Delhi", "Bangalore", "Chennai"];
 
 export default function Navbar() {
   const [location, setLocation] = useState<string>("Mumbai"); // Default
+  const { totalCount, openCart } = useCart();
 
   useEffect(() => {
     const saved = localStorage.getItem("relife_buyer_location");
@@ -26,10 +28,11 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="border-b bg-white p-3 sm:p-4 flex flex-col md:flex-row justify-between items-center sticky top-0 z-50 gap-3 md:gap-0">
+    <nav className="border-b bg-white p-3 sm:p-4 flex flex-col md:flex-row justify-between items-center sticky top-0 z-50 gap-3 md:gap-0 shadow-xs">
       <div className="flex items-center justify-between w-full md:w-auto gap-4">
-        <Link href="/" className="text-xl font-bold text-slate-900">
-          ReLife
+        <Link href="/" className="text-xl font-black tracking-tight text-slate-900 flex items-center gap-1.5">
+          <span>ReLife</span>
+          <span className="text-[10px] bg-emerald-500 text-white font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider">AI</span>
         </Link>
         <div className="flex items-center gap-1 text-xs sm:text-sm text-slate-600 bg-slate-100 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full">
           <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-600" />
@@ -51,6 +54,22 @@ export default function Navbar() {
           <Leaf className="w-3 h-3 sm:w-4 sm:h-4" />
           My Impact
         </Link>
+        
+        {/* Cart Button */}
+        <button
+          onClick={openCart}
+          className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900 text-white font-bold text-xs sm:text-sm shadow-md hover:bg-slate-800 transition-all cursor-pointer active:scale-95"
+          title="Open Cart"
+        >
+          <ShoppingBag className="w-4 h-4 text-emerald-400" />
+          <span>Cart</span>
+          {totalCount > 0 && (
+            <span className="ml-0.5 flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-[10px] font-black text-white shadow-xs animate-pulse">
+              {totalCount}
+            </span>
+          )}
+        </button>
+
         <span className="text-slate-300 ml-1 sm:ml-2">|</span>
         {/* Seller Links */}
         <Link href="/seller" className="text-xs sm:text-sm font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap">Seller Dashboard</Link>

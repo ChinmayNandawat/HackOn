@@ -25,10 +25,26 @@ import {
   Info,
   X,
   Store,
-  Tag
+  Tag,
+  ShieldCheck,
+  Zap,
+  ShoppingBag,
+  Clock,
+  Percent
 } from "lucide-react";
+import { SellerAutomationProvider, useSellerAutomation } from "@/context/SellerAutomationContext";
+import { calculateBuyerTrustScore } from "@/lib/trustScore";
 
 export default function AdminReturnDetailPage() {
+  return (
+    <SellerAutomationProvider>
+      <AdminReturnDetailPageContent />
+    </SellerAutomationProvider>
+  );
+}
+
+function AdminReturnDetailPageContent() {
+  const { isReturnAutoApproved } = useSellerAutomation();
   const { id } = useParams() as { id: string };
   const router = useRouter();
 
@@ -441,6 +457,8 @@ export default function AdminReturnDetailPage() {
   };
 
   const gradeClasses = record.grade ? gradeColors[record.grade as keyof typeof gradeColors] : "";
+  const trustProfile = record ? calculateBuyerTrustScore(record) : null;
+  const autoApproved = record ? isReturnAutoApproved(record) : false;
 
   // SORTING & CONTEXT-AWARE FLAW FILTERING
   // Map images to their specific flaws, calculate a damage score, and sort (most damaged first).
@@ -497,11 +515,75 @@ export default function AdminReturnDetailPage() {
           </div>
         </header>
 
+        {/* AI Automated Override Alert Banner */}
+        {autoApproved && trustProfile && (
+          <div className="mb-8 p-5 bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-900 text-white rounded-xl shadow-lg border border-emerald-500/40 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-pulse">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-emerald-500/20 rounded-xl border border-emerald-400/30 text-emerald-300 flex-shrink-0">
+                <Zap className="w-6 h-6 fill-current" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-black tracking-tight">AI Automated Override Active: Auto-Approved by System</h3>
+                  <span className="bg-emerald-500/30 text-emerald-300 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded border border-emerald-400/40">
+                    Instant Refund
+                  </span>
+                </div>
+                <p className="text-xs text-emerald-100/90 mt-1">
+                  This item qualifies under your automated refund threshold (Value under limit & Buyer Trust Score is {trustProfile.score}%). No manual inspection required.
+                </p>
+              </div>
+            </div>
+            <div className="bg-emerald-950/60 border border-emerald-500/30 px-4 py-2 rounded-lg text-emerald-200 text-xs font-bold text-center self-start md:self-center whitespace-nowrap">
+              ⚡ Status: Auto-Approved
+            </div>
+          </div>
+        )}
+
         {/* Dual Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           
           {/* LEFT COLUMN: Return Context */}
           <div className="space-y-6">
+            {/* Buyer Trust Profile Breakdown Card */}
+            {trustProfile && (
+              <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm relative overflow-hidden">
+                <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className={`p-1.5 rounded-lg ${trustProfile.badgeBg} ${trustProfile.iconColor}`}>
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h2 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">Buyer Trust Profile</h2>
+                      <span className="text-[10px] text-gray-400 font-semibold block">ID: {trustProfile.buyerId.substring(0, 13)}...</span>
+                    </div>
+                  </div>
+                  <span className={`px-2.5 py-1 rounded-full border text-xs font-extrabold flex items-center gap-1 ${trustProfile.badgeColor}`}>
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    {trustProfile.score}% ({trustProfile.tier})
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="bg-gray-50/80 p-3 rounded-xl border border-gray-150/60 flex flex-col items-center justify-center">
+                    <ShoppingBag className="w-4 h-4 text-blue-500 mb-1" />
+                    <span className="text-sm font-black text-gray-800">{trustProfile.orderVolume}</span>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight mt-0.5">Orders</span>
+                  </div>
+                  <div className="bg-gray-50/80 p-3 rounded-xl border border-gray-150/60 flex flex-col items-center justify-center">
+                    <Percent className="w-4 h-4 text-amber-500 mb-1" />
+                    <span className="text-sm font-black text-gray-800">{trustProfile.pastReturnRate}%</span>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight mt-0.5">Return Rate</span>
+                  </div>
+                  <div className="bg-gray-50/80 p-3 rounded-xl border border-gray-150/60 flex flex-col items-center justify-center">
+                    <Clock className="w-4 h-4 text-emerald-500 mb-1" />
+                    <span className="text-sm font-black text-gray-800">{trustProfile.timingHours}h</span>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight mt-0.5">Post-Delivery</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Return Details Card */}
             <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
               <h2 className="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wider">Return Details</h2>

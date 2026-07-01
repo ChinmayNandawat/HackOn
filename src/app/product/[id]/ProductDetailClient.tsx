@@ -7,11 +7,17 @@ import BuyRefurbishedButton from "@/components/BuyRefurbishedButton";
 import BuyNewButton from "@/components/BuyNewButton";
 import ReturnPreventionBanner from "@/components/ReturnPreventionBanner";
 import { Button } from "@/components/ui/button";
+import { ShoppingBag } from "lucide-react";
+import { useCart } from "@/context/CartContext";
 
 export default function ProductDetailClient({ product, riskData, refurbishedAlternative }: any) {
   const [buyerLocation, setBuyerLocation] = useState<string>("");
   const [now, setNow] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<string>("");
+
+  const { addToCart } = useCart();
+  const [selectedSize, setSelectedSize] = useState<string>("");
+  const [sizeWarning, setSizeWarning] = useState<boolean>(false);
 
   useEffect(() => {
     setNow(Date.now());
@@ -39,6 +45,17 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
     const timer = setInterval(calculateTimeLeft, 60000);
     return () => clearInterval(timer);
   }, [product.local_only_until]);
+
+  const isFashion = () => {
+    const cat = product.category || "";
+    const title = product.title || "";
+    const fashionCategories = ["Shoes", "Footwear", "Fashion", "Clothing", "Apparel", "Wearables"];
+    const keywords = ["shirt", "jacket", "jeans", "dress", "sneakers", "shoe", "hoodie", "coat", "apparel", "wear"];
+    return (
+      fashionCategories.includes(cat) ||
+      keywords.some((kw) => title.toLowerCase().includes(kw))
+    );
+  };
 
   const isRefurbished = product.is_refurbished === true;
   let isLocalDeal = false;
@@ -156,20 +173,73 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
         </div>
       )}
 
-      {/* Add to Cart / Buy Button */}
-      <div className="pt-6">
+      {/* Size Selection for Fashion Items */}
+      {isFashion() && (
+        <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-black text-slate-800 dark:text-slate-200">Select Size:</span>
+            {sizeWarning && (
+              <span className="text-red-500 font-extrabold text-xs flex items-center gap-1 animate-bounce">
+                ⚠️ Size selection is required!
+              </span>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {["XS", "S", "M", "L", "XL", "XXL"].map((size) => {
+              const isSelected = selectedSize === size;
+              return (
+                <button
+                  key={size}
+                  onClick={() => {
+                    setSelectedSize(size);
+                    setSizeWarning(false);
+                  }}
+                  className={`px-4 py-2.5 rounded-xl font-black text-sm transition-all border ${
+                    isSelected
+                      ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-slate-900 shadow-md scale-105"
+                      : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400 hover:bg-slate-100"
+                  }`}
+                >
+                  {size}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Add to Cart & Buy Actions */}
+      <div className="pt-4 space-y-3">
         {product.relist_status === 'sold' ? (
           <Button disabled className="w-full py-7 text-lg font-black tracking-wide rounded-xl shadow-xl bg-slate-200 text-slate-500 opacity-70">
             Sold Out
           </Button>
-        ) : isRefurbished ? (
-          <BuyRefurbishedButton 
-            productId={product.id}
-            originalPrice={product.original_price}
-            estimatedResalePrice={displayPrice}
-          />
         ) : (
-          <BuyNewButton productId={product.id} />
+          <>
+            <button
+              onClick={() => {
+                if (isFashion() && !selectedSize) {
+                  setSizeWarning(true);
+                  return;
+                }
+                addToCart(product, selectedSize, displayPrice, isLocalDeal);
+              }}
+              className="w-full py-5 rounded-xl bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:opacity-95 text-white font-black text-lg tracking-wide shadow-xl transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              <span>Add to Cart</span>
+            </button>
+
+            {isRefurbished ? (
+              <BuyRefurbishedButton 
+                productId={product.id}
+                originalPrice={product.original_price}
+                estimatedResalePrice={displayPrice}
+              />
+            ) : (
+              <BuyNewButton productId={product.id} />
+            )}
+          </>
         )}
       </div>
     </div>

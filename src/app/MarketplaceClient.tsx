@@ -4,10 +4,13 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ShoppingBag } from "lucide-react";
+import { useCart } from "@/context/CartContext";
 
 interface Product {
   id: string;
   title: string;
+  category?: string;
   original_price?: number;
   estimated_resale_price?: number;
   current_price?: number; // fallback
@@ -52,6 +55,10 @@ export default function MarketplaceClient({ products }: { products: Product[] })
   const [buyerLocation, setBuyerLocation] = useState<string>("");
   const [now, setNow] = useState<number>(0);
 
+  const { addToCart } = useCart();
+  const [selectedSizes, setSelectedSizes] = useState<Record<string, string>>({});
+  const [sizeWarning, setSizeWarning] = useState<Record<string, boolean>>({});
+
   useEffect(() => {
     setNow(Date.now());
     const handleLocationChange = () => {
@@ -61,6 +68,42 @@ export default function MarketplaceClient({ products }: { products: Product[] })
     window.addEventListener("relife_location_changed", handleLocationChange);
     return () => window.removeEventListener("relife_location_changed", handleLocationChange);
   }, []);
+
+  const isFashionProduct = (product: Product) => {
+    const cat = product.category || "";
+    const title = product.title || "";
+    const fashionCategories = ["Shoes", "Footwear", "Fashion", "Clothing", "Apparel", "Wearables"];
+    const keywords = ["shirt", "jacket", "jeans", "dress", "sneakers", "shoe", "hoodie", "coat", "apparel", "wear"];
+    return (
+      fashionCategories.includes(cat) ||
+      keywords.some((kw) => title.toLowerCase().includes(kw))
+    );
+  };
+
+  const handleSizeClick = (e: React.MouseEvent, productId: string, size: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedSizes((prev) => ({ ...prev, [productId]: size }));
+    setSizeWarning((prev) => ({ ...prev, [productId]: false }));
+  };
+
+  const handleAddToCartClick = (
+    e: React.MouseEvent,
+    product: Product,
+    displayPrice: number,
+    isLocalDeal: boolean
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isFashionProduct(product) && !selectedSizes[product.id]) {
+      setSizeWarning((prev) => ({ ...prev, [product.id]: true }));
+      setTimeout(() => {
+        setSizeWarning((prev) => ({ ...prev, [product.id]: false }));
+      }, 1500);
+      return;
+    }
+    addToCart(product, selectedSizes[product.id], displayPrice, isLocalDeal);
+  };
 
   const filteredProducts = products.filter((product) => {
     // Handle Local Deal visibility rules
@@ -87,12 +130,12 @@ export default function MarketplaceClient({ products }: { products: Product[] })
       
       <div className="flex gap-2">
         <button onClick={() => setFilter("all")}>
-          <Badge variant={filter === "all" ? "default" : "outline"} className={filter === "all" ? "bg-slate-900" : ""}>
+          <Badge variant={filter === "all" ? "default" : "outline"} className={filter === "all" ? "bg-slate-900 text-white" : ""}>
             All
           </Badge>
         </button>
         <button onClick={() => setFilter("new")}>
-          <Badge variant={filter === "new" ? "default" : "outline"} className={filter === "new" ? "bg-slate-900" : ""}>
+          <Badge variant={filter === "new" ? "default" : "outline"} className={filter === "new" ? "bg-slate-900 text-white" : ""}>
             New Only
           </Badge>
         </button>
@@ -106,9 +149,10 @@ export default function MarketplaceClient({ products }: { products: Product[] })
         </button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
         {filteredProducts.map((product) => {
           const isRefurb = product.condition === 'refurbished' || product.is_refurbished;
+          const isFashion = isFashionProduct(product);
           
           let displayPrice = (isRefurb ? product.estimated_resale_price : product.original_price) || product.current_price || 0;
           let isLocalDeal = false;
@@ -125,36 +169,85 @@ export default function MarketplaceClient({ products }: { products: Product[] })
 
           return (
             <Link href={`/product/${product.id}`} key={product.id}>
-              <Card className={`hover:shadow-md transition cursor-pointer h-full flex flex-col ${isRefurb ? 'border-green-200' : ''} ${isLocalDeal ? 'ring-2 ring-amber-400' : ''}`}>
-                <div className="h-32 sm:h-48 bg-slate-200 relative flex items-center justify-center overflow-hidden shrink-0">
+              <Card className={`hover:shadow-lg transition-all duration-300 cursor-pointer h-full flex flex-col ${isRefurb ? 'border-green-200 bg-gradient-to-b from-green-50/20 to-white' : 'bg-white'} ${isLocalDeal ? 'ring-2 ring-amber-400' : ''}`}>
+                <div className="h-44 sm:h-52 bg-slate-100 dark:bg-slate-900 relative flex items-center justify-center overflow-hidden shrink-0 rounded-t-xl">
                   {product.image_url ? (
-                    <img src={product.image_url} alt={product.title} className="object-contain w-full h-full p-2 sm:p-4 mix-blend-multiply" />
+                    <img src={product.image_url} alt={product.title} className="object-contain w-full h-full p-4 mix-blend-multiply dark:mix-blend-normal transition-transform duration-500 hover:scale-105" />
                   ) : (
                     <span className="text-slate-400 font-medium text-xs sm:text-sm">No Image</span>
                   )}
                   {isRefurb && (
                     <>
-                      <Badge className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-green-500 hover:bg-green-600 z-10 text-[10px] sm:text-xs px-1.5 py-0 sm:px-2.5 sm:py-0.5">AI Verified ✓</Badge>
+                      <Badge className="absolute top-2 right-2 bg-green-500 hover:bg-green-600 z-10 text-[10px] sm:text-xs px-2 py-0.5 shadow-sm">AI Verified ✓</Badge>
                       {(product.grade || product.health_data?.grade) && (
-                        <Badge className="absolute top-1 left-1 sm:top-2 sm:left-2 bg-slate-900 hover:bg-slate-800 z-10 text-[10px] sm:text-xs px-1.5 py-0 sm:px-2.5 sm:py-0.5">Grade {product.grade || product.health_data?.grade}</Badge>
+                        <Badge className="absolute top-2 left-2 bg-slate-900 hover:bg-slate-800 z-10 text-[10px] sm:text-xs px-2 py-0.5 shadow-sm">Grade {product.grade || product.health_data?.grade}</Badge>
                       )}
                       {isLocalDeal && (
-                        <Badge className="absolute bottom-1 left-1 sm:bottom-2 sm:left-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 border-none text-white font-bold px-1.5 py-0.5 sm:px-2.5 sm:py-1 flex items-center shadow-lg z-10 text-[10px] sm:text-xs">
+                        <Badge className="absolute bottom-2 left-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 border-none text-white font-bold px-2 py-0.5 flex items-center shadow-lg z-10 text-[10px] sm:text-xs">
                           Local Deal <CountdownTimer targetDate={product.local_only_until!} />
                         </Badge>
                       )}
                     </>
                   )}
                 </div>
-                <CardContent className="p-3 sm:p-4 relative flex flex-col flex-1 justify-between">
-                  <h3 className="font-semibold text-sm sm:text-lg line-clamp-2 sm:line-clamp-1 min-h-[40px] sm:min-h-0 leading-tight sm:leading-normal mb-1 sm:mb-0">{product.title}</h3>
-                  <div className="flex flex-col xl:flex-row xl:items-center gap-0.5 sm:gap-2 mt-auto">
-                    <p className={isRefurb ? (isLocalDeal ? 'text-amber-600 font-black text-sm sm:text-xl' : 'text-green-700 font-bold text-sm sm:text-lg') : 'text-slate-900 font-semibold text-sm sm:text-base'}>
-                      ₹{displayPrice.toLocaleString("en-IN")}
-                    </p>
-                    {isRefurb && product.original_price && (
-                      <p className="text-slate-400 line-through text-[10px] sm:text-sm">₹{product.original_price.toLocaleString("en-IN")}</p>
-                    )}
+                <CardContent className="p-4 relative flex flex-col flex-1 justify-between gap-3">
+                  <div>
+                    <h3 className="font-bold text-sm sm:text-base line-clamp-2 leading-snug text-slate-900 dark:text-white min-h-[40px]">{product.title}</h3>
+                    <div className="flex items-baseline gap-2 mt-2">
+                      <p className={isRefurb ? (isLocalDeal ? 'text-amber-600 font-black text-lg sm:text-xl' : 'text-green-700 font-extrabold text-lg sm:text-xl') : 'text-slate-900 font-bold text-base sm:text-lg'}>
+                        ₹{displayPrice.toLocaleString("en-IN")}
+                      </p>
+                      {isRefurb && product.original_price && (
+                        <p className="text-slate-400 line-through text-xs sm:text-sm">₹{product.original_price.toLocaleString("en-IN")}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Size Selection for Fashion Items */}
+                  {isFashion && (
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                        <span>Select Size:</span>
+                        {sizeWarning[product.id] && (
+                          <span className="text-red-500 font-extrabold flex items-center gap-0.5 animate-bounce">
+                            ⚠️ Required!
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {["XS", "S", "M", "L", "XL", "XXL"].map((size) => {
+                          const isSelected = selectedSizes[product.id] === size;
+                          return (
+                            <button
+                              key={size}
+                              onClick={(e) => handleSizeClick(e, product.id, size)}
+                              className={`px-2 py-1 rounded text-[11px] font-black transition-all border ${
+                                isSelected
+                                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-slate-900 shadow-sm scale-105"
+                                  : "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400 hover:bg-slate-100"
+                              }`}
+                            >
+                              {size}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Add to Cart Button */}
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button
+                      onClick={(e) => handleAddToCartClick(e, product, displayPrice, isLocalDeal)}
+                      className={`w-full py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 ${
+                        isRefurb
+                          ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                          : "bg-slate-900 hover:bg-slate-800 text-white"
+                      } ${sizeWarning[product.id] ? "ring-2 ring-red-500 ring-offset-2 animate-pulse" : ""}`}
+                    >
+                      <ShoppingBag className="w-4 h-4" />
+                      <span>Add to Cart</span>
+                    </button>
                   </div>
                 </CardContent>
               </Card>

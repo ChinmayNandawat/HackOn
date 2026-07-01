@@ -10,11 +10,25 @@ import {
   Clock, 
   FileText, 
   Layers, 
-  AlertCircle 
+  AlertCircle,
+  ShieldCheck,
+  Zap
 } from "lucide-react";
 import SellerNav from "@/components/SellerNav";
+import { SellerAutomationProvider, useSellerAutomation } from "@/context/SellerAutomationContext";
+import AutomatedOverrideCard from "@/components/seller/AutomatedOverrideCard";
+import { calculateBuyerTrustScore } from "@/lib/trustScore";
 
 export default function AdminReturnsListPage() {
+  return (
+    <SellerAutomationProvider>
+      <AdminReturnsListPageContent />
+    </SellerAutomationProvider>
+  );
+}
+
+function AdminReturnsListPageContent() {
+  const { isReturnAutoApproved } = useSellerAutomation();
   const [returns, setReturns] = useState<ReturnWithProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -182,6 +196,8 @@ export default function AdminReturnsListPage() {
         </header>
 
         <SellerNav />
+
+        <AutomatedOverrideCard returns={returns} />
 
         {error && (
           <div className="mb-8 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-3 text-sm">
@@ -363,11 +379,18 @@ export default function AdminReturnsListPage() {
                 D: "bg-red-50 text-red-700 border-red-200",
               }[item.grade] : "";
 
+              const trustProfile = calculateBuyerTrustScore(item);
+              const autoApproved = isReturnAutoApproved(item);
+
               return (
                 <Link
                   key={item.id}
                   href={`/seller/returns/${item.id}`}
-                  className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-start gap-4 hover:border-blue-300 hover:shadow-md transition group block"
+                  className={`p-5 rounded-xl border shadow-sm flex items-start gap-4 hover:border-blue-300 hover:shadow-md transition group block ${
+                    autoApproved
+                      ? "border-emerald-400/80 ring-2 ring-emerald-500/20 bg-emerald-50/10"
+                      : "bg-white border-gray-200"
+                  }`}
                 >
                   {/* Thumbnail */}
                   {firstImage ? (
@@ -400,16 +423,32 @@ export default function AdminReturnsListPage() {
                             Grade {item.grade}
                           </span>
                         )}
+
+                        {/* Buyer Trust Score Badge */}
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-bold ${trustProfile.badgeColor}`}
+                        >
+                          <ShieldCheck className="w-3 h-3" />
+                          Trust Score: {trustProfile.score}% ({trustProfile.tier.replace(" Trust", "")})
+                        </span>
                       </div>
                     </div>
 
-                    <div className="text-[11px] text-gray-400 font-semibold space-x-2 flex items-center">
+                    <div className="text-[11px] text-gray-400 font-semibold space-x-2 flex items-center flex-wrap gap-y-1">
                       <span>{category}</span>
                       <span className="text-gray-300">•</span>
                       <span className="text-gray-600 font-bold">{formatPrice(originalPrice)}</span>
                       <span className="text-gray-300">•</span>
                       <span>Reason: <span className="text-gray-500 font-normal italic">"{item.return_reason}"</span></span>
                     </div>
+
+                    {/* Auto-Approval Banner */}
+                    {autoApproved && (
+                      <div className="mt-2.5 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 shadow-sm animate-pulse w-fit">
+                        <Zap className="w-3.5 h-3.5 fill-current flex-shrink-0" />
+                        <span>⚡ AUTO-APPROVED BY SYSTEM — Instant Refund Issued</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Right Arrow/Time indicator */}
