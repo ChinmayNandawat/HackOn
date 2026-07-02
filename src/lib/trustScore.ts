@@ -20,7 +20,18 @@ export function calculateBuyerTrustScore(item: {
   buyer_id?: string;
   return_reason?: string;
   created_at?: string;
+  flaws_json?: any;
 }): BuyerTrustProfile {
+  // Check if a demo override was set
+  const overrideScore = item.flaws_json?.demo_trust_score;
+  let useOverride = false;
+  let forcedScore = 0;
+  
+  if (overrideScore !== undefined && overrideScore !== null) {
+    useOverride = true;
+    forcedScore = Number(overrideScore);
+  }
+
   const seedString = item.id || item.buyer_id || "default_seed";
   
   // Simple deterministic hash from string
@@ -30,7 +41,14 @@ export function calculateBuyerTrustScore(item: {
     hash |= 0; // Convert to 32bit integer
   }
   const positiveHash = Math.abs(hash);
-  const mod100 = positiveHash % 100;
+  let mod100 = positiveHash % 100;
+
+  // If override, force the mod100 to route to the correct tier block
+  if (useOverride) {
+    if (forcedScore >= 85) mod100 = 90; // High
+    else if (forcedScore >= 60) mod100 = 70; // Medium
+    else mod100 = 40; // Low
+  }
 
   // We want a realistic distribution: ~50% High Trust, ~35% Medium Trust, ~15% Low Trust
   let tier: "High Trust" | "Medium Trust" | "Low Trust";
@@ -45,7 +63,7 @@ export function calculateBuyerTrustScore(item: {
   if (mod100 >= 50) {
     // High Trust: Score 86 - 98%
     tier = "High Trust";
-    score = 86 + (positiveHash % 13); // 86 to 98
+    score = useOverride ? forcedScore : 86 + (positiveHash % 13); // 86 to 98
     orderVolume = 15 + (positiveHash % 30); // 15 to 44 orders
     pastReturnRate = 1 + (positiveHash % 5); // 1% to 5% return rate
     timingHours = 2 + (positiveHash % 18); // 2 to 19 hours post-delivery
@@ -55,7 +73,7 @@ export function calculateBuyerTrustScore(item: {
   } else if (mod100 >= 15) {
     // Medium Trust: Score 65 - 84%
     tier = "Medium Trust";
-    score = 65 + (positiveHash % 20); // 65 to 84
+    score = useOverride ? forcedScore : 65 + (positiveHash % 20); // 65 to 84
     orderVolume = 6 + (positiveHash % 10); // 6 to 15 orders
     pastReturnRate = 8 + (positiveHash % 10); // 8% to 17% return rate
     timingHours = 24 + (positiveHash % 48); // 24 to 71 hours post-delivery
@@ -65,7 +83,7 @@ export function calculateBuyerTrustScore(item: {
   } else {
     // Low Trust: Score 42 - 59%
     tier = "Low Trust";
-    score = 42 + (positiveHash % 18); // 42 to 59
+    score = useOverride ? forcedScore : 42 + (positiveHash % 18); // 42 to 59
     orderVolume = 1 + (positiveHash % 5); // 1 to 5 orders
     pastReturnRate = 22 + (positiveHash % 18); // 22% to 39% return rate
     timingHours = 72 + (positiveHash % 96); // 72 to 167 hours post-delivery

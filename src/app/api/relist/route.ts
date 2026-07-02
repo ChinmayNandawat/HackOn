@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (returnData.ai_routing_decision !== 'relist_as_refurbished' && returnData.ai_routing_decision !== 'needs_repair_then_relist') {
+    if (returnData.ai_routing_decision !== 'relist_as_refurbished') {
       return NextResponse.json<RelistResponse>(
         { success: false, error: "This return is not approved for relisting based on AI routing decision." },
         { status: 400 }

@@ -159,7 +159,28 @@ export default function OrdersPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">My Orders</h1>
-          <p className="text-slate-500 mt-1">Manage your recent orders and returns.</p>
+          <div className="flex items-center gap-4 mt-1">
+            <p className="text-slate-500">Manage your recent orders and returns.</p>
+            {/* Subtle Demo Toggle */}
+            <select
+              className="text-xs bg-slate-50 border border-slate-200 rounded px-2 py-1 text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300"
+              value={typeof window !== 'undefined' ? localStorage.getItem("DEMO_TRUST_OVERRIDE") || "" : ""}
+              onChange={(e) => {
+                if (e.target.value) {
+                  localStorage.setItem("DEMO_TRUST_OVERRIDE", e.target.value);
+                } else {
+                  localStorage.removeItem("DEMO_TRUST_OVERRIDE");
+                }
+                // Force a tiny visual update if needed, but since it's just for returns/new it's fine.
+                window.location.reload();
+              }}
+            >
+              <option value="">Auto Trust Score</option>
+              <option value="95">Force High Trust (95%)</option>
+              <option value="75">Force Med Trust (75%)</option>
+              <option value="40">Force Low Trust (40%)</option>
+            </select>
+          </div>
         </div>
         
         {credits > 0 && (

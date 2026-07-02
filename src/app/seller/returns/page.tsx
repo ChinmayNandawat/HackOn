@@ -34,7 +34,7 @@ function AdminReturnsListPageContent() {
   const [error, setError] = useState<string | null>(null);
   
   // Client-side Filter state: 'all' | 'processing' | 'inspected' | 'relisted' | 'donated'
-  const [filter, setFilter] = useState<"all" | "processing" | "inspected" | "relisted" | "donated">("all");
+  const [filter, setFilter] = useState<"all" | "processing" | "inspected" | "relisted" | "donated" | "auto-approved">("all");
 
   // Metrics state
   const [metrics, setMetrics] = useState({
@@ -91,6 +91,7 @@ function AdminReturnsListPageContent() {
         grade: rawItem.grade,
         score: rawItem.score,
         flaws: rawItem.flaws_json?.flaws || null,
+        flaws_json: rawItem.flaws_json || null,
         confidence: rawItem.confidence,
         routing_decision: rawItem.routing_decision,
         routing_reasoning: rawItem.flaws_json?.routing_reasoning || null,
@@ -180,6 +181,7 @@ function AdminReturnsListPageContent() {
   // Filter returns based on state
   const filteredReturns = returns.filter((item) => {
     if (filter === "all") return true;
+    if (filter === "auto-approved") return isReturnAutoApproved(item) || (item as any).flaws_json?.auto_approved === true;
     if (filter === "donated") return item.status === "completed" && item.routing_decision === "donate";
     return item.status === filter;
   });
@@ -274,6 +276,17 @@ function AdminReturnsListPageContent() {
               All
             </button>
             <button
+              onClick={() => setFilter("auto-approved")}
+              className={`px-4 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-1.5 ${
+                filter === "auto-approved" 
+                  ? "bg-emerald-600 text-white shadow-md ring-2 ring-emerald-500/20" 
+                  : "bg-emerald-50/50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 ml-2"
+              }`}
+            >
+              <Zap className="w-3.5 h-3.5 fill-current" />
+              Auto-Processed
+            </button>
+            <button
               onClick={() => setFilter("processing")}
               className={`px-4 py-1.5 rounded-md text-xs font-bold transition ${
                 filter === "processing" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-800"
@@ -356,20 +369,26 @@ function AdminReturnsListPageContent() {
                 rejected: "bg-red-50 text-red-700 border-red-200",
               };
 
-              const statusLabels: Record<string, string> = {
-                processing: "Pending",
-                inspected: "Inspected",
-                relisted: "Relisted",
-                completed: "Completed",
-                accepted: "Accepted",
-                standard_refund: "Refunded",
-                rejected: "Rejected",
-              };
+              let currentStatusLabel: string = item.status;
+              if (item.status === "processing") currentStatusLabel = "Awaiting AI";
+              else if (item.status === "inspected") {
+                if (item.routing_decision === "keep_and_refund" && (item as any).flaws_json?.offer_sent_to_buyer) {
+                  currentStatusLabel = "Pending Buyer Response";
+                } else {
+                  currentStatusLabel = "Needs Seller Review";
+                }
+              } else if (item.status === "relisted") currentStatusLabel = "Relisted";
+              else if (item.status === "rejected") currentStatusLabel = "Declined";
+              else if (item.status === "accepted") currentStatusLabel = "Approved";
+              else if (item.status === "standard_refund") currentStatusLabel = "Standard Refund";
+              else if (item.status === "completed") {
+                if (item.routing_decision === "donate") currentStatusLabel = "Donated";
+                else if (item.routing_decision === "recycle") currentStatusLabel = "Recycled";
+                else if (item.routing_decision === "keep_and_refund") currentStatusLabel = "Partial Refund Accepted";
+                else currentStatusLabel = "Resolved";
+              }
               
               const currentStatusClass = statusClasses[item.status] || "bg-gray-50 text-gray-700 border-gray-200";
-              const currentStatusLabel = (item.status === "inspected" && item.routing_decision === "keep_and_refund" && (item as any).offer_sent_to_buyer)
-                ? "Offer Sent"
-                : statusLabels[item.status] || item.status;
 
               // Color codes for Grade (A green, B teal, C amber, D red)
               const gradeClasses = item.grade ? {
@@ -425,13 +444,19 @@ function AdminReturnsListPageContent() {
                           </span>
                         )}
 
-                        {/* Buyer Trust Score Badge */}
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-bold ${trustProfile.badgeColor}`}
-                        >
-                          <ShieldCheck className="w-3 h-3" />
-                          Trust Score: {trustProfile.score}% ({trustProfile.tier.replace(" Trust", "")})
-                        </span>
+                        {/* Subtle Auto Badges */}
+                        {autoApproved && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center gap-1">
+                            <Zap className="w-3 h-3 fill-current" />
+                            Auto
+                          </span>
+                        )}
+                        {willAutoApprove && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200 flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-amber-500" />
+                            Auto
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -443,18 +468,6 @@ function AdminReturnsListPageContent() {
                       <span>Reason: <span className="text-gray-500 font-normal italic">"{item.return_reason}"</span></span>
                     </div>
 
-                    {/* Auto-Approval Banner */}
-                    {autoApproved ? (
-                      <div className="mt-2.5 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 shadow-sm animate-pulse w-fit">
-                        <Zap className="w-3.5 h-3.5 fill-current flex-shrink-0" />
-                        <span>⚡ AUTO-APPROVED BY SYSTEM — Instant Action Taken</span>
-                      </div>
-                    ) : willAutoApprove ? (
-                      <div className="mt-2.5 bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 shadow-sm animate-pulse w-fit">
-                        <Zap className="w-3.5 h-3.5 fill-current flex-shrink-0" />
-                        <span>⏳ PREDICTED TO BE AUTO-APPROVED (Awaiting AI)</span>
-                      </div>
-                    ) : null}
                   </div>
 
                   {/* Right Arrow/Time indicator */}

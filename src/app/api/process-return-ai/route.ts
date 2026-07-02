@@ -4,7 +4,7 @@ import { calculateBuyerTrustScore } from "@/lib/trustScore";
 
 export async function POST(req: NextRequest) {
   try {
-    const { returnId } = await req.json();
+    const { returnId, demoTrustScore } = await req.json();
 
     if (!returnId) {
       return NextResponse.json({ error: "Missing returnId" }, { status: 400 });
@@ -82,12 +82,27 @@ export async function POST(req: NextRequest) {
     const routeResult = await routeRes.json();
 
     // 4. Update the returns table
+    // Dynamic Trust Degradation (Option 3)
+    let activeScore = demoTrustScore;
+    if (!activeScore) {
+      const { count } = await supabase
+        .from('returns')
+        .select('id', { count: 'exact', head: true })
+        .eq('buyer_id', returnData.buyer_id);
+      
+      const returnsCount = count || 1;
+      if (returnsCount <= 1) activeScore = 95; // 1st return: High Trust
+      else if (returnsCount === 2) activeScore = 75; // 2nd return: Med Trust
+      else activeScore = 40; // 3+ returns: Low Trust
+    }
+
     const combinedFlawsJson: any = {
       flaws: gradeResult.flaws || [],
       routing_reasoning: routeResult.reasoning,
       estimated_resale_price: routeResult.estimatedResalePrice || 0,
       suggested_refund_amount: routeResult.estimatedRefundAmount || 0,
       offer_sent_to_buyer: false,
+      demo_trust_score: activeScore,
     };
 
     let finalStatus = "inspected";
@@ -100,7 +115,8 @@ export async function POST(req: NextRequest) {
         const trustProfile = calculateBuyerTrustScore({
           id: returnId,
           buyer_id: returnData.buyer_id,
-          return_reason: returnData.reason
+          return_reason: returnData.reason,
+          flaws_json: combinedFlawsJson
         });
 
         if (
@@ -113,7 +129,7 @@ export async function POST(req: NextRequest) {
             combinedFlawsJson.auto_approved = true;
             combinedFlawsJson.offer_sent_to_buyer = true; // Automatically send offer
             combinedFlawsJson.refund_offer_amount = combinedFlawsJson.suggested_refund_amount;
-          } else if (routeResult.decision === "relist_as_refurbished" || routeResult.decision === "needs_repair_then_relist") {
+          } else if (routeResult.decision === "relist_as_refurbished" || routeResult.decision === "standard_return") {
             finalStatus = "accepted"; 
             combinedFlawsJson.auto_approved = true;
           } else if (routeResult.decision === "donate" || routeResult.decision === "recycle") {
@@ -145,7 +161,7 @@ export async function POST(req: NextRequest) {
     }
 
     // TRUE AUTOMATION: If it was auto-approved for relisting, trigger the relist API immediately in the background
-    if (combinedFlawsJson.auto_approved && (routeResult.decision === "relist_as_refurbished" || routeResult.decision === "needs_repair_then_relist")) {
+    if (combinedFlawsJson.auto_approved && routeResult.decision === "relist_as_refurbished") {
       fetch(`${baseUrl}/api/relist`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

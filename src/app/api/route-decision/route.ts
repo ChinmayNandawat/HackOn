@@ -11,7 +11,7 @@ export interface RouteDecisionRequest {
 }
 
 export interface RouteDecisionResult {
-  decision: "relist_as_refurbished" | "needs_repair_then_relist" | "donate" | "recycle" | "keep_and_refund" | "reject";
+  decision: "relist_as_refurbished" | "standard_return" | "donate" | "recycle" | "keep_and_refund" | "reject";
   reasoning: string; // 2-3 sentence explanation
   estimatedResalePrice: number; // in INR, 0 if donate or recycle
   estimatedRefundAmount?: number; // suggested partial refund (INR) if keep_and_refund
@@ -96,8 +96,8 @@ Analyze the following returned product context and decide the optimal pathway fo
   - ₹300 for items above ₹2000
 
 ### Allowed Pathways & Logic
-- "relist_as_refurbished": The product is in good condition (Grade A or B) and the expected resale value justifies the return shipping cost.
-- "needs_repair_then_relist": The product has some repairable issues (typically Grade B or C), but the original price is high enough (e.g. above ₹2000) to make repair and subsequent refurbished listing economically viable.
+- "relist_as_refurbished": (DEFAULT & HIGHLY PREFERRED) The item is functional and can be resold. Always aggressively default to this pathway for Grade A, B, and most Grade C items to maximize recovery value.
+- "standard_return": Use this ONLY as an absolute last resort if you are completely certain the product is too defective to be relisted, but too valuable to donate or recycle.
 - "keep_and_refund": The product has minor cosmetic flaws that don't affect core functionality, and return shipping + inspection would erode profit margins. It's more viable for the buyer to keep it with a strict, minimal partial refund.
 - "donate": The product is functional but too damaged to resell (typically Grade C or D) or has low original value where shipping/repair exceeds resale value, but it is still usable.
 - "recycle": The product is completely unusable or heavily damaged (typically Grade D), making it a candidate only for responsible recycling.
@@ -107,7 +107,7 @@ Analyze the following returned product context and decide the optimal pathway fo
 Return ONLY a valid JSON object. Do NOT wrap it in markdown code blocks like \`\`\`json, do NOT output any intro or outro text.
 The JSON must match the following structure:
 {
-  "decision": "relist_as_refurbished" | "needs_repair_then_relist" | "donate" | "recycle" | "keep_and_refund" | "reject",
+  "decision": "relist_as_refurbished" | "standard_return" | "donate" | "recycle" | "keep_and_refund" | "reject",
   "reasoning": "A 2 to 3 sentence explanation detailing why this route was selected based on condition, shipping cost, and economic margin.",
   "estimatedResalePrice": number (realistic refurbished resale price in INR. Set to 0 if the decision is "donate", "recycle", or "keep_and_refund"),
   "estimatedRefundAmount": number (CRITICAL: Only if "keep_and_refund". Must be VERY strict and minimal, generally between 5% and 15% of the original price depending on flaw severity. We want to refund as little as possible while satisfying the buyer),
@@ -159,7 +159,7 @@ Let's proceed.`;
     }
 
     // 6. Validate the routing decision field
-    const validDecisions = ["relist_as_refurbished", "needs_repair_then_relist", "donate", "recycle", "keep_and_refund", "reject"];
+    const validDecisions = ["relist_as_refurbished", "standard_return", "donate", "recycle", "keep_and_refund", "reject"];
     if (!validDecisions.includes(parsedResult.decision)) {
       console.error("[api/route-decision] Invalid decision returned from AI:", parsedResult.decision);
       return NextResponse.json(

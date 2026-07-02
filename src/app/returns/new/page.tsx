@@ -187,10 +187,15 @@ export default function NewReturnPage() {
       if (!insertData || !insertData.id) throw new Error("Failed to retrieve new return ID.");
       
       // 2. Automatically run the AI Inspection pipeline
+      const demoTrustScore = typeof window !== 'undefined' ? localStorage.getItem("DEMO_TRUST_OVERRIDE") : null;
+      
       const processRes = await fetch("/api/process-return-ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ returnId: insertData.id }),
+        body: JSON.stringify({ 
+          returnId: insertData.id,
+          demoTrustScore: demoTrustScore
+        }),
       });
 
       if (!processRes.ok) {

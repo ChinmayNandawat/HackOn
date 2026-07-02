@@ -10,14 +10,14 @@ import { ReturnWithProduct } from "@/types/database";
 const formatPrice = (price: number): string => {
   return `₹${Number(price).toLocaleString("en-IN")}`;
 };
-import { 
-  Sparkles, 
-  Check, 
-  Wrench, 
-  Heart, 
-  RefreshCw, 
-  ArrowLeft, 
-  Loader2, 
+import {
+  Sparkles,
+  Check,
+  Wrench,
+  Heart,
+  RefreshCw,
+  ArrowLeft,
+  Loader2,
   AlertTriangle,
   HelpCircle,
   ThumbsUp,
@@ -30,7 +30,8 @@ import {
   Zap,
   ShoppingBag,
   Clock,
-  Percent
+  Percent,
+  CheckCircle2
 } from "lucide-react";
 import { SellerAutomationProvider, useSellerAutomation } from "@/context/SellerAutomationContext";
 import { calculateBuyerTrustScore } from "@/lib/trustScore";
@@ -164,7 +165,7 @@ function AdminReturnDetailPageContent() {
       if (!res.ok) {
         throw new Error(await res.text());
       }
-      
+
       // Re-fetch to get updated grade, decision, and status
       await fetchReturnDetails();
       setSuccessMessage("AI Inspection completed successfully!");
@@ -250,7 +251,7 @@ function AdminReturnDetailPageContent() {
   // Action Bar: Relist Decision
   const handleRelist = async () => {
     if (!record) return;
-    
+
     // Guard
     if (record.grade === null) {
       setError("Run AI Inspection first before relisting");
@@ -269,15 +270,15 @@ function AdminReturnDetailPageContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ returnId: id }),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok || !data.success) {
         throw new Error(data.error || "Failed to relist product");
       }
-      
+
       setRelistSuccess({ newProductId: data.newProductId, title: data.generatedTitle });
-      
+
       setRecord((prev) => {
         if (!prev) return null;
         return {
@@ -393,7 +394,7 @@ function AdminReturnDetailPageContent() {
         <div className="bg-white p-6 max-w-md w-full border border-red-200 shadow rounded-xl text-center">
           <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-3" />
           <h1 className="text-lg font-bold text-gray-800">Return Detail Failed</h1>
-          <button 
+          <button
             onClick={() => router.push("/seller/returns")}
             className="mt-6 px-4 py-2 bg-gray-800 text-white text-sm font-semibold rounded-lg hover:bg-gray-700"
           >
@@ -411,20 +412,31 @@ function AdminReturnDetailPageContent() {
   const category = product?.category || "N/A";
   const originalPrice = product?.original_price || 0;
   const photos = record.image_urls || [];
-  
+
   // Stored state parsing
   const hasInspectionResults = record.grade !== null;
   const flaws = record.flaws || [];
   const reasoning = record.routing_reasoning || "";
   const resalePrice = record.estimated_resale_price || 0;
 
-  // Status mapping UI
-  const statusLabels: Record<string, string> = {
-    processing: "Pending Inspection",
-    inspected: "Inspected",
-    completed: "Resolved / finalized",
-    relisted: "Relisted as Refurbished",
-  };
+  let currentStatusLabel: string = record.status;
+  if (record.status === "processing") currentStatusLabel = "Awaiting AI";
+  else if (record.status === "inspected") {
+    if (record.routing_decision === "keep_and_refund" && (record as any).flaws_json?.offer_sent_to_buyer) {
+      currentStatusLabel = "Pending Buyer Response";
+    } else {
+      currentStatusLabel = "Needs Seller Review";
+    }
+  } else if (record.status === "relisted") currentStatusLabel = "Relisted";
+  else if (record.status === "rejected") currentStatusLabel = "Declined";
+  else if (record.status === "accepted") currentStatusLabel = "Approved";
+  else if (record.status === "standard_refund") currentStatusLabel = "Standard Refund";
+  else if (record.status === "completed") {
+    if (record.routing_decision === "donate") currentStatusLabel = "Donated";
+    else if (record.routing_decision === "recycle") currentStatusLabel = "Recycled";
+    else if (record.routing_decision === "keep_and_refund") currentStatusLabel = "Partial Refund Accepted";
+    else currentStatusLabel = "Resolved";
+  }
 
   const statusClasses: Record<string, string> = {
     processing: "bg-amber-50 text-amber-700 border-amber-200",
@@ -451,7 +463,7 @@ function AdminReturnDetailPageContent() {
   const processedPhotos = photos.map((url, originalIndex) => {
     // Find flaws that were specifically tagged for this image index by the AI
     const imageFlaws = flaws.filter((f: any) => f.image_index === originalIndex);
-    
+
     // Calculate damage severity score for sorting
     let damageScore = 0;
     imageFlaws.forEach((f: any) => {
@@ -467,8 +479,8 @@ function AdminReturnDetailPageContent() {
     <main className="min-h-screen bg-gray-50/50 p-6 md:p-8 font-sans">
       <div className="max-w-5xl mx-auto">
         {/* Back Link */}
-        <Link 
-          href="/seller/returns" 
+        <Link
+          href="/seller/returns"
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
@@ -503,56 +515,58 @@ function AdminReturnDetailPageContent() {
 
         {/* AI Automated Override Alert Banner */}
         {autoApproved && trustProfile && (
-          <div className="mb-8 p-5 bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-900 text-white rounded-xl shadow-lg border border-emerald-500/40 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-pulse">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-emerald-500/20 rounded-xl border border-emerald-400/30 text-emerald-300 flex-shrink-0">
-                <Zap className="w-6 h-6 fill-current" />
+          <div className="mb-8 p-5 bg-emerald-50/80 border border-emerald-200 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
+            <div className="flex items-start gap-4 relative z-10">
+              <div className="p-3 bg-white rounded-xl border border-emerald-100 text-emerald-600 shadow-sm flex-shrink-0">
+                <Zap className="w-7 h-7 fill-current animate-pulse" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-black tracking-tight">AI Automated Override Active: Auto-Approved by System</h3>
-                  <span className="bg-emerald-500/30 text-emerald-300 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded border border-emerald-400/40">
-                    Instant Action Taken
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-lg font-extrabold text-emerald-900 tracking-tight">Auto-Processed by System</h3>
+                  <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase px-2 py-0.5 rounded-full border border-emerald-200">
+                    AI Automated Override
                   </span>
                 </div>
-                <p className="text-xs text-emerald-100/90 mt-1">
-                  This item qualified under your automated refund threshold (Value under limit & Buyer Trust Score is {trustProfile.score}%).
+                <p className="text-sm text-emerald-800/80 font-medium max-w-xl">
+                  This return bypassed manual review. The item value (₹{Number(originalPrice).toLocaleString("en-IN")}) is under your auto-refund threshold and the buyer has an excellent Trust Score ({trustProfile.score}%).
                 </p>
               </div>
             </div>
-            <div className="bg-emerald-950/60 border border-emerald-500/30 px-4 py-2 rounded-lg text-emerald-200 text-xs font-bold text-center self-start md:self-center whitespace-nowrap">
-               Status: Auto-Approved
+            <div className="bg-white border border-emerald-100 px-5 py-3 rounded-xl text-emerald-700 text-sm font-bold flex items-center gap-2 shadow-sm relative z-10 self-start md:self-center">
+              <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+              Resolved Automatically
             </div>
           </div>
         )}
-        
+
         {willAutoApprove && trustProfile && (
-          <div className="mb-8 p-5 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 text-white rounded-xl shadow-lg border border-amber-500/40 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-pulse">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-amber-500/20 rounded-xl border border-amber-400/30 text-amber-300 flex-shrink-0">
-                <Zap className="w-6 h-6 fill-current" />
+          <div className="mb-8 p-5 bg-amber-50/80 border border-amber-200 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
+            <div className="flex items-start gap-4 relative z-10">
+              <div className="p-3 bg-white rounded-xl border border-amber-100 text-amber-500 shadow-sm flex-shrink-0">
+                <Zap className="w-7 h-7 fill-current animate-pulse" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-black tracking-tight">Predicted to be Auto-Approved</h3>
-                  <span className="bg-amber-500/30 text-amber-300 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded border border-amber-400/40">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-lg font-extrabold text-amber-900 tracking-tight">Predicted to be Auto-Approved</h3>
+                  <span className="bg-amber-100 text-amber-700 text-[10px] font-black uppercase px-2 py-0.5 rounded-full border border-amber-200">
                     Awaiting AI Inspection
                   </span>
                 </div>
-                <p className="text-xs text-amber-100/90 mt-1">
+                <p className="text-sm text-amber-800/80 font-medium max-w-xl">
                   This item appears to qualify under your automated return threshold (Value under limit & Buyer Trust Score is {trustProfile.score}%).
                 </p>
               </div>
             </div>
-            <div className="bg-amber-950/60 border border-amber-500/30 px-4 py-2 rounded-lg text-amber-200 text-xs font-bold text-center self-start md:self-center whitespace-nowrap">
-               Status: Pending Auto-Approval
+            <div className="bg-white border border-amber-100 px-5 py-3 rounded-xl text-amber-700 text-sm font-bold flex items-center gap-2 shadow-sm relative z-10 self-start md:self-center whitespace-nowrap">
+              <Clock className="w-5 h-5 text-amber-500" />
+              Pending Auto-Approval
             </div>
           </div>
         )}
 
         {/* Dual Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          
+
           {/* LEFT COLUMN: Return Context */}
           <div className="space-y-6">
             {/* Buyer Trust Profile Breakdown Card */}
@@ -616,7 +630,7 @@ function AdminReturnDetailPageContent() {
                   <div>
                     <span className="text-gray-400 font-bold block mb-1">Current Status</span>
                     <span className={`px-2 py-0.5 rounded border font-bold inline-block mt-1 ${statusClasses[record.status] || "bg-gray-50 text-gray-700 border-gray-200"}`}>
-                      {statusLabels[record.status] || record.status}
+                      {currentStatusLabel}
                     </span>
                   </div>
                 </div>
@@ -631,8 +645,8 @@ function AdminReturnDetailPageContent() {
               ) : (
                 <div className="grid grid-cols-2 gap-4">
                   {processedPhotos.map((photoItem, displayIndex) => (
-                    <div 
-                      key={photoItem.originalIndex} 
+                    <div
+                      key={photoItem.originalIndex}
                       className="aspect-square relative rounded-lg overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center cursor-pointer group hover:ring-2 hover:ring-blue-500 transition-all"
                       onClick={() => setExpandedImage(photoItem)}
                     >
@@ -645,13 +659,13 @@ function AdminReturnDetailPageContent() {
                           height={400}
                         />
                       ) : (
-                        <img 
-                          src={photoItem.url} 
+                        <img
+                          src={photoItem.url}
                           alt={`Return Capture ${photoItem.originalIndex + 1}`}
                           className="w-full h-full object-cover"
                         />
                       )}
-                      
+
                       {/* Image Labels */}
                       <div className="absolute bottom-2 left-2 flex gap-1 z-10">
                         <span className="bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded font-bold">
@@ -677,28 +691,27 @@ function AdminReturnDetailPageContent() {
             {/* AI Results Display */}
             {hasInspectionResults && (
               <div className="space-y-6">
-                
+
                 {/* Section 1: Grade Card */}
                 <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center text-center">
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">
                     AI Quality Grade
                   </span>
-                  
+
                   <span className={`text-8xl font-black ${gradeClasses} mb-1`}>
                     {record.grade}
                   </span>
-                  
+
                   <span className="text-base font-bold text-gray-700 mb-3">
                     Score: {record.score}/100
                   </span>
 
                   <div className="flex items-center gap-2 mb-4">
                     <span className="text-xs text-gray-400 font-semibold">Confidence:</span>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                      record.confidence === "High" ? "bg-green-50 text-green-700 border-green-200" :
-                      record.confidence === "Medium" ? "bg-amber-50 text-amber-700 border-amber-200" :
-                      "bg-red-50 text-red-700 border-red-200"
-                    }`}>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${record.confidence === "High" ? "bg-green-50 text-green-700 border-green-200" :
+                        record.confidence === "Medium" ? "bg-amber-50 text-amber-700 border-amber-200" :
+                          "bg-red-50 text-red-700 border-red-200"
+                      }`}>
                       {record.confidence}
                     </span>
                   </div>
@@ -744,16 +757,15 @@ function AdminReturnDetailPageContent() {
                 {/* Section 3: Routing Decision */}
                 <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                   <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Optimal Pathway Routing</h3>
-                  
+
                   <div className="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                    <div className={`p-2.5 rounded-lg text-white ${
-                      record.routing_decision === "relist_as_refurbished" ? "bg-green-500" :
-                      record.routing_decision === "needs_repair_then_relist" ? "bg-amber-500" :
-                      record.routing_decision === "donate" ? "bg-blue-500" :
-                      "bg-gray-500"
-                    }`}>
+                    <div className={`p-2.5 rounded-lg text-white ${record.routing_decision === "relist_as_refurbished" ? "bg-green-500" :
+                        record.routing_decision === "standard_return" ? "bg-blue-500" :
+                          record.routing_decision === "donate" ? "bg-blue-500" :
+                            "bg-gray-500"
+                      }`}>
                       {record.routing_decision === "relist_as_refurbished" && <Check className="w-5 h-5" />}
-                      {record.routing_decision === "needs_repair_then_relist" && <Wrench className="w-5 h-5" />}
+                      {record.routing_decision === "standard_return" && <ArrowLeft className="w-5 h-5" />}
                       {record.routing_decision === "donate" && <Heart className="w-5 h-5" />}
                       {record.routing_decision === "recycle" && <RefreshCw className="w-5 h-5" />}
                     </div>
@@ -761,7 +773,7 @@ function AdminReturnDetailPageContent() {
                       <span className="text-xs text-gray-400 font-bold uppercase tracking-wide block">Recommended Action</span>
                       <span className="text-sm font-extrabold text-gray-800">
                         {record.routing_decision === "relist_as_refurbished" && "Relist as Refurbished"}
-                        {record.routing_decision === "needs_repair_then_relist" && "Send for Repair"}
+                        {record.routing_decision === "standard_return" && "Standard Return"}
                         {record.routing_decision === "donate" && "Donate"}
                         {record.routing_decision === "recycle" && "Recycle"}
                         {record.routing_decision === "keep_and_refund" && "Keep & Partial Refund"}
@@ -787,7 +799,7 @@ function AdminReturnDetailPageContent() {
                 {record.status !== "completed" && record.status !== "relisted" && record.status !== "rejected" ? (
                   <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Dashboard Actions</h3>
-                    
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Action Button Logic */}
                       {record.status === "processing" ? (
@@ -822,7 +834,7 @@ function AdminReturnDetailPageContent() {
                         </div>
                       ) : (
                         <div className="flex flex-col gap-2">
-                          {(record.routing_decision === "relist_as_refurbished" || record.routing_decision === "needs_repair_then_relist") ? (
+                          {record.routing_decision === "relist_as_refurbished" ? (
                             <button
                               onClick={handleRelist}
                               disabled={isRelisting}
@@ -864,7 +876,7 @@ function AdminReturnDetailPageContent() {
                               ) : (
                                 <div className="flex flex-col gap-2">
                                   <label className="text-xs font-bold text-gray-700">Refund Offer Amount (₹)</label>
-                                  <input 
+                                  <input
                                     type="number"
                                     value={refundOfferAmount}
                                     onChange={(e) => setRefundOfferAmount(e.target.value)}
@@ -925,7 +937,7 @@ function AdminReturnDetailPageContent() {
                           >
                             <option value="" disabled>Override Decision...</option>
                             <option value="relist_as_refurbished">Relist as Refurbished</option>
-                            <option value="needs_repair_then_relist">Send for Repair</option>
+                            <option value="standard_return">Standard Return</option>
                             <option value="keep_and_refund">Keep & Partial Refund</option>
                             <option value="donate">Donate</option>
                             <option value="recycle">Recycle</option>
@@ -961,15 +973,15 @@ function AdminReturnDetailPageContent() {
 
       {/* Lightbox Modal */}
       {expandedImage && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 md:p-12 animate-in fade-in duration-200"
           onClick={() => setExpandedImage(null)}
         >
-          <div 
-            className="relative w-full max-w-4xl aspect-square bg-gray-900 rounded-2xl overflow-hidden flex items-center justify-center shadow-2xl" 
+          <div
+            className="relative w-full max-w-4xl aspect-square bg-gray-900 rounded-2xl overflow-hidden flex items-center justify-center shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <button 
+            <button
               className="absolute top-4 right-4 bg-black/50 hover:bg-black text-white rounded-full p-2 z-50 transition-colors"
               onClick={() => setExpandedImage(null)}
             >
@@ -983,8 +995,8 @@ function AdminReturnDetailPageContent() {
                 height={1000}
               />
             ) : (
-              <img 
-                src={expandedImage.url} 
+              <img
+                src={expandedImage.url}
                 alt="Enlarged Return Capture"
                 className="w-full h-full object-contain"
               />
