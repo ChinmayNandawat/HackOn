@@ -124,11 +124,7 @@ export default function OrdersPage() {
     return "Return processed — pending seller confirmation.";
   };
 
-  const getCreditsForDecision = (decision: string) => {
-    if (decision === "keep_and_refund" || decision === "keep_refund") return 50;
-    if (decision === "buy_refurbished") return 30;
-    return 0;
-  };
+
 
   const getCompletedOutcomeText = (ret: any) => {
     if (ret.status === "relisted") return "Your return was accepted, and the item has been listed as refurbished to find a new home.";
@@ -191,7 +187,6 @@ export default function OrdersPage() {
             
             const ret = returnsMap[product.id];
             const isKeep = ret?.ai_routing_decision?.includes("keep");
-            const creditsEarned = getCreditsForDecision(ret?.ai_routing_decision || "");
 
             return (
               <Card key={order.id} className="overflow-hidden border-slate-200 shadow-sm hover:shadow-md transition-shadow">
@@ -277,12 +272,6 @@ export default function OrdersPage() {
                           </div>
 
                           <div className="flex flex-wrap gap-2 pt-2">
-                            {creditsEarned > 0 && (
-                              <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 font-bold px-3 py-1 text-xs">
-                                <Sparkles className="w-3 h-3 mr-1 inline-block" />
-                                +{creditsEarned} Green Credits upon finalization
-                              </Badge>
-                            )}
                             {isKeep && (
                               <Badge className="bg-sky-100 text-sky-800 hover:bg-sky-100 border border-sky-200 font-bold px-3 py-1 text-xs">
                                 <Cloud className="w-3 h-3 mr-1 inline-block" />
@@ -344,7 +333,6 @@ export default function OrdersPage() {
                           <CheckCircle2 className="w-8 h-8 text-emerald-500 shrink-0" />
                           <div>
                             <h4 className="font-black text-emerald-900">Decision Accepted</h4>
-                            <p className="text-sm font-bold text-emerald-700 mt-0.5">+{creditsEarned} Green Credits earned</p>
                           </div>
                         </div>
                       )}
@@ -369,12 +357,6 @@ export default function OrdersPage() {
                           <div>
                             <h4 className="font-black text-blue-900">Completed</h4>
                             <p className="text-sm font-bold text-blue-700 mt-0.5">{getCompletedOutcomeText(ret)}</p>
-                            {creditsEarned > 0 && ret.status !== "rejected" && (
-                              <p className="text-xs font-bold text-emerald-700 mt-2 flex items-center gap-1">
-                                <Sparkles className="w-3 h-3" />
-                                +{creditsEarned} Green Credits awarded
-                              </p>
-                            )}
                           </div>
                         </div>
                       )}

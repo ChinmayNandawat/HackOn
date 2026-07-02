@@ -193,23 +193,6 @@ function AdminReturnDetailPageContent() {
 
       if (updateError) throw updateError;
 
-      let actionType = "return_processed";
-      if (record.routing_decision === "donate") actionType = "donate";
-      if (record.routing_decision === "recycle") actionType = "recycle";
-      if (record.routing_decision === "keep_and_refund") actionType = "keep_and_refund";
-
-      // START IMPACT POST (Fire and forget)
-      fetch('/api/impact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: record.buyer_id,
-          actionType,
-          productId: record.product_id
-        })
-      }).catch(console.error);
-      // END IMPACT POST
-
       setRecord((prev) => {
         if (!prev) return null;
         return {
@@ -302,19 +285,6 @@ function AdminReturnDetailPageContent() {
           status: "relisted",
         };
       });
-
-      // START IMPACT POST (Fire and forget)
-      fetch('/api/impact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: record.buyer_id,
-          actionType: 'relist',
-          productId: record.product_id
-        })
-      }).catch(console.error);
-      // END IMPACT POST
-      
     } catch (err: any) {
       console.error("Relist error:", err);
       setRelistError(err.message || "An unexpected error occurred during relisting");
@@ -335,17 +305,6 @@ function AdminReturnDetailPageContent() {
         .eq("id", id);
 
       if (updateError) throw updateError;
-
-      // IMPACT POST (0 credits for reject)
-      fetch('/api/impact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: record.buyer_id,
-          actionType: 'reject',
-          productId: record.product_id
-        })
-      }).catch(console.error);
 
       setRecord((prev) => {
         if (!prev) return null;

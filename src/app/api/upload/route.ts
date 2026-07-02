@@ -35,17 +35,14 @@ export async function POST(
     const bucketName = process.env.AWS_S3_BUCKET_NAME || process.env.S3_BUCKET_NAME;
     const region = process.env.AWS_REGION;
 
-    if (!bucketName || !region) {
+    if (!bucketName || !region || !process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+      console.warn("[api/upload] AWS credentials or S3 bucket not configured. Using mock upload for demo.");
       return NextResponse.json(
-        { error: "S3 Configuration is missing bucket name or region in environment variables." },
-        { status: 500 }
-      );
-    }
-
-    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
-      return NextResponse.json(
-        { error: "AWS Credentials are not configured in environment variables." },
-        { status: 500 }
+        {
+          uploadUrl: "/api/mock-upload",
+          fileUrl: "https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=600&auto=format&fit=crop", // Dummy shoes image
+        },
+        { status: 200 }
       );
     }
 

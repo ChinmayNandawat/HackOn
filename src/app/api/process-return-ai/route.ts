@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
           trustProfile.score >= rules.minTrustScore
         ) {
           if (routeResult.decision === "keep_and_refund") {
-            finalStatus = "standard_refund"; // using standard_refund as the 'resolved' for buyer keeps
+            finalStatus = "inspected"; // Keeps it inspected so the UI shows the offer
             combinedFlawsJson.auto_approved = true;
             combinedFlawsJson.offer_sent_to_buyer = true; // Automatically send offer
             combinedFlawsJson.refund_offer_amount = combinedFlawsJson.suggested_refund_amount;
@@ -121,24 +121,6 @@ export async function POST(req: NextRequest) {
             combinedFlawsJson.auto_approved = true;
           }
           // if reject, do not auto-approve
-          
-          if (combinedFlawsJson.auto_approved) {
-             // trigger impact asynchronously
-             let actionType = "return_processed";
-             if (routeResult.decision === "donate") actionType = "donate";
-             if (routeResult.decision === "recycle") actionType = "recycle";
-             if (routeResult.decision === "keep_and_refund") actionType = "keep_and_refund";
-             
-             fetch(`${baseUrl}/api/impact`, {
-               method: 'POST',
-               headers: { 'Content-Type': 'application/json' },
-               body: JSON.stringify({
-                 sessionId: returnData.buyer_id,
-                 actionType,
-                 productId: product.id
-               })
-             }).catch(console.error);
-          }
         }
       }
     } catch (e) {
