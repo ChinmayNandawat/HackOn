@@ -12,10 +12,11 @@ import {
   Leaf, 
   CheckCircle2, 
   ShieldCheck, 
-  Sparkles 
+  Sparkles,
+  AlertTriangle,
+  Info
 } from "lucide-react";
 import { useCart, CartItem } from "@/context/CartContext";
-import AISizeAdvisorBanner from "@/components/AISizeAdvisorBanner";
 import { supabase } from "@/lib/supabase";
 
 export default function CartDrawer() {
@@ -35,9 +36,6 @@ export default function CartDrawer() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
   const router = useRouter();
-
-  if (!isCartOpen) return null;
-
   // Helper to identify fashion items in cart
   const isFashion = (item: CartItem) => {
     const cat = item.product?.category || "";
@@ -50,21 +48,66 @@ export default function CartDrawer() {
     );
   };
 
-  // Find the first fashion item in cart that could trigger a sizing mismatch
-  const targetFashionItem = items.find((item) => isFashion(item) && item.selectedSize);
+  const fashionItems = items.filter((item) => isFashion(item) && item.selectedSize);
+  const analysisKey = JSON.stringify(fashionItems.map(i => `${i.id}-${i.selectedSize}`));
 
-  // Determine recommended size
-  const getRecommendedSize = (currentSize?: string) => {
-    switch (currentSize) {
-      case "XS": return "S";
-      case "S": return "M";
-      case "M": return "L";
-      case "L": return "XL";
-      case "XL": return "XXL";
-      case "XXL": return "XL";
-      default: return "L";
+  const [sizeAdviceMap, setSizeAdviceMap] = useState<Record<string, string>>({});
+
+  React.useEffect(() => {
+    const fetchAllAdvice = async () => {
+      const newAdvice: Record<string, string> = {};
+      await Promise.all(
+        fashionItems.map(async (item) => {
+          try {
+            const res = await fetch("/api/size-advisor", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                product: item.product,
+                selectedSize: item.selectedSize,
+              }),
+            });
+            const data = await res.json();
+            if (data.reasonText) {
+              newAdvice[item.id] = data.reasonText;
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        })
+      );
+      setSizeAdviceMap(newAdvice);
+    };
+
+    if (fashionItems.length > 0) {
+      fetchAllAdvice();
+    } else {
+      setSizeAdviceMap({});
     }
-  };
+  }, [analysisKey]);
+
+  // Multiple size detection
+  const distinctSizes = new Set(
+    items.filter((item) => isFashion(item) && item.selectedSize).map((item) => item.selectedSize)
+  );
+  
+  const productSizeMap = new Map<string, Set<string>>();
+  let hasDuplicateProductSizes = false;
+  items.forEach(item => {
+    if (isFashion(item) && item.selectedSize) {
+      if (!productSizeMap.has(item.product.id)) {
+        productSizeMap.set(item.product.id, new Set());
+      }
+      productSizeMap.get(item.product.id)!.add(item.selectedSize);
+      if (productSizeMap.get(item.product.id)!.size > 1) {
+        hasDuplicateProductSizes = true;
+      }
+    }
+  });
+
+  const hasMultipleSizesWarning = distinctSizes.size >= 3 || hasDuplicateProductSizes;
+
+  if (!isCartOpen) return null;
 
   const handleCheckout = async () => {
     if (items.length === 0) return;
@@ -189,15 +232,6 @@ export default function CartDrawer() {
               </div>
             ) : (
               <>
-                {/* AI Size Advisor Banner */}
-                {targetFashionItem && (
-                  <AISizeAdvisorBanner 
-                    cartItem={targetFashionItem}
-                    recommendedSize={getRecommendedSize(targetFashionItem.selectedSize)}
-                    onSwitchSize={updateSize}
-                  />
-                )}
-
                 {/* Cart Items List */}
                 <div className="space-y-4">
                   {items.map((item) => {
@@ -256,6 +290,13 @@ export default function CartDrawer() {
                             </div>
                           </div>
 
+                          {/* Inline Sizing Warning */}
+                          {sizeAdviceMap[item.id] && (
+                            <div className="mt-2 text-[10px] text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded-lg leading-snug">
+                              {sizeAdviceMap[item.id]}
+                            </div>
+                          )}
+
                           {/* Quantity controls */}
                           <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-700/50">
                             <span className="text-[10px] text-slate-400 font-medium">
@@ -292,6 +333,19 @@ export default function CartDrawer() {
           {items.length > 0 && !checkoutSuccess && (
             <div className="p-4 sm:p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md space-y-4">
               
+              {/* Accidental Multiple Sizes Warning */}
+              {hasMultipleSizesWarning && (
+                <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 text-amber-800 dark:text-amber-300">
+                  <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+                  <div className="text-xs">
+                    <p className="font-bold mb-0.5">Multiple sizes detected</p>
+                    <p className="opacity-90 leading-snug">
+                      Please verify your selection before checkout.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Green credits reward notice */}
               {greenCreditsEarned > 0 && (
                 <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300">
