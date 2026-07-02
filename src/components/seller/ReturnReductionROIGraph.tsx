@@ -47,87 +47,84 @@ export default function ReturnReductionROIGraph() {
   const totalAvoided = data.reduce((acc, curr) => acc + curr.returnsAvoided, 0);
 
   return (
-    <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl shadow-xl border border-indigo-500/30 p-6 md:p-8 mb-8 relative overflow-hidden transition-all duration-300">
-      {/* Background glow effects */}
-      <div className="absolute -top-32 -right-32 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
-      <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 mb-8 relative transition-all duration-300">
 
       {/* Header section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-indigo-800/60 pb-6 mb-6 relative z-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6 mb-6 relative z-10">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="p-2.5 bg-emerald-500/20 rounded-xl border border-emerald-400/30 text-emerald-300 shadow-inner">
+            <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200 text-emerald-600">
               <TrendingDown className="w-6 h-6" />
             </div>
-            <h2 className="text-xl md:text-2xl font-black tracking-tight text-white">
+            <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900">
               Return Reduction Proof & ROI Graph
             </h2>
           </div>
-          <p className="text-sm text-indigo-200/80 mt-1">
+          <p className="text-sm text-slate-600 font-medium mt-1">
             Your Return Rate vs. Platform Average over the past 6 months since enabling AI tools.
           </p>
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-6 self-start md:self-center bg-slate-800/60 px-4 py-2 rounded-xl border border-indigo-500/20 text-xs font-bold">
+        <div className="flex items-center gap-6 self-start md:self-center bg-gray-100 border border-slate-200 px-4 py-2 rounded-xl text-xs font-bold">
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></span>
-            <span className="text-emerald-300">Your Return Rate</span>
+            <span className="text-slate-900">Your Return Rate</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3 h-0.5 border-t-2 border-dashed border-slate-400"></span>
-            <span className="text-slate-400">Platform Avg (~15%)</span>
+            <span className="text-slate-900">Platform Avg (~15%)</span>
           </div>
         </div>
       </div>
 
-      {/* Bold Stat Callout Banners */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 relative z-10">
-        <div className="bg-emerald-950/60 border border-emerald-500/40 rounded-xl p-4 flex items-center gap-3.5 shadow-lg">
-          <div className="p-3 bg-emerald-500/20 rounded-lg text-emerald-400 flex-shrink-0">
+      {/* Metric Cards - Dashboard Pattern */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 relative z-10">
+        <div className="bg-white border border-emerald-200 rounded-xl p-4 flex items-center gap-3.5 shadow-sm">
+          <div className="p-3 bg-emerald-50 rounded-lg text-emerald-600 flex-shrink-0">
             <ArrowDownRight className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 block">
-              Impact Proof
+            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">
+              Returns Avoided
             </span>
-            <p className="text-sm font-black text-white leading-tight">
-              Returns Reduced by 66% since enabling AI Cart Size Advisor
+            <p className="text-sm font-extrabold text-slate-900 leading-tight">
+              {totalAvoided} returns prevented
             </p>
           </div>
         </div>
 
-        <div className="bg-indigo-950/60 border border-indigo-500/40 rounded-xl p-4 flex items-center gap-3.5 shadow-lg">
-          <div className="p-3 bg-indigo-500/20 rounded-lg text-indigo-300 flex-shrink-0">
+        <div className="bg-white border border-blue-200 rounded-xl p-4 flex items-center gap-3.5 shadow-sm">
+          <div className="p-3 bg-blue-50 rounded-lg text-blue-600 flex-shrink-0">
             <DollarSign className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-300 block">
-              Net Cost Savings
+            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">
+              Estimated Savings
             </span>
-            <p className="text-sm font-black text-white leading-tight">
-              ₹{totalSavingsInr.toLocaleString("en-IN")} (~${Math.round(totalSavingsInr / 83)} USD) saved in logistics
+            <p className="text-sm font-extrabold text-slate-900 leading-tight">
+              ₹{totalSavingsInr.toLocaleString("en-IN")} (~${Math.round(totalSavingsInr / 83)} USD)
             </p>
           </div>
         </div>
 
-        <div className="bg-purple-950/60 border border-purple-500/40 rounded-xl p-4 flex items-center gap-3.5 shadow-lg">
-          <div className="p-3 bg-purple-500/20 rounded-lg text-purple-300 flex-shrink-0">
+        <div className="bg-white border border-amber-200 rounded-xl p-4 flex items-center gap-3.5 shadow-sm">
+          <div className="p-3 bg-amber-50 rounded-lg text-amber-600 flex-shrink-0">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-300 block">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">
               Fit Satisfaction
             </span>
-            <p className="text-sm font-black text-white leading-tight">
-              94.2% Buyer Fit Score ({totalAvoided} returns prevented)
+            <p className="text-sm font-extrabold text-slate-900 leading-tight">
+              94.2% Buyer Fit Score
             </p>
           </div>
         </div>
       </div>
 
       {/* SVG Chart Container */}
-      <div className="bg-slate-900/80 border border-indigo-500/20 rounded-xl p-6 relative z-10 backdrop-blur-sm">
+      <div className="bg-gray-50 border border-slate-200 rounded-xl p-6 relative z-10">
         <div className="relative w-full overflow-x-auto">
           <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-64 overflow-visible">
             <defs>
@@ -145,7 +142,7 @@ export default function ReturnReductionROIGraph() {
                   y1={getY(val)}
                   x2={width - 50}
                   y2={getY(val)}
-                  stroke="#334155"
+                  stroke="#e2e8f0"
                   strokeDasharray="4 4"
                   strokeWidth="1"
                 />
@@ -154,7 +151,7 @@ export default function ReturnReductionROIGraph() {
                   y={getY(val) + 4}
                   textAnchor="end"
                   fontSize="11"
-                  fill="#64748b"
+                  fill="#475569"
                   fontWeight="bold"
                 >
                   {val}%
@@ -221,7 +218,7 @@ export default function ReturnReductionROIGraph() {
                     cx={cx}
                     cy={cyYour}
                     r={isSelected ? "8" : "5"}
-                    fill="#10b981"
+                    fill={isSelected ? "#0ea5e9" : "#10b981"}
                     stroke="#ffffff"
                     strokeWidth="2.5"
                     className="transition-all duration-200 hover:r-8 shadow-lg"
@@ -234,7 +231,7 @@ export default function ReturnReductionROIGraph() {
                     textAnchor="middle"
                     fontSize="13"
                     fontWeight={isSelected ? "900" : "bold"}
-                    fill={isSelected ? "#38bdf8" : "#94a3b8"}
+                    fill={isSelected ? "#0ea5e9" : "#64748b"}
                   >
                     {d.month}
                   </text>
@@ -256,8 +253,8 @@ export default function ReturnReductionROIGraph() {
 
             {/* Annotation Badge for Month 4 (Apr) AI Enablement */}
             <g transform={`translate(${getX(3) - 80}, ${getY(data[3].yourRate) - 45})`}>
-              <rect width="160" height="26" rx="6" fill="#065f46" stroke="#34d399" strokeWidth="1.5" />
-              <text x="80" y="17" textAnchor="middle" fontSize="10" fontWeight="extrabold" fill="#a7f3d0">
+              <rect width="160" height="26" rx="6" fill="#ecfdf5" stroke="#10b981" strokeWidth="1.5" />
+              <text x="80" y="17" textAnchor="middle" fontSize="10" fontWeight="extrabold" fill="#059669">
                 ✨ AI Cart Advisor Enabled
               </text>
             </g>
@@ -265,31 +262,31 @@ export default function ReturnReductionROIGraph() {
         </div>
 
         {/* Selected Month Detail Box */}
-        <div className="mt-8 pt-6 border-t border-indigo-800/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="mt-8 pt-6 border-t border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-indigo-600/30 rounded-xl border border-indigo-400/30 text-indigo-300">
+            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 text-blue-600">
               <Info className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-xs text-indigo-300 font-bold block">
-                Selected Month Analysis: <strong className="text-white text-sm">{activeData.month}</strong>
+              <span className="text-xs text-slate-500 font-bold block">
+                Selected Month Analysis: <strong className="text-slate-900 text-sm">{activeData.month}</strong>
               </span>
-              <p className="text-sm text-gray-300 mt-0.5 font-medium">
-                Your Return Rate was <strong className="text-emerald-400 font-extrabold">{activeData.yourRate}%</strong> vs. Platform Average of <strong className="text-slate-400 font-bold">{activeData.platformAvg}%</strong>.
-                {activeData.note && <span className="ml-2 text-amber-300 font-bold">{activeData.note}</span>}
+              <p className="text-sm text-slate-600 mt-0.5 font-medium">
+                Your Return Rate was <strong className="text-emerald-600 font-extrabold">{activeData.yourRate}%</strong> vs. Platform Average of <strong className="text-slate-700 font-bold">{activeData.platformAvg}%</strong>.
+                {activeData.note && <span className="ml-2 text-amber-600 font-bold">{activeData.note}</span>}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 self-start md:self-center bg-slate-800 px-4 py-2.5 rounded-xl border border-indigo-500/20 text-xs">
+          <div className="flex items-center gap-4 self-start md:self-center bg-gray-50 px-4 py-2.5 rounded-xl border border-slate-200 text-xs">
             <div>
-              <span className="text-gray-400 block font-semibold">Returns Avoided:</span>
-              <span className="text-sm font-black text-white">+{activeData.returnsAvoided} items</span>
+              <span className="text-slate-500 block font-semibold">Returns Avoided:</span>
+              <span className="text-sm font-extrabold text-slate-900">+{activeData.returnsAvoided} items</span>
             </div>
-            <div className="h-6 w-px bg-slate-700"></div>
+            <div className="h-6 w-px bg-slate-300"></div>
             <div>
-              <span className="text-gray-400 block font-semibold">Cost Savings:</span>
-              <span className="text-sm font-black text-emerald-400">₹{activeData.savingsInr.toLocaleString("en-IN")}</span>
+              <span className="text-slate-500 block font-semibold">Cost Savings:</span>
+              <span className="text-sm font-extrabold text-emerald-600">₹{activeData.savingsInr.toLocaleString("en-IN")}</span>
             </div>
           </div>
         </div>

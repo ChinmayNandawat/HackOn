@@ -31,7 +31,7 @@ export function SellerAutomationProvider({ children }: { children: React.ReactNo
   const [rules, setRules] = useState<AutomationRules>(defaultRules);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount, then sync with server
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -45,18 +45,38 @@ export function SellerAutomationProvider({ children }: { children: React.ReactNo
       }
     } catch (err) {
       console.error("Failed to load seller automation rules from localStorage:", err);
-    } finally {
-      setIsLoaded(true);
     }
+    
+    // Fetch fresh rules from server
+    fetch("/api/seller-automation-rules")
+      .then(res => res.json())
+      .then(data => {
+        if (data) {
+          setRules({
+            enabled: data.enabled ?? defaultRules.enabled,
+            maxItemValue: data.maxItemValue ?? defaultRules.maxItemValue,
+            minTrustScore: data.minTrustScore ?? defaultRules.minTrustScore,
+          });
+          setIsLoaded(true);
+        }
+      })
+      .catch(console.error)
+      .finally(() => setIsLoaded(true));
   }, []);
 
-  // Save to localStorage when rules change
+  // Save to localStorage AND server when rules change
   useEffect(() => {
     if (!isLoaded) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(rules));
+      // Fire and forget save to server
+      fetch("/api/seller-automation-rules", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(rules)
+      }).catch(console.error);
     } catch (err) {
-      console.error("Failed to save seller automation rules to localStorage:", err);
+      console.error("Failed to save seller automation rules:", err);
     }
   }, [rules, isLoaded]);
 
@@ -73,7 +93,14 @@ export function SellerAutomationProvider({ children }: { children: React.ReactNo
   };
 
   const isReturnAutoApproved = (item: any): boolean => {
-    if (!rules.enabled || !item) return false;
+    if (!item) return false;
+    
+    // If the return is already processed, rely on the actual DB flag
+    if (item.status && item.status !== "processing") {
+      return item.flaws_json?.auto_approved === true;
+    }
+
+    if (!rules.enabled) return false;
     
     // Check item value
     const price = item.products?.original_price || 0;

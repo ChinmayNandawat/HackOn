@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, RefreshCw } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
 interface Product {
@@ -121,14 +121,19 @@ export default function MarketplaceClient({ products }: { products: Product[] })
   ) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isFashionProduct(product) && !selectedSizes[product.id]) {
+    
+    const isRefurb = product.condition === 'refurbished' || product.is_refurbished;
+    
+    if (isFashionProduct(product) && !isRefurb && !selectedSizes[product.id]) {
       setSizeWarning((prev) => ({ ...prev, [product.id]: true }));
       setTimeout(() => {
         setSizeWarning((prev) => ({ ...prev, [product.id]: false }));
       }, 1500);
       return;
     }
-    addToCart(product, selectedSizes[product.id], displayPrice, isLocalDeal);
+    
+    const finalSize = (isFashionProduct(product) && isRefurb) ? "M" : selectedSizes[product.id];
+    addToCart(product, finalSize, displayPrice, isLocalDeal);
   };
 
   const filteredProducts = products.filter((product) => {
@@ -226,11 +231,9 @@ export default function MarketplaceClient({ products }: { products: Product[] })
                 <CardContent className="p-4 relative flex flex-col flex-1 justify-between gap-3">
                   <div>
                     {isRefurb && (
-                      <div className="mb-1.5 flex items-center gap-1">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black tracking-wide bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">
-                          <span>♻️ Refurbished Batch #{getBatchNumber(product)}</span>
-                          <span>•</span>
-                          <span>Grade {product.grade || product.health_data?.grade || "A"}</span>
+                      <div className="mb-1 flex items-center">
+                        <span className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded shadow-sm border border-emerald-100 w-fit">
+                          <RefreshCw className="w-3 h-3" /> Refurbished
                         </span>
                       </div>
                     )}
@@ -246,7 +249,7 @@ export default function MarketplaceClient({ products }: { products: Product[] })
                   </div>
 
                   {/* Size Selection for Fashion Items */}
-                  {isFashion && (
+                  {isFashion && !isRefurb && (
                     <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
                       <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400">
                         <span>Select Size:</span>
@@ -274,6 +277,16 @@ export default function MarketplaceClient({ products }: { products: Product[] })
                           );
                         })}
                       </div>
+                    </div>
+                  )}
+                  {isFashion && isRefurb && (
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                        <span>Size:</span>
+                      </div>
+                      <span className="inline-flex px-2 py-1 rounded text-[11px] font-black bg-slate-900 text-white dark:bg-white dark:text-slate-900 border border-slate-900 shadow-sm">
+                        M
+                      </span>
                     </div>
                   )}
 
