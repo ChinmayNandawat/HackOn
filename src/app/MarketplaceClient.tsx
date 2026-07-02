@@ -8,12 +8,14 @@ import {
   Sparkles, 
   Check, 
   MapPin, 
-  Zap, 
   Truck,
   ShieldCheck,
-  Leaf
+  Leaf,
+  Heart,
+  Zap
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 
 interface Product {
   id: string;
@@ -42,13 +44,22 @@ interface Product {
 function cleanProductTitle(title: string): string {
   if (!title) return "";
   return title
-    .replace(/\s*-\s*Refurbished.*$/i, "")
+    .replace(/\s*,\s*Grade\s+[A-C].*$/i, "")
+    .replace(/\s*-\s*Grade\s+[A-C].*$/i, "")
     .replace(/\s*\(Grade\s+[A-C]\)/i, "")
-    .replace(/\s*-\s*Grade\s+[A-C]/i, "")
-    .replace(/\s*-\s*Works\s+perfectly.*$/i, "")
+    .replace(/\s*,\s*AI Verified.*$/i, "")
+    .replace(/\s*-\s*AI Verified.*$/i, "")
+    .replace(/\s*,\s*Works\s+perfect*.*$/i, "")
+    .replace(/\s*-\s*Works\s+perfect*.*$/i, "")
+    .replace(/\s*-\s*Refurbished.*$/i, "")
+    .replace(/\s*,\s*Refurbished.*$/i, "")
     .replace(/\s*\[Refurbished\]/i, "")
     .replace(/^Refurbished\s*-\s*/i, "")
+    .replace(/^Refurbished\s*,\s*/i, "")
     .replace(/\bRefurbished\b/i, "")
+    .replace(/\bAI Verified\b/i, "")
+    .replace(/\bGrade\s+[A-C]\b/i, "")
+    .replace(/,\s*$/i, "")
     .trim();
 }
 
@@ -98,6 +109,7 @@ export default function MarketplaceClient({ products }: { products: Product[] })
   const [now, setNow] = useState<number>(0);
 
   const { addToCart } = useCart();
+  const { toggleWishlist, isWishlisted } = useWishlist();
   const [selectedSizes, setSelectedSizes] = useState<Record<string, string>>({});
   const [sizeWarning, setSizeWarning] = useState<Record<string, boolean>>({});
 
@@ -259,24 +271,34 @@ export default function MarketplaceClient({ products }: { products: Product[] })
                     <span className="text-slate-400 font-medium text-xs">No Image Available</span>
                   )}
                   
-                  {/* Top-Left Soft Badges */}
-                  <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10 items-start">
-                    {isRefurb ? (
-                      <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-medium px-2.5 py-0.5 rounded-full text-xs border border-emerald-200/60 dark:border-emerald-800/50 shadow-2xs flex items-center gap-1">
-                        <span>♻️ Refurbished • Grade {grade}</span>
+                  {/* Minimalist Corner Ribbon Tag for Refurbished items only */}
+                  {isRefurb && (
+                    <div className="absolute top-0 left-0 z-10">
+                      <span className="inline-block bg-slate-700/90 dark:bg-slate-800 text-white font-semibold text-xs px-3 py-1 shadow-sm rounded-br-lg">
+                        Refurbished
                       </span>
-                    ) : (
-                      <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium px-2.5 py-0.5 rounded-full text-xs border border-slate-200 dark:border-slate-700 shadow-2xs">
-                        Brand New
-                      </span>
-                    )}
-                    
-                    {isRefurb && (
-                      <span className="bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-400 font-medium px-2.5 py-0.5 rounded-full text-xs border border-amber-200/60 dark:border-amber-800/50 shadow-2xs flex items-center gap-1">
-                        <Zap className="w-3 h-3 fill-amber-500 text-amber-600" />
-                        <span>30-Min Return Eligible</span>
-                      </span>
-                    )}
+                    </div>
+                  )}
+
+                  {/* Top-Right Wishlist Action Button */}
+                  <div className="absolute top-3 right-3 z-20">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleWishlist(product);
+                      }}
+                      className={`p-2 rounded-full border shadow-sm transition-all duration-300 transform active:scale-90 cursor-pointer ${
+                        isWishlisted(product.id)
+                          ? "bg-rose-50 border-rose-300 text-rose-500 dark:bg-rose-950/80 dark:border-rose-700 scale-110"
+                          : "bg-white/90 border-slate-200 text-slate-400 hover:text-rose-500 hover:bg-white dark:bg-slate-900/90 dark:border-slate-700 dark:text-slate-300"
+                      }`}
+                      title="Add to Reverse Wishlist • Local Refurb Match Alert"
+                      aria-label="Wishlist"
+                    >
+                      <Heart className={`w-4 h-4 transition-transform duration-300 ${isWishlisted(product.id) ? "fill-rose-500 text-rose-500 scale-110" : ""}`} />
+                    </button>
                   </div>
 
                   {/* Local Deal Pill if active */}
@@ -292,12 +314,7 @@ export default function MarketplaceClient({ products }: { products: Product[] })
                 <CardContent className="p-4 sm:p-5 flex flex-col flex-1 justify-between gap-4">
                   <div className="space-y-2">
                     
-                    {/* Refurbished Batch Notice */}
-                    {isRefurb && (
-                      <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                        Batch #{getBatchNumber(product)} • AI Verified
-                      </p>
-                    )}
+
 
                     {/* Product Title */}
                     <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-[#0F766E] transition-colors min-h-[42px]">

@@ -101,3 +101,25 @@ export function getReturnRiskData(
   };
 }
 
+export function cleanProductTitle(title?: string): string {
+  if (!title) return "";
+  return title
+    .replace(/\s*,\s*Grade\s+[A-C].*$/i, "")
+    .replace(/\s*-\s*Grade\s+[A-C].*$/i, "")
+    .replace(/\s*\(Grade\s+[A-C]\)/i, "")
+    .replace(/\s*,\s*AI Verified.*$/i, "")
+    .replace(/\s*-\s*AI Verified.*$/i, "")
+    .replace(/\s*,\s*Works\s+perfect*.*$/i, "")
+    .replace(/\s*-\s*Works\s+perfect*.*$/i, "")
+    .replace(/\s*-\s*Refurbished.*$/i, "")
+    .replace(/\s*,\s*Refurbished.*$/i, "")
+    .replace(/\s*\[Refurbished\]/i, "")
+    .replace(/^Refurbished\s*-\s*/i, "")
+    .replace(/^Refurbished\s*,\s*/i, "")
+    .replace(/\bRefurbished\b/i, "")
+    .replace(/\bAI Verified\b/i, "")
+    .replace(/\bGrade\s+[A-C]\b/i, "")
+    .replace(/,\s*$/i, "")
+    .trim();
+}
+

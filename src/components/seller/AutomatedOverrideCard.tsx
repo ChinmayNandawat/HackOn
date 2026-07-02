@@ -29,14 +29,14 @@ export default function AutomatedOverrideCard({ returns = [] }: AutomatedOverrid
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                Automated Return Threshold & Instant Override
+                Automatic Instant Refunds
               </h2>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-teal-50 dark:bg-teal-950/80 text-[#0F766E] dark:text-teal-300 border border-teal-200 dark:border-teal-800 shadow-2xs">
-                AI Rules Engine
+                Auto-Refund Rules
               </span>
             </div>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl leading-relaxed">
-              Eliminate manual inspection bottlenecks by configuring intelligent thresholds for high-reputation buyers.
+              Automatically approve refunds for trusted buyers when the item value is below your set limit.
             </p>
           </div>
         </div>

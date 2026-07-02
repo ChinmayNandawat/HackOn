@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useCart, CartItem } from "@/context/CartContext";
 import AISizeAdvisorBanner from "@/components/AISizeAdvisorBanner";
-import { isFashionItem, getNextSize } from "@/lib/mock-prevention";
+import { isFashionItem, getNextSize, cleanProductTitle } from "@/lib/mock-prevention";
 import { supabase } from "@/lib/supabase";
 
 export default function CartDrawer() {
@@ -214,7 +214,7 @@ export default function CartDrawer() {
                           <div>
                             <div className="flex items-start justify-between gap-1">
                               <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white line-clamp-1">
-                                {item.product.title}
+                                {cleanProductTitle(item.product.title) || item.product.title}
                               </h4>
                               <button
                                 onClick={() => removeFromCart(item.id)}

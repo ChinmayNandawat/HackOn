@@ -15,6 +15,7 @@ import {
   X,
   MapPin
 } from "lucide-react";
+import WishlistNotificationBell from "@/components/shared/WishlistNotificationBell";
 
 const CITIES = ["Mumbai", "Delhi", "Bangalore", "Chennai", "Pune", "Hyderabad"];
 
@@ -122,6 +123,9 @@ export default function Navbar() {
             <Package className="w-4 h-4 text-slate-500 shrink-0" />
             <span className="hidden sm:inline">My Orders</span>
           </Link>
+
+          {/* Reverse Wishlist Local Match Alert Bell */}
+          <WishlistNotificationBell />
 
           {/* Minimalist Cart Button with Soft Teal Item Badge */}
           <button

@@ -11,13 +11,11 @@ import {
   FileText, 
   Layers, 
   AlertCircle,
-  ShieldCheck,
   Zap
 } from "lucide-react";
 import SellerNav from "@/components/SellerNav";
 import { SellerAutomationProvider, useSellerAutomation } from "@/context/SellerAutomationContext";
 import AutomatedOverrideCard from "@/components/seller/AutomatedOverrideCard";
-import { calculateBuyerTrustScore } from "@/lib/trustScore";
 
 export default function AdminReturnsListPage() {
   return (
@@ -189,9 +187,9 @@ function AdminReturnsListPageContent() {
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <header className="mb-4">
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Returns Dashboard & Automated Override</h1>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Returns & Instant Refunds</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Analyze, grade, and route returned inventory with zero manual touchpoints.
+            Manage customer returns, inspect item grades, and review automatic refunds.
           </p>
         </header>
 
@@ -379,7 +377,6 @@ function AdminReturnsListPageContent() {
                 D: "bg-red-50 text-red-700 border-red-200",
               }[item.grade] : "";
 
-              const trustProfile = calculateBuyerTrustScore(item);
               const autoApproved = isReturnAutoApproved(item);
 
               return (
@@ -420,17 +417,9 @@ function AdminReturnsListPageContent() {
                         {/* Grade Badge */}
                         {item.grade && (
                           <span className={`px-2.5 py-0.5 rounded border text-[10px] font-extrabold ${gradeClasses}`}>
-                            Grade {item.grade} • 🤖 Evaluated by Amazon Bedrock • Nova Pro Vision AI
+                            Grade {item.grade}
                           </span>
                         )}
-
-                        {/* Buyer Trust Score Badge */}
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-bold ${trustProfile.badgeColor}`}
-                        >
-                          <ShieldCheck className="w-3 h-3" />
-                          Trust Score: {trustProfile.score}% ({trustProfile.tier.replace(" Trust", "")})
-                        </span>
                       </div>
                     </div>
 
@@ -444,9 +433,9 @@ function AdminReturnsListPageContent() {
 
                     {/* Auto-Approval Banner */}
                     {autoApproved && (
-                      <div className="mt-2.5 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 shadow-sm animate-pulse w-fit">
+                      <div className="mt-2.5 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm w-fit">
                         <Zap className="w-3.5 h-3.5 fill-current flex-shrink-0" />
-                        <span>⚡ AUTO-APPROVED BY SYSTEM — Instant Refund Issued</span>
+                        <span>⚡ Instant Refund (Auto-Approved)</span>
                       </div>
                     )}
                   </div>

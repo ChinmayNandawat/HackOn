@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 
 import Navbar from "@/components/shared/Navbar";
 import CartProviderWrapper from "@/components/shared/CartProviderWrapper";
+import WishlistProviderWrapper from "@/components/shared/WishlistProviderWrapper";
 
 export default function RootLayout({
   children,
@@ -32,12 +33,14 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-slate-100 font-sans text-slate-900">
-        <CartProviderWrapper>
-          <Navbar />
-          <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 md:p-8">
-            {children}
-          </main>
-        </CartProviderWrapper>
+        <WishlistProviderWrapper>
+          <CartProviderWrapper>
+            <Navbar />
+            <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 md:p-8">
+              {children}
+            </main>
+          </CartProviderWrapper>
+        </WishlistProviderWrapper>
       </body>
     </html>
   );
