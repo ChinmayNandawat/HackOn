@@ -225,18 +225,15 @@ export default function MarketplaceClient({ products }: { products: Product[] })
                           Local Deal <CountdownTimer targetDate={product.local_only_until!} />
                         </Badge>
                       )}
+                      <div className="absolute bottom-3 right-3 bg-slate-900/95 text-white z-10 text-[10px] sm:text-[11px] px-3 py-1.5 rounded-full shadow-xl flex items-center gap-1.5 font-bold border border-white/10 backdrop-blur-md">
+                        <RefreshCw className="w-3.5 h-3.5 text-emerald-400" /> 
+                        <span className="tracking-wide">Refurbished</span>
+                      </div>
                     </>
                   )}
                 </div>
                 <CardContent className="p-4 relative flex flex-col flex-1 justify-between gap-3">
                   <div>
-                    {isRefurb && (
-                      <div className="mb-1 flex items-center">
-                        <span className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded shadow-sm border border-emerald-100 w-fit">
-                          <RefreshCw className="w-3 h-3" /> Refurbished
-                        </span>
-                      </div>
-                    )}
                     <h3 className="font-bold text-sm sm:text-base line-clamp-2 leading-snug text-slate-900 dark:text-white min-h-[40px]">{cleanProductTitle(product.title) || product.title}</h3>
                     <div className="flex items-baseline gap-2 mt-2">
                       <p className={isRefurb ? (isLocalDeal ? 'text-amber-600 font-black text-lg sm:text-xl' : 'text-green-700 font-extrabold text-lg sm:text-xl') : 'text-slate-900 font-bold text-base sm:text-lg'}>

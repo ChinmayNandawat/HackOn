@@ -14,9 +14,10 @@ import {
 interface ProductHealthCardProps {
   product: Product;
   showFullDetail?: boolean;
+  overridePrice?: number;
 }
 
-export default function ProductHealthCard({ product, showFullDetail = true }: ProductHealthCardProps) {
+export default function ProductHealthCard({ product, showFullDetail = true, overridePrice }: ProductHealthCardProps) {
   const {
     health_data,
     estimated_resale_price,
@@ -51,7 +52,7 @@ export default function ProductHealthCard({ product, showFullDetail = true }: Pr
 
   // Derived prices
   const origPrice = Number(original_price) || 0;
-  const resalePrice = Number(estimated_resale_price) || 0;
+  const resalePrice = overridePrice !== undefined ? overridePrice : (Number(estimated_resale_price) || 0);
   const savings = origPrice - resalePrice;
   const savingsPercent = origPrice > 0 ? Math.round((savings / origPrice) * 100) : 0;
 

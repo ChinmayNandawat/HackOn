@@ -185,7 +185,7 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
             <div className="h-px bg-gray-300 flex-1" />
           </div>
           
-          <ProductHealthCard product={product} showFullDetail={true} />
+          <ProductHealthCard product={product} showFullDetail={true} overridePrice={displayPrice} />
         </div>
       )}
 
