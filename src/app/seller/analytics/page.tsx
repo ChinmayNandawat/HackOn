@@ -33,7 +33,7 @@ export default async function SellerAnalytics() {
     { label: "Medium", percentage: 15 },
     { label: "Low", percentage: 5 }
   ];
-  let aiSuggestion = `34% of your returns are due to "Wrong Size". Consider adding a detailed sizing chart to your product descriptions to prevent future returns.`;
+  let aiSuggestion = `34% of your returns are due to "Wrong Size". Optional Idea: You may consider evaluating a detailed sizing chart for your product descriptions as you see fit.`;
 
   try {
     const { data: returns, error } = await supabase.from("returns").select("*");
@@ -128,18 +128,18 @@ export default async function SellerAnalytics() {
       // Dynamic Insight
       if (topReasons.length > 0) {
         const topR = topReasons[0];
-        let suggestion = "consider updating your product descriptions.";
+        let suggestion = "you may evaluate reviewing your product descriptions if appropriate.";
         const reasonLower = topR.reason.toLowerCase();
         
         if (reasonLower.includes("size") || reasonLower.includes("small") || reasonLower.includes("large") || reasonLower.includes("fit")) {
-          suggestion = "consider adding a detailed sizing chart to your product descriptions to prevent future returns.";
+          suggestion = "you may want to evaluate adding a detailed sizing chart if appropriate for your catalog.";
         } else if (reasonLower.includes("damage") || reasonLower.includes("broken") || reasonLower.includes("defective")) {
-          suggestion = "consider upgrading your packaging to prevent damage in transit.";
+          suggestion = "you may want to review warehouse packaging specifications as you see fit.";
         } else if (reasonLower.includes("color") || reasonLower.includes("match")) {
-          suggestion = "consider adding more accurate photos in natural lighting.";
+          suggestion = "you may want to evaluate adding natural lighting photos if helpful for accurate representation.";
         }
         
-        aiSuggestion = `${topR.percentage}% of returns are for "${topR.reason}" — ${suggestion}`;
+        aiSuggestion = `${topR.percentage}% of returns are for "${topR.reason}" — Optional Idea: ${suggestion}`;
       } else {
         aiSuggestion = "Not enough return data yet to generate specific insights. AI insights will appear here automatically.";
       }
