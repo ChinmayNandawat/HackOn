@@ -414,8 +414,8 @@ export default function OrdersPage() {
                               <span className="w-3 h-3 bg-amber-500 rounded-full relative z-10"></span>
                             </div>
                             <div>
-                              <h4 className="font-bold text-amber-950 dark:text-amber-200 text-sm sm:text-base">AI Vision Check is analyzing your return capture.</h4>
-                              <p className="text-xs font-medium text-amber-800 dark:text-amber-300 mt-0.5">Automated 100-point inspection usually completes in under 60 seconds.</p>
+                              <h4 className="font-bold text-amber-950 dark:text-amber-200 text-sm sm:text-base">🤖 Evaluated by Amazon Bedrock • Nova Pro Vision AI — Analyzing return capture...</h4>
+                              <p className="text-xs font-medium text-amber-800 dark:text-amber-300 mt-0.5">Automated 100-point vision inspection usually completes in under 60 seconds.</p>
                             </div>
                           </div>
                         )}
@@ -426,7 +426,10 @@ export default function OrdersPage() {
                             <div className="flex items-start gap-3">
                               <div className="w-8 h-8 rounded-full bg-[#0F766E] text-white flex items-center justify-center shrink-0 font-bold text-sm">✓</div>
                               <div>
-                                <h4 className="font-bold text-slate-900 dark:text-white text-base sm:text-lg">AI Resolution Decision Ready</h4>
+                                <h4 className="font-bold text-slate-900 dark:text-white text-base sm:text-lg flex items-center gap-2 flex-wrap">
+                                  <span>AI Resolution Decision Ready</span>
+                                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-teal-50 text-[#0F766E] border border-teal-200">🤖 Evaluated by Amazon Bedrock • Nova Pro Vision AI</span>
+                                </h4>
                                 <p className="text-sm font-bold text-[#0F766E] dark:text-teal-400 mt-0.5">{getDecisionText(ret.ai_routing_decision, ret.flaws_json?.refund_offer_amount)}</p>
                                 <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">{ret.flaws_json?.routing_reasoning}</p>
                               </div>

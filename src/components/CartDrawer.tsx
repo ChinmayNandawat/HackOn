@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useCart, CartItem } from "@/context/CartContext";
 import AISizeAdvisorBanner from "@/components/AISizeAdvisorBanner";
+import { isFashionItem, getNextSize } from "@/lib/mock-prevention";
 import { supabase } from "@/lib/supabase";
 
 export default function CartDrawer() {
@@ -40,14 +41,7 @@ export default function CartDrawer() {
 
   // Helper to identify fashion items in cart
   const isFashion = (item: CartItem) => {
-    const cat = item.product?.category || "";
-    const title = item.product?.title || "";
-    const fashionCategories = ["Shoes", "Footwear", "Fashion", "Clothing", "Apparel", "Wearables"];
-    const keywords = ["shirt", "jacket", "jeans", "dress", "sneakers", "shoe", "hoodie", "coat", "apparel", "wear"];
-    return (
-      fashionCategories.includes(cat) ||
-      keywords.some((kw) => title.toLowerCase().includes(kw))
-    );
+    return isFashionItem(item.product?.category, item.product?.title);
   };
 
   // Find the first fashion item in cart that could trigger a sizing mismatch
@@ -55,15 +49,7 @@ export default function CartDrawer() {
 
   // Determine recommended size
   const getRecommendedSize = (currentSize?: string) => {
-    switch (currentSize) {
-      case "XS": return "S";
-      case "S": return "M";
-      case "M": return "L";
-      case "L": return "XL";
-      case "XL": return "XXL";
-      case "XXL": return "XL";
-      default: return "L";
-    }
+    return getNextSize(currentSize);
   };
 
   const handleCheckout = async () => {

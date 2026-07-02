@@ -419,8 +419,8 @@ function AdminReturnsListPageContent() {
 
                         {/* Grade Badge */}
                         {item.grade && (
-                          <span className={`px-2 py-0.5 rounded border text-[10px] font-bold ${gradeClasses}`}>
-                            Grade {item.grade}
+                          <span className={`px-2.5 py-0.5 rounded border text-[10px] font-extrabold ${gradeClasses}`}>
+                            Grade {item.grade} • 🤖 Evaluated by Amazon Bedrock • Nova Pro Vision AI
                           </span>
                         )}
 

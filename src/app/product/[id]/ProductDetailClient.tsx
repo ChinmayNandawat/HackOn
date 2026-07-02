@@ -6,6 +6,7 @@ import ProductHealthCard from "@/components/ProductHealthCard";
 import BuyRefurbishedButton from "@/components/BuyRefurbishedButton";
 import BuyNewButton from "@/components/BuyNewButton";
 import ReturnPreventionBanner from "@/components/ReturnPreventionBanner";
+import { isFashionItem } from "@/lib/mock-prevention";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag } from "lucide-react";
 import { useCart } from "@/context/CartContext";
@@ -135,7 +136,7 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
       </div>
 
       {/* RETURN PREVENTION BANNER */}
-      {!isRefurbished && (product.category === 'Shoes' || product.category === 'Footwear') && (
+      {!isRefurbished && isFashionItem(product.category, product.title) && (
         <ReturnPreventionBanner 
           riskPercent={riskData.riskPercent}
           reason={riskData.reason}

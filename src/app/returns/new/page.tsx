@@ -327,9 +327,9 @@ export default function NewReturnPage() {
                 <div className="relative z-10 flex items-center justify-between border-b border-slate-200/80 dark:border-slate-700 pb-3">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">AI-VISION-ENG-v4 • ACTIVE SCAN</span>
+                    <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">🤖 Amazon Bedrock • Nova Pro Vision AI • ACTIVE SCAN</span>
                   </div>
-                  <Badge className="bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">100-Point Neural Matrix</Badge>
+                  <Badge className="bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">100-Point Bedrock Vision</Badge>
                 </div>
 
                 {/* Product Thumbnail with Clean Verification Badges */}
@@ -353,7 +353,7 @@ export default function NewReturnPage() {
                     {visionProgress >= 50 && (
                       <div className="absolute top-1/2 -translate-y-1/2 right-2 bg-white/90 dark:bg-slate-900/90 border border-teal-200 dark:border-teal-800 px-2.5 py-1 rounded-lg text-[10px] text-[#0F766E] dark:text-teal-300 font-bold shadow-sm animate-in zoom-in-50 duration-300 flex items-center gap-1">
                         <Sparkles className="w-3 h-3 text-[#0F766E] dark:text-teal-400 shrink-0" />
-                        <span>✨ Surface: Flawless Grade A</span>
+                        <span>✨ Grade A • Amazon Bedrock Nova Pro</span>
                       </div>
                     )}
 
@@ -391,11 +391,11 @@ export default function NewReturnPage() {
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="w-7 h-7 text-[#0F766E] dark:text-teal-400 shrink-0" />
                     <div>
-                      <h4 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">AI Condition Check Passed!</h4>
+                      <h4 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">AI Condition Check Passed! <span className="text-xs font-normal text-slate-500 block sm:inline">(🤖 Evaluated by Amazon Bedrock • Nova Pro Vision AI)</span></h4>
                       <p className="text-xs font-medium text-slate-600 dark:text-slate-300">Your item qualifies for instant driver hand-back & immediate refund override.</p>
                     </div>
                   </div>
-                  <Badge className="bg-[#0F766E] text-white font-bold text-xs px-3 py-1">Grade A Verified</Badge>
+                  <Badge className="bg-[#0F766E] text-white font-bold text-xs px-3 py-1">Grade A • Bedrock Nova Pro</Badge>
                 </div>
               )}
               

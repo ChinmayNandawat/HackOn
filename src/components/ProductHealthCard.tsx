@@ -92,8 +92,11 @@ export default function ProductHealthCard({ product, showFullDetail = true }: Pr
       <div className="bg-gradient-to-r from-emerald-50 to-green-100/50 p-4 border-b border-emerald-100 flex items-start gap-3">
         <ShieldCheck className="w-8 h-8 text-emerald-600 flex-shrink-0 mt-0.5" />
         <div>
-          <h2 className="text-lg font-bold text-gray-900 tracking-tight">AI Verified Product</h2>
-          <p className="text-xs text-gray-600 font-medium">Independently graded by Amazon ReLife AI</p>
+          <h2 className="text-lg font-bold text-gray-900 tracking-tight flex items-center gap-2 flex-wrap">
+            <span>AI Verified Product</span>
+            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">🤖 Amazon Bedrock Nova Pro</span>
+          </h2>
+          <p className="text-xs text-gray-600 font-medium">🤖 Evaluated by Amazon Bedrock • Nova Pro Vision AI</p>
         </div>
       </div>
 
