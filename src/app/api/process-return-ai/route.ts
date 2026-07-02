@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { calculateBuyerTrustScore } from "@/lib/trustScore";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,6 +15,8 @@ export async function POST(req: NextRequest) {
       .from("returns")
       .select(`
         id,
+        buyer_id,
+        reason,
         product_id,
         status,
         return_photo_urls,
@@ -79,13 +82,68 @@ export async function POST(req: NextRequest) {
     const routeResult = await routeRes.json();
 
     // 4. Update the returns table
-    const combinedFlawsJson = {
+    const combinedFlawsJson: any = {
       flaws: gradeResult.flaws || [],
       routing_reasoning: routeResult.reasoning,
       estimated_resale_price: routeResult.estimatedResalePrice || 0,
       suggested_refund_amount: routeResult.estimatedRefundAmount || 0,
       offer_sent_to_buyer: false,
     };
+
+    let finalStatus = "inspected";
+
+    try {
+      const rulesRes = await fetch(`${baseUrl}/api/seller-automation-rules`);
+      if (rulesRes.ok) {
+        const rules = await rulesRes.json();
+        
+        const trustProfile = calculateBuyerTrustScore({
+          id: returnId,
+          buyer_id: returnData.buyer_id,
+          return_reason: returnData.reason
+        });
+
+        if (
+          rules.enabled && 
+          originalPrice <= rules.maxItemValue && 
+          trustProfile.score >= rules.minTrustScore
+        ) {
+          if (routeResult.decision === "keep_and_refund") {
+            finalStatus = "standard_refund"; // using standard_refund as the 'resolved' for buyer keeps
+            combinedFlawsJson.auto_approved = true;
+            combinedFlawsJson.offer_sent_to_buyer = true; // Automatically send offer
+            combinedFlawsJson.refund_offer_amount = combinedFlawsJson.suggested_refund_amount;
+          } else if (routeResult.decision === "relist_as_refurbished" || routeResult.decision === "needs_repair_then_relist") {
+            finalStatus = "accepted"; 
+            combinedFlawsJson.auto_approved = true;
+          } else if (routeResult.decision === "donate" || routeResult.decision === "recycle") {
+            finalStatus = "completed";
+            combinedFlawsJson.auto_approved = true;
+          }
+          // if reject, do not auto-approve
+          
+          if (combinedFlawsJson.auto_approved) {
+             // trigger impact asynchronously
+             let actionType = "return_processed";
+             if (routeResult.decision === "donate") actionType = "donate";
+             if (routeResult.decision === "recycle") actionType = "recycle";
+             if (routeResult.decision === "keep_and_refund") actionType = "keep_and_refund";
+             
+             fetch(`${baseUrl}/api/impact`, {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify({
+                 sessionId: returnData.buyer_id,
+                 actionType,
+                 productId: product.id
+               })
+             }).catch(console.error);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("[api/process-return-ai] Auto-approval logic error:", e);
+    }
 
     const { error: updateErr } = await supabase
       .from("returns")
@@ -94,7 +152,7 @@ export async function POST(req: NextRequest) {
         ai_score: gradeResult.score,
         ai_confidence: gradeResult.confidence.charAt(0).toUpperCase() + gradeResult.confidence.slice(1),
         ai_routing_decision: routeResult.decision,
-        status: "inspected",
+        status: finalStatus,
         flaws_json: combinedFlawsJson,
       })
       .eq("id", returnId);
@@ -104,7 +162,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to update return record" }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, status: "inspected" });
+    // TRUE AUTOMATION: If it was auto-approved for relisting, trigger the relist API immediately in the background
+    if (combinedFlawsJson.auto_approved && (routeResult.decision === "relist_as_refurbished" || routeResult.decision === "needs_repair_then_relist")) {
+      fetch(`${baseUrl}/api/relist`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ returnId })
+      }).catch(err => console.error("[api/process-return-ai] Auto-relist trigger failed:", err));
+    }
+
+    return NextResponse.json({ success: true, status: finalStatus });
   } catch (error: any) {
     console.error("[api/process-return-ai] Unhandled exception:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

@@ -7,7 +7,8 @@ import BuyRefurbishedButton from "@/components/BuyRefurbishedButton";
 import BuyNewButton from "@/components/BuyNewButton";
 import ReturnPreventionBanner from "@/components/ReturnPreventionBanner";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ShoppingBag, RefreshCw } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
 export default function ProductDetailClient({ product, riskData, refurbishedAlternative }: any) {
@@ -101,9 +102,16 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
 
       {/* Header Info */}
       <div className="space-y-2">
-        <span className="inline-block px-2.5 py-1 bg-gray-100 text-gray-600 rounded-md text-[10px] font-extrabold uppercase tracking-widest">
-          {product.category}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="inline-block px-2.5 py-1 bg-gray-100 text-gray-600 rounded-md text-[10px] font-extrabold uppercase tracking-widest">
+            {product.category}
+          </span>
+          {isRefurbished && (
+            <span className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded shadow-sm border border-emerald-100 w-fit">
+              <RefreshCw className="w-3 h-3" /> Refurbished
+            </span>
+          )}
+        </div>
         <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
           {product.title}
         </h1>
@@ -151,8 +159,16 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
           alt={product.title} 
           className="w-full h-full object-contain p-4 mix-blend-multiply"
         />
+        {isRefurbished && (
+          <>
+            <Badge className="absolute top-4 right-4 bg-green-500 hover:bg-green-600 z-10 text-xs px-3 py-1 shadow-md border-none text-white font-black tracking-wide">AI Verified ✓</Badge>
+            {(product.grade || product.health_data?.grade) && (
+              <Badge className="absolute top-4 left-4 bg-slate-900 hover:bg-slate-800 z-10 text-xs px-3 py-1 shadow-md border-none text-white font-black tracking-wide">Grade {product.grade || product.health_data?.grade}</Badge>
+            )}
+          </>
+        )}
         {isLocalDeal && (
-          <div className="absolute top-4 left-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black px-4 py-2 rounded-lg shadow-lg">
+          <div className="absolute bottom-4 left-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black px-4 py-2 rounded-lg shadow-lg">
             Local Deal
           </div>
         )}
@@ -174,7 +190,7 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
       )}
 
       {/* Size Selection for Fashion Items */}
-      {isFashion() && (
+      {isFashion() && !isRefurbished && (
         <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-sm font-black text-slate-800 dark:text-slate-200">Select Size:</span>
@@ -207,6 +223,16 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
           </div>
         </div>
       )}
+      {isFashion() && isRefurbished && (
+        <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-black text-slate-800 dark:text-slate-200">Size:</span>
+          </div>
+          <span className="inline-flex px-4 py-2.5 rounded-xl text-sm font-black bg-slate-900 text-white dark:bg-white dark:text-slate-900 border border-slate-900 shadow-md">
+            M
+          </span>
+        </div>
+      )}
 
       {/* Add to Cart & Buy Actions */}
       <div className="pt-4 space-y-3">
@@ -218,11 +244,12 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
           <>
             <button
               onClick={() => {
-                if (isFashion() && !selectedSize) {
+                if (isFashion() && !isRefurbished && !selectedSize) {
                   setSizeWarning(true);
                   return;
                 }
-                addToCart(product, selectedSize, displayPrice, isLocalDeal);
+                const finalSize = (isFashion() && isRefurbished) ? "M" : selectedSize;
+                addToCart(product, finalSize, displayPrice, isLocalDeal);
               }}
               className="w-full py-5 rounded-xl bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:opacity-95 text-white font-black text-lg tracking-wide shadow-xl transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer"
             >

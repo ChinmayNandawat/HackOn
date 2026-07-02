@@ -380,14 +380,15 @@ function AdminReturnsListPageContent() {
               }[item.grade] : "";
 
               const trustProfile = calculateBuyerTrustScore(item);
-              const autoApproved = isReturnAutoApproved(item);
+              const autoApproved = item.flaws_json?.auto_approved === true;
+              const willAutoApprove = item.status === "processing" && isReturnAutoApproved(item);
 
               return (
                 <Link
                   key={item.id}
                   href={`/seller/returns/${item.id}`}
                   className={`p-5 rounded-xl border shadow-sm flex items-start gap-4 hover:border-blue-300 hover:shadow-md transition group block ${
-                    autoApproved
+                    autoApproved || willAutoApprove
                       ? "border-emerald-400/80 ring-2 ring-emerald-500/20 bg-emerald-50/10"
                       : "bg-white border-gray-200"
                   }`}
@@ -443,12 +444,17 @@ function AdminReturnsListPageContent() {
                     </div>
 
                     {/* Auto-Approval Banner */}
-                    {autoApproved && (
+                    {autoApproved ? (
                       <div className="mt-2.5 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 shadow-sm animate-pulse w-fit">
                         <Zap className="w-3.5 h-3.5 fill-current flex-shrink-0" />
-                        <span>⚡ AUTO-APPROVED BY SYSTEM — Instant Refund Issued</span>
+                        <span>⚡ AUTO-APPROVED BY SYSTEM — Instant Action Taken</span>
                       </div>
-                    )}
+                    ) : willAutoApprove ? (
+                      <div className="mt-2.5 bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 shadow-sm animate-pulse w-fit">
+                        <Zap className="w-3.5 h-3.5 fill-current flex-shrink-0" />
+                        <span>⏳ PREDICTED TO BE AUTO-APPROVED (Awaiting AI)</span>
+                      </div>
+                    ) : null}
                   </div>
 
                   {/* Right Arrow/Time indicator */}

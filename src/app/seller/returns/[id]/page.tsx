@@ -66,6 +66,9 @@ function AdminReturnDetailPageContent() {
   // Lightbox state
   const [expandedImage, setExpandedImage] = useState<{ url: string, imageFlaws?: any[], originalIndex: number } | null>(null);
 
+  // AI Inspection state
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
   useEffect(() => {
     fetchReturnDetails();
   }, [id]);
@@ -147,8 +150,31 @@ function AdminReturnDetailPageContent() {
     }
   };
 
-  // We removed the manual runFullAIInspection function as this is now automated during the buyer submission flow!
-
+  // Action Bar: Run AI Inspection (Fallback for stuck processing returns)
+  const runFullAIInspection = async () => {
+    setIsAnalyzing(true);
+    setError(null);
+    setSuccessMessage(null);
+    try {
+      const res = await fetch("/api/process-return-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ returnId: id }),
+      });
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
+      
+      // Re-fetch to get updated grade, decision, and status
+      await fetchReturnDetails();
+      setSuccessMessage("AI Inspection completed successfully!");
+    } catch (err: any) {
+      console.error("AI Inspection error:", err);
+      setError("AI Inspection failed: " + err.message);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
   // Action Bar: Accept Decision
   const handleAcceptDecision = async () => {
     if (!record) return;
@@ -458,7 +484,8 @@ function AdminReturnDetailPageContent() {
 
   const gradeClasses = record.grade ? gradeColors[record.grade as keyof typeof gradeColors] : "";
   const trustProfile = record ? calculateBuyerTrustScore(record) : null;
-  const autoApproved = record ? isReturnAutoApproved(record) : false;
+  const autoApproved = record?.flaws_json?.auto_approved === true;
+  const willAutoApprove = record?.status === "processing" && record ? isReturnAutoApproved(record) : false;
 
   // SORTING & CONTEXT-AWARE FLAW FILTERING
   // Map images to their specific flaws, calculate a damage score, and sort (most damaged first).
@@ -526,16 +553,40 @@ function AdminReturnDetailPageContent() {
                 <div className="flex items-center gap-2">
                   <h3 className="text-base font-black tracking-tight">AI Automated Override Active: Auto-Approved by System</h3>
                   <span className="bg-emerald-500/30 text-emerald-300 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded border border-emerald-400/40">
-                    Instant Refund
+                    Instant Action Taken
                   </span>
                 </div>
                 <p className="text-xs text-emerald-100/90 mt-1">
-                  This item qualifies under your automated refund threshold (Value under limit & Buyer Trust Score is {trustProfile.score}%). No manual inspection required.
+                  This item qualified under your automated refund threshold (Value under limit & Buyer Trust Score is {trustProfile.score}%).
                 </p>
               </div>
             </div>
             <div className="bg-emerald-950/60 border border-emerald-500/30 px-4 py-2 rounded-lg text-emerald-200 text-xs font-bold text-center self-start md:self-center whitespace-nowrap">
-              ⚡ Status: Auto-Approved
+               Status: Auto-Approved
+            </div>
+          </div>
+        )}
+        
+        {willAutoApprove && trustProfile && (
+          <div className="mb-8 p-5 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 text-white rounded-xl shadow-lg border border-amber-500/40 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-pulse">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-amber-500/20 rounded-xl border border-amber-400/30 text-amber-300 flex-shrink-0">
+                <Zap className="w-6 h-6 fill-current" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-black tracking-tight">Predicted to be Auto-Approved</h3>
+                  <span className="bg-amber-500/30 text-amber-300 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded border border-amber-400/40">
+                    Awaiting AI Inspection
+                  </span>
+                </div>
+                <p className="text-xs text-amber-100/90 mt-1">
+                  This item appears to qualify under your automated return threshold (Value under limit & Buyer Trust Score is {trustProfile.score}%).
+                </p>
+              </div>
+            </div>
+            <div className="bg-amber-950/60 border border-amber-500/30 px-4 py-2 rounded-lg text-amber-200 text-xs font-bold text-center self-start md:self-center whitespace-nowrap">
+               Status: Pending Auto-Approval
             </div>
           </div>
         )}
@@ -780,7 +831,25 @@ function AdminReturnDetailPageContent() {
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Action Button Logic */}
-                      {relistSuccess ? (
+                      {record.status === "processing" ? (
+                        <button
+                          onClick={runFullAIInspection}
+                          disabled={isAnalyzing}
+                          className="col-span-1 sm:col-span-2 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition disabled:bg-amber-400"
+                        >
+                          {isAnalyzing ? (
+                            <>
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                              Running AI Inspection...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-5 h-5" />
+                              Retry AI Inspection
+                            </>
+                          )}
+                        </button>
+                      ) : relistSuccess ? (
                         <div className="col-span-1 sm:col-span-2 bg-green-50 p-4 border border-green-200 rounded-xl text-center">
                           <Check className="w-8 h-8 text-green-500 mx-auto mb-2" />
                           <h3 className="font-bold text-green-700 text-sm">Successfully Listed!</h3>

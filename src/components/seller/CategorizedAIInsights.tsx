@@ -170,7 +170,7 @@ export default function CategorizedAIInsights() {
           const severityBadge = {
             high: "bg-red-50 text-red-700 border-red-200",
             medium: "bg-amber-50 text-amber-800 border-amber-200",
-            optimization: "bg-emerald-50 text-emerald-700 border-emerald-200",
+            optimization: "bg-blue-50 text-blue-700 border-blue-200",
           }[item.severity];
 
           const severityLabel = {
@@ -182,13 +182,13 @@ export default function CategorizedAIInsights() {
           const borderStyle = {
             high: "border-red-200 hover:border-red-300",
             medium: "border-amber-200 hover:border-amber-300",
-            optimization: "border-emerald-200 hover:border-emerald-300",
+            optimization: "border-blue-200 hover:border-blue-300",
           }[item.severity];
 
           return (
             <div
               key={item.id}
-              className={`rounded-2xl border p-6 transition-all duration-300 flex flex-col justify-between ${borderStyle} ${
+              className={`rounded-2xl border p-6 transition-all duration-200 flex flex-col justify-between ${borderStyle} ${
                 isApplied && !item.isInitiallyApplied ? "bg-emerald-50/30 border-emerald-300 shadow-sm" : "bg-slate-50/50 hover:shadow-md"
               }`}
             >

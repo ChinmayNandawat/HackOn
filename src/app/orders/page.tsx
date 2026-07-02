@@ -6,7 +6,7 @@ import { getOrCreateSessionId } from "@/lib/session";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Cloud, Sparkles, Clock, AlertCircle } from "lucide-react";
+import { CheckCircle2, Cloud, Sparkles, Clock, AlertCircle, Zap } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
@@ -238,6 +238,17 @@ export default function OrdersPage() {
                         <AlertCircle className="w-4 h-4" /> 
                         <span>Return requested {formatDistanceToNow(new Date(ret.created_at))} ago for reason: <span className="italic text-slate-700">"{ret.reason}"</span></span>
                       </div>
+                      
+                      {/* Auto Approved Banner */}
+                      {ret.flaws_json?.auto_approved && (
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex gap-3 items-center shadow-sm">
+                          <Zap className="w-5 h-5 text-emerald-500 fill-current shrink-0" />
+                          <div>
+                            <h4 className="font-black text-emerald-900 text-sm">Lightning Fast Return ⚡</h4>
+                            <p className="text-xs font-bold text-emerald-700 mt-0.5">Your strong trust score means this return was automatically approved instantly.</p>
+                          </div>
+                        </div>
+                      )}
                       
                       {/* STATE 1: PROCESSING */}
                       {ret.status === "processing" && (
