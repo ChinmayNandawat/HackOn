@@ -38,21 +38,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const prompt = `You are a fast pre-upload photo validator for an e-commerce returns app. 
+    const prompt = `You are a fast, high-precision pre-upload photo validator for an e-commerce returns app. 
 The user claims the provided image contains a returned product in the category: "${productCategory}".
 
-Evaluate the image against the following criteria:
-1. Does the image plausibly contain a product from the category "${productCategory}"?
-2. Is the image in focus and not overly blurry?
-3. Is the image adequately lit and not too dark?
-4. Is it a real photo taken by a camera? (Reject screenshots, photos of other screens, heavily edited images, or completely blank backgrounds).
+Evaluate the image against these strict boundary thresholds:
+1. CATEGORY MATCH: Does the image plausibly contain a product from the category "${productCategory}"?
+2. SHARPNESS: Is the image sharp enough to read brand logos or inspect surface scratches? (Fail if motion blur obscures edges or fine texture).
+3. LUMINANCE: Is the product adequately lit? (Fail if shadow/darkness obscures >30% of the item's surface).
+4. AUTHENTICITY: Is it a real photo taken by a camera? (Strictly reject screenshots, digital mockups, photos of screens, or heavily filtered photos).
 
-Return EXACTLY and ONLY raw JSON matching this format (no markdown formatting, no code fences like \`\`\`json):
+Return EXACTLY and ONLY raw JSON matching this format (no markdown code blocks, no intro/outro):
 {
   "pass": boolean,
-  "reason": "positive confirmation if pass=true, or specific user-facing fix instruction if pass=false",
-  "failedChecks": ["wrong_product", "blurry", "too_dark", "not_real_photo"] // Include only the ones that failed, empty array if pass=true
-}`;
+  "reason": "Clear confirmation if pass=true, or 1-sentence actionable user fix instruction if pass=false",
+  "failedChecks": ["wrong_product", "blurry", "too_dark", "not_real_photo"]
+}
+
+Example valid output for a dark photo:
+{"pass": false, "reason": "The photo is too dark to inspect surface condition. Please move to a brighter room or turn on flash.", "failedChecks": ["too_dark"]}`;
 
     const rawResponse = await invokeVisionModel(prompt, [imageUrl]);
 

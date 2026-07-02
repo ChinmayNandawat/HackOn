@@ -11,6 +11,7 @@ export interface RouteDecisionRequest {
 }
 
 export interface RouteDecisionResult {
+  marginCalculation?: string; // Step-by-step CoT reasoning for net profit margin
   decision: "relist_as_refurbished" | "needs_repair_then_relist" | "donate" | "recycle" | "keep_and_refund" | "reject";
   reasoning: string; // 2-3 sentence explanation
   estimatedResalePrice: number; // in INR, 0 if donate or recycle
@@ -78,43 +79,33 @@ export async function POST(
     }
 
     // 3. Construct Claude Routing Prompt
-    const routingPrompt = `You are a financial and sustainability routing expert for Amazon's returns processing system.
-Analyze the following returned product context and decide the optimal pathway for it.
+    const routingPrompt = `You are a financial and sustainability routing expert for Amazon's circular returns processing system.
+Analyze the product context and determine the most profitable, sustainable resale pathway.
 
 ### Product Context
 - Category: ${productCategory}
-- Grade: ${grade} (A/B/C/D)
-- Score: ${score} / 100
+- Grade: ${grade} | Score: ${score}/100
 - Original Price: ₹${originalPrice} INR
 - Condition Summary: ${flawSummary}
-- AI Grading Confidence: ${confidence}
+- AI Confidence: ${confidence}
 
-### Logistics & Economic Constraints in India
-- Estimated return shipping cost:
-  - ₹150 for items under ₹500
-  - ₹200 for items between ₹500 and ₹2000
-  - ₹300 for items above ₹2000
+### Logistics Constraints (INR)
+- Estimated Return Shipping: ₹150 (<₹500), ₹200 (₹500-₹2000), ₹300 (>₹2000).
 
-### Allowed Pathways & Logic
-- "relist_as_refurbished": The product is in good condition (Grade A or B) and the expected resale value justifies the return shipping cost.
-- "needs_repair_then_relist": The product has some repairable issues (typically Grade B or C), but the original price is high enough (e.g. above ₹2000) to make repair and subsequent refurbished listing economically viable.
-- "keep_and_refund": The product has minor cosmetic flaws that don't affect core functionality, and return shipping + inspection would erode profit margins. It's more viable for the buyer to keep it with a strict, minimal partial refund.
-- "donate": The product is functional but too damaged to resell (typically Grade C or D) or has low original value where shipping/repair exceeds resale value, but it is still usable.
-- "recycle": The product is completely unusable or heavily damaged (typically Grade D), making it a candidate only for responsible recycling.
-- "reject": The product has no valid flaws, matches the original description perfectly, or exhibits signs of fraudulent claims. The return should be declined.
-
-### Output Instructions
-Return ONLY a valid JSON object. Do NOT wrap it in markdown code blocks like \`\`\`json, do NOT output any intro or outro text.
-The JSON must match the following structure:
+Return ONLY a raw, valid JSON object (no markdown wrapping) matching this exact schema:
 {
+  "marginCalculation": "Step-by-step CoT reasoning: calculate (Estimated Resale Price - Return Shipping Cost - Refurbishing Fee) vs. Keep-and-Refund loss.",
   "decision": "relist_as_refurbished" | "needs_repair_then_relist" | "donate" | "recycle" | "keep_and_refund" | "reject",
-  "reasoning": "A 2 to 3 sentence explanation detailing why this route was selected based on condition, shipping cost, and economic margin.",
-  "estimatedResalePrice": number (realistic refurbished resale price in INR. Set to 0 if the decision is "donate", "recycle", or "keep_and_refund"),
-  "estimatedRefundAmount": number (CRITICAL: Only if "keep_and_refund". Must be VERY strict and minimal, generally between 5% and 15% of the original price depending on flaw severity. We want to refund as little as possible while satisfying the buyer),
-  "confidenceScore": number (0 to 100 representing your level of certainty in this decision)
+  "reasoning": "A 2-sentence explanation summarizing why this decision maximizes margin or sustainability.",
+  "estimatedResalePrice": number (realistic refurbished price in INR, 0 if donate/recycle/keep),
+  "estimatedRefundAmount": number (STRICTLY for 'keep_and_refund': 5% to 15% of original price),
+  "confidenceScore": number (0 to 100)
 }
 
-Let's proceed.`;
+DECISION RULES:
+- If Grade is A or B and (Estimated Resale Price - Shipping) > 20% profit margin -> choose "relist_as_refurbished".
+- If item value is low (<₹500) and minor flaw -> choose "keep_and_refund" with minimal 10% refund to avoid shipping loss.
+- If item is a fraudulent mismatch -> choose "reject".`;
 
     // 4. Invoke the Bedrock Claude Model (text-only)
     let rawResponse: string;
@@ -125,6 +116,7 @@ Let's proceed.`;
       
       // Fallback for demo
       rawResponse = JSON.stringify({
+        marginCalculation: originalPrice < 5000 ? `Low item value (₹${originalPrice}); shipping cost (₹200) erodes profit margin. Keep-and-refund is most viable.` : `Resale value ₹${Math.round(originalPrice * 0.7)} minus ₹300 shipping yields positive >20% margin. Relist as refurbished.`,
         decision: originalPrice < 5000 ? "keep_and_refund" : "relist_as_refurbished",
         reasoning: "Based on the minor flaws and item value, this is the most economically viable option.",
         estimatedResalePrice: originalPrice < 5000 ? 0 : Math.round(originalPrice * 0.7),
@@ -147,6 +139,9 @@ Let's proceed.`;
 
     try {
       parsedResult = JSON.parse(cleanedResponse);
+      if (parsedResult.marginCalculation) {
+        console.log("[api/route-decision] AI Margin CoT Reasoning:", parsedResult.marginCalculation);
+      }
     } catch (parseErr: any) {
       console.error("[api/route-decision] Failed to parse JSON response:", parseErr, "Raw output:", rawResponse);
       return NextResponse.json(

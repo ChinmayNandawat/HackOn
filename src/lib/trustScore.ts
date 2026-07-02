@@ -11,64 +11,69 @@ export interface BuyerTrustProfile {
 }
 
 /**
- * Deterministically computes a Buyer Trust Profile for a given return request.
- * Synthesizes realistic historical order volume, return rate, and return timing
- * to generate a 0-100% score that accurately classifies buyers into High, Medium, or Low trust tiers.
+ * Computes a Buyer Trust Profile for a given return request using a real mathematical engine.
+ * Synthesizes historical order volume, return rate, and return timing
+ * to generate a 10-99% score that accurately classifies buyers into High, Medium, or Low trust tiers.
  */
 export function calculateBuyerTrustScore(item: {
   id?: string;
   buyer_id?: string;
   return_reason?: string;
   created_at?: string;
+  total_orders?: number;
+  total_returns?: number;
+  delivery_timestamp?: string;
+  [key: string]: any;
 }): BuyerTrustProfile {
-  const seedString = item.id || item.buyer_id || "default_seed";
-  
-  // Simple deterministic hash from string
-  let hash = 0;
-  for (let i = 0; i < seedString.length; i++) {
-    hash = (hash << 5) - hash + seedString.charCodeAt(i);
-    hash |= 0; // Convert to 32bit integer
+  // 1. Elapsed Timing (timingHours)
+  let timingHours = 14;
+  if (item.delivery_timestamp && item.created_at) {
+    const deliveryTime = new Date(item.delivery_timestamp).getTime();
+    const returnTime = new Date(item.created_at).getTime();
+    if (!isNaN(deliveryTime) && !isNaN(returnTime) && returnTime >= deliveryTime) {
+      timingHours = Math.round((returnTime - deliveryTime) / 36e5);
+    }
   }
-  const positiveHash = Math.abs(hash);
-  const mod100 = positiveHash % 100;
 
-  // We want a realistic distribution: ~50% High Trust, ~35% Medium Trust, ~15% Low Trust
+  // 2. Order Volume (orderVolume)
+  const orderVolume = typeof item.total_orders === "number" && item.total_orders > 0
+    ? item.total_orders
+    : 12;
+
+  // 3. Return Rate (pastReturnRate)
+  let pastReturnRate = 8;
+  if (typeof item.total_returns === "number" && typeof item.total_orders === "number" && item.total_orders > 0) {
+    pastReturnRate = Math.round((item.total_returns / item.total_orders) * 100);
+  } else if (typeof item.total_returns === "number") {
+    pastReturnRate = Math.round((item.total_returns / orderVolume) * 100);
+  }
+
+  // 4. Score Calculation Algorithm
+  const baseScore = 70;
+  const orderBonus = Math.min(20, orderVolume * 2);
+  const returnPenalty = Math.min(40, Math.round(pastReturnRate * 1.5));
+  const timingBonus = timingHours <= 12 ? 10 : (timingHours <= 48 ? 5 : 0);
+  const rawScore = baseScore + orderBonus - returnPenalty + timingBonus;
+  const score = Math.max(10, Math.min(99, rawScore));
+
+  // 5. Dynamic Tier & Badge Classification
   let tier: "High Trust" | "Medium Trust" | "Low Trust";
-  let score: number;
-  let orderVolume: number;
-  let pastReturnRate: number;
-  let timingHours: number;
   let badgeColor: string;
   let badgeBg: string;
   let iconColor: string;
 
-  if (mod100 >= 50) {
-    // High Trust: Score 86 - 98%
+  if (score >= 85) {
     tier = "High Trust";
-    score = 86 + (positiveHash % 13); // 86 to 98
-    orderVolume = 15 + (positiveHash % 30); // 15 to 44 orders
-    pastReturnRate = 1 + (positiveHash % 5); // 1% to 5% return rate
-    timingHours = 2 + (positiveHash % 18); // 2 to 19 hours post-delivery
     badgeColor = "bg-emerald-50 text-emerald-700 border-emerald-200";
     badgeBg = "bg-emerald-50/80";
     iconColor = "text-emerald-600";
-  } else if (mod100 >= 15) {
-    // Medium Trust: Score 65 - 84%
+  } else if (score >= 65) {
     tier = "Medium Trust";
-    score = 65 + (positiveHash % 20); // 65 to 84
-    orderVolume = 6 + (positiveHash % 10); // 6 to 15 orders
-    pastReturnRate = 8 + (positiveHash % 10); // 8% to 17% return rate
-    timingHours = 24 + (positiveHash % 48); // 24 to 71 hours post-delivery
     badgeColor = "bg-amber-50 text-amber-700 border-amber-200";
     badgeBg = "bg-amber-50/80";
     iconColor = "text-amber-600";
   } else {
-    // Low Trust: Score 42 - 59%
     tier = "Low Trust";
-    score = 42 + (positiveHash % 18); // 42 to 59
-    orderVolume = 1 + (positiveHash % 5); // 1 to 5 orders
-    pastReturnRate = 22 + (positiveHash % 18); // 22% to 39% return rate
-    timingHours = 72 + (positiveHash % 96); // 72 to 167 hours post-delivery
     badgeColor = "bg-red-50 text-red-700 border-red-200";
     badgeBg = "bg-red-50/80";
     iconColor = "text-red-600";
