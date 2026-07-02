@@ -11,13 +11,11 @@ import {
   FileText, 
   Layers, 
   AlertCircle,
-  ShieldCheck,
   Zap
 } from "lucide-react";
 import SellerNav from "@/components/SellerNav";
 import { SellerAutomationProvider, useSellerAutomation } from "@/context/SellerAutomationContext";
 import AutomatedOverrideCard from "@/components/seller/AutomatedOverrideCard";
-import { calculateBuyerTrustScore } from "@/lib/trustScore";
 
 export default function AdminReturnsListPage() {
   return (
@@ -185,13 +183,13 @@ function AdminReturnsListPageContent() {
   });
 
   return (
-    <main className="min-h-screen bg-gray-50/50 p-6 md:p-8 font-sans">
+    <main className="min-h-screen bg-slate-50/60 dark:bg-slate-950 p-6 md:p-8 font-sans">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <header className="mb-4">
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Returns Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Analyze, grade, and route returned inventory.
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Returns & Instant Refunds</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Manage customer returns, inspect item grades, and review automatic refunds.
           </p>
         </header>
 
@@ -209,105 +207,105 @@ function AdminReturnsListPageContent() {
         {/* Section 1: Summary Metrics */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Card 1: Total Returns This Month */}
-          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">
+              <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">
                 Returns This Month
               </span>
               {loading ? (
-                <div className="h-8 w-16 bg-gray-200 animate-pulse rounded"></div>
+                <div className="h-8 w-16 bg-slate-200 dark:bg-slate-800 animate-pulse rounded"></div>
               ) : (
-                <span className="text-3xl font-black text-gray-800">{metrics.totalThisMonth}</span>
+                <span className="text-3xl font-black text-slate-900 dark:text-white">{metrics.totalThisMonth}</span>
               )}
             </div>
-            <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
+            <div className="p-3 bg-teal-50 dark:bg-teal-950/50 text-[#0F766E] dark:text-teal-400 border border-teal-200/60 dark:border-teal-800/50 rounded-xl shadow-2xs">
               <Layers className="w-6 h-6" />
             </div>
           </div>
 
           {/* Card 2: Pending Inspection */}
-          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">
+              <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">
                 Pending Inspection
               </span>
               {loading ? (
-                <div className="h-8 w-16 bg-gray-200 animate-pulse rounded"></div>
+                <div className="h-8 w-16 bg-slate-200 dark:bg-slate-800 animate-pulse rounded"></div>
               ) : (
-                <span className="text-3xl font-black text-amber-600">{metrics.pendingInspection}</span>
+                <span className="text-3xl font-black text-amber-600 dark:text-amber-400">{metrics.pendingInspection}</span>
               )}
             </div>
-            <div className="p-3 bg-amber-50 text-amber-600 rounded-lg">
+            <div className="p-3 bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/50 rounded-xl shadow-2xs">
               <Clock className="w-6 h-6" />
             </div>
           </div>
 
           {/* Card 3: Avg Grade Score */}
-          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">
+              <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">
                 Avg Quality Score
               </span>
               {loading ? (
-                <div className="h-8 w-16 bg-gray-200 animate-pulse rounded"></div>
+                <div className="h-8 w-16 bg-slate-200 dark:bg-slate-800 animate-pulse rounded"></div>
               ) : (
-                <span className="text-3xl font-black text-green-600">
+                <span className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
                   {metrics.avgScore > 0 ? `${metrics.avgScore}/100` : "N/A"}
                 </span>
               )}
             </div>
-            <div className="p-3 bg-green-50 text-green-600 rounded-lg">
+            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/50 rounded-xl shadow-2xs">
               <BarChart3 className="w-6 h-6" />
             </div>
           </div>
         </section>
 
         {/* Section 2: Filter Bar */}
-        <section className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4">
-          <div className="flex bg-gray-100 p-1 rounded-lg">
+        <section className="mb-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+          <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
             <button
               onClick={() => setFilter("all")}
-              className={`px-4 py-1.5 rounded-md text-xs font-bold transition ${
-                filter === "all" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-800"
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                filter === "all" ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               All
             </button>
             <button
               onClick={() => setFilter("processing")}
-              className={`px-4 py-1.5 rounded-md text-xs font-bold transition ${
-                filter === "processing" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-800"
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                filter === "processing" ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               Pending
             </button>
             <button
               onClick={() => setFilter("inspected")}
-              className={`px-4 py-1.5 rounded-md text-xs font-bold transition ${
-                filter === "inspected" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-800"
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                filter === "inspected" ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               Inspected
             </button>
             <button
               onClick={() => setFilter("relisted")}
-              className={`px-4 py-1.5 rounded-md text-xs font-bold transition ${
-                filter === "relisted" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-800"
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                filter === "relisted" ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               Relisted
             </button>
             <button
               onClick={() => setFilter("donated")}
-              className={`px-4 py-1.5 rounded-md text-xs font-bold transition ${
-                filter === "donated" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-800"
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                filter === "donated" ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               Donated
             </button>
           </div>
 
-          <span className="text-xs text-gray-400 font-medium">
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-bold">
             Showing {filteredReturns.length} return{filteredReturns.length !== 1 ? "s" : ""}
           </span>
         </section>
@@ -379,17 +377,16 @@ function AdminReturnsListPageContent() {
                 D: "bg-red-50 text-red-700 border-red-200",
               }[item.grade] : "";
 
-              const trustProfile = calculateBuyerTrustScore(item);
               const autoApproved = isReturnAutoApproved(item);
 
               return (
                 <Link
                   key={item.id}
                   href={`/seller/returns/${item.id}`}
-                  className={`p-5 rounded-xl border shadow-sm flex items-start gap-4 hover:border-blue-300 hover:shadow-md transition group block ${
+                  className={`p-5 rounded-2xl border shadow-2xs flex items-start gap-4 transition group block ${
                     autoApproved
-                      ? "border-emerald-400/80 ring-2 ring-emerald-500/20 bg-emerald-50/10"
-                      : "bg-white border-gray-200"
+                      ? "border-emerald-300 dark:border-emerald-700 bg-emerald-50/20 dark:bg-emerald-950/20 hover:border-emerald-400"
+                      : "bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-teal-400 dark:hover:border-teal-500 hover:shadow-sm"
                   }`}
                 >
                   {/* Thumbnail */}
@@ -419,18 +416,10 @@ function AdminReturnsListPageContent() {
 
                         {/* Grade Badge */}
                         {item.grade && (
-                          <span className={`px-2 py-0.5 rounded border text-[10px] font-bold ${gradeClasses}`}>
+                          <span className={`px-2.5 py-0.5 rounded border text-[10px] font-extrabold ${gradeClasses}`}>
                             Grade {item.grade}
                           </span>
                         )}
-
-                        {/* Buyer Trust Score Badge */}
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-bold ${trustProfile.badgeColor}`}
-                        >
-                          <ShieldCheck className="w-3 h-3" />
-                          Trust Score: {trustProfile.score}% ({trustProfile.tier.replace(" Trust", "")})
-                        </span>
                       </div>
                     </div>
 
@@ -444,9 +433,9 @@ function AdminReturnsListPageContent() {
 
                     {/* Auto-Approval Banner */}
                     {autoApproved && (
-                      <div className="mt-2.5 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 shadow-sm animate-pulse w-fit">
+                      <div className="mt-2.5 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm w-fit">
                         <Zap className="w-3.5 h-3.5 fill-current flex-shrink-0" />
-                        <span>⚡ AUTO-APPROVED BY SYSTEM — Instant Refund Issued</span>
+                        <span>⚡ Instant Refund (Auto-Approved)</span>
                       </div>
                     )}
                   </div>

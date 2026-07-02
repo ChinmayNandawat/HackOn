@@ -673,6 +673,9 @@ function AdminReturnDetailPageContent() {
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">
                     AI Quality Grade
                   </span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-teal-50 text-[#0F766E] border border-teal-200 mb-2 shadow-2xs">
+                    🤖 Evaluated by Amazon Bedrock • Nova Pro Vision AI
+                  </span>
                   
                   <span className={`text-8xl font-black ${gradeClasses} mb-1`}>
                     {record.grade}
@@ -700,7 +703,12 @@ function AdminReturnDetailPageContent() {
 
                 {/* Section 2: Flaw Map */}
                 <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">AI Flaw Map</h3>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-4">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">AI Flaw Map</h3>
+                    <span className="text-[10px] font-extrabold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200 w-fit">
+                      🤖 Evaluated by Amazon Bedrock • Nova Pro Vision AI
+                    </span>
+                  </div>
                   {flaws.length === 0 ? (
                     <p className="text-xs text-gray-400 italic">No defects identified by the AI vision grader.</p>
                   ) : (

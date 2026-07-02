@@ -6,9 +6,11 @@ import ProductHealthCard from "@/components/ProductHealthCard";
 import BuyRefurbishedButton from "@/components/BuyRefurbishedButton";
 import BuyNewButton from "@/components/BuyNewButton";
 import ReturnPreventionBanner from "@/components/ReturnPreventionBanner";
+import { isFashionItem, cleanProductTitle } from "@/lib/mock-prevention";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Heart } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 
 export default function ProductDetailClient({ product, riskData, refurbishedAlternative }: any) {
   const [buyerLocation, setBuyerLocation] = useState<string>("");
@@ -16,6 +18,7 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
   const [timeLeft, setTimeLeft] = useState<string>("");
 
   const { addToCart } = useCart();
+  const { toggleWishlist, isWishlisted } = useWishlist();
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [sizeWarning, setSizeWarning] = useState<boolean>(false);
 
@@ -96,7 +99,7 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
           {product.category}
         </Link>
         <span>→</span>
-        <span className="text-gray-900 truncate">{product.title}</span>
+        <span className="text-gray-900 truncate">{cleanProductTitle(product.title) || product.title}</span>
       </nav>
 
       {/* Header Info */}
@@ -105,7 +108,7 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
           {product.category}
         </span>
         <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
-          {product.title}
+          {cleanProductTitle(product.title) || product.title}
         </h1>
         <div className="flex items-end gap-3 mt-4">
           {isRefurbished ? (
@@ -135,7 +138,7 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
       </div>
 
       {/* RETURN PREVENTION BANNER */}
-      {!isRefurbished && (product.category === 'Shoes' || product.category === 'Footwear') && (
+      {!isRefurbished && isFashionItem(product.category, product.title) && (
         <ReturnPreventionBanner 
           riskPercent={riskData.riskPercent}
           reason={riskData.reason}
@@ -216,19 +219,33 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
           </Button>
         ) : (
           <>
-            <button
-              onClick={() => {
-                if (isFashion() && !selectedSize) {
-                  setSizeWarning(true);
-                  return;
-                }
-                addToCart(product, selectedSize, displayPrice, isLocalDeal);
-              }}
-              className="w-full py-5 rounded-xl bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:opacity-95 text-white font-black text-lg tracking-wide shadow-xl transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer"
-            >
-              <ShoppingBag className="w-5 h-5" />
-              <span>Add to Cart</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => toggleWishlist(product)}
+                className={`p-5 rounded-xl border font-bold flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-lg shrink-0 ${
+                  isWishlisted(product.id)
+                    ? "bg-rose-50 border-rose-300 text-rose-600 dark:bg-rose-950/80 dark:border-rose-700"
+                    : "bg-white border-slate-200 text-slate-700 hover:border-rose-300 hover:text-rose-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200"
+                }`}
+                title="Reverse Wishlist • Local Refurb Match Alert"
+              >
+                <Heart className={`w-6 h-6 transition-transform duration-300 ${isWishlisted(product.id) ? "fill-rose-500 text-rose-500 scale-110" : ""}`} />
+              </button>
+              <button
+                onClick={() => {
+                  if (isFashion() && !selectedSize) {
+                    setSizeWarning(true);
+                    return;
+                  }
+                  addToCart(product, selectedSize, displayPrice, isLocalDeal);
+                }}
+                className="flex-1 py-5 rounded-xl bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:opacity-95 text-white font-black text-lg tracking-wide shadow-xl transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer"
+              >
+                <ShoppingBag className="w-5 h-5" />
+                <span>Add to Cart</span>
+              </button>
+            </div>
 
             {isRefurbished ? (
               <BuyRefurbishedButton 

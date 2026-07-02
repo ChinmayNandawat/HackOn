@@ -1,4 +1,5 @@
 import PersonalImpactStats from "@/components/PersonalImpactStats";
+import ImpactLeaderboard from "@/components/ImpactLeaderboard";
 import { RefreshCcw, ShieldCheck, HeartHandshake, Globe, Leaf, TrendingUp } from "lucide-react";
 
 export default function ImpactPage() {
@@ -26,6 +27,9 @@ export default function ImpactPage() {
 
         {/* Personal Metrics & Tier */}
         <PersonalImpactStats />
+
+        {/* Community Leaderboard */}
+        <ImpactLeaderboard />
 
         {/* Platform-wide stats — light compact banner */}
         <div className="bg-gray-50 rounded-2xl p-5 md:p-6 border border-gray-100">
