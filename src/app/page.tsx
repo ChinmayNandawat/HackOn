@@ -13,7 +13,7 @@ export default async function Marketplace() {
     <div className="space-y-6">
       {error && (
         <div className="p-4 bg-red-50 text-red-600 rounded-md text-sm mb-4">
-          ⚠️ Supabase not connected or query failed. (Add your keys to .env.local)
+          Supabase not connected or query failed. (Add your keys to .env.local)
         </div>
       )}
       <MarketplaceClient products={displayProducts} />

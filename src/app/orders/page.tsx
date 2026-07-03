@@ -158,7 +158,7 @@ export default function OrdersPage() {
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">My Orders</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">My Orders</h1>
           <div className="flex items-center gap-4 mt-1">
             <p className="text-slate-500">Manage your recent orders and returns.</p>
             {/* Subtle Demo Toggle */}
@@ -260,7 +260,7 @@ export default function OrdersPage() {
                         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex gap-3 items-center shadow-sm">
                           <Zap className="w-5 h-5 text-emerald-500 fill-current shrink-0" />
                           <div>
-                            <h4 className="font-black text-emerald-900 text-sm">Lightning Fast Return ⚡</h4>
+                            <h4 className="font-bold text-emerald-900 text-sm">Lightning Fast Return</h4>
                             <p className="text-xs font-bold text-emerald-700 mt-0.5">Your strong trust score means this return was automatically approved instantly.</p>
                           </div>
                         </div>

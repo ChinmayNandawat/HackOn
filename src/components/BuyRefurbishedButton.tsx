@@ -71,7 +71,7 @@ export default function BuyRefurbishedButton({ productId, originalPrice, estimat
         <div className="absolute -top-14 left-0 right-0 flex justify-center animate-in fade-in slide-in-from-bottom-4 duration-300 pointer-events-none">
           <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-2 rounded-full shadow-lg text-sm font-bold flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-            You earned 30 Green Credits! 🌱
+            You earned 30 Green Credits
           </div>
         </div>
       )}

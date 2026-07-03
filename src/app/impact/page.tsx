@@ -16,13 +16,13 @@ export default function ImpactPage() {
         
         {/* Header */}
         <div className="space-y-2 text-center md:text-left mt-8 md:mt-4">
-          <div className="flex items-center gap-3 justify-center md:justify-start">
-            <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center border border-emerald-100">
-              <Leaf className="w-4.5 h-4.5 text-emerald-600" />
+          <div className="flex items-center gap-2.5 justify-center md:justify-start">
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center border border-emerald-100">
+              <Leaf className="w-4 h-4 text-emerald-600" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">My Impact</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">My Impact</h1>
           </div>
-          <p className="text-gray-500 font-medium text-sm">See how your choices are helping build a circular economy.</p>
+          <p className="text-sm text-gray-500">See how your choices are helping build a circular economy.</p>
         </div>
 
         {/* Personal Metrics & Tier */}

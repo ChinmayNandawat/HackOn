@@ -144,7 +144,7 @@ export default function SustainabilityTier({ credits, tier }: SustainabilityTier
       )}
       {!nextTier && (
         <div className="text-center text-xs text-emerald-600 font-semibold -mt-1">
-          🎉 You've reached the highest tier!
+          You've reached the highest tier!
         </div>
       )}
 

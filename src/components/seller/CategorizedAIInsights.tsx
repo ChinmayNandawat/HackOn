@@ -180,9 +180,9 @@ export default function CategorizedAIInsights() {
           }[item.severity];
 
           const severityLabel = {
-            high: "⚠️ High Priority Alert",
-            medium: "💡 Medium Alert",
-            optimization: "✨ Active Mitigation",
+            high: "High Priority Alert",
+            medium: "Medium Alert",
+            optimization: "Active Mitigation",
           }[item.severity];
 
           const borderStyle = {
@@ -236,7 +236,7 @@ export default function CategorizedAIInsights() {
                   className="w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-200 bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-950 border border-slate-200/80 shadow-2xs cursor-pointer"
                 >
                   <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
-                  <span>{isOpen ? "💡 Hide Optional AI Suggestion ▴" : "💡 View Optional AI Suggestion ▾"}</span>
+                  <span>{isOpen ? "Hide AI Suggestion" : "View AI Suggestion"}</span>
                 </button>
 
                 {isOpen && (

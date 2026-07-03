@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Trophy, Sparkles, Globe, MapPin, Building2, ArrowRight, Award } from "lucide-react";
+import { Trophy, Sparkles, Globe, MapPin, Building2, ArrowRight, Award, Leaf } from "lucide-react";
 
 type ScopeTab = "local" | "national" | "global";
 
@@ -113,7 +113,7 @@ export default function ImpactLeaderboard() {
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
-            <span>🏛️</span>
+            <Building2 className="w-3.5 h-3.5" />
             <span>National</span>
           </button>
           <button
@@ -195,7 +195,7 @@ export default function ImpactLeaderboard() {
               {/* Green Credit Score Pill */}
               <div className="text-right shrink-0">
                 <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-black text-xs md:text-sm shadow-2xs">
-                  <span>🌿</span>
+                  <Leaf className="w-3.5 h-3.5 text-emerald-500" />
                   <span>{user.credits.toLocaleString()} pts</span>
                 </div>
               </div>
@@ -213,7 +213,7 @@ export default function ImpactLeaderboard() {
           
           <div className="flex items-center gap-3.5 relative z-10">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-lg shrink-0 shadow-inner">
-              ✨
+              <Sparkles className="w-5 h-5 text-emerald-300" />
             </div>
             <div>
               <div className="text-xs md:text-sm font-bold text-emerald-100">

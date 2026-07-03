@@ -8,7 +8,7 @@ import BuyNewButton from "@/components/BuyNewButton";
 import ReturnPreventionBanner from "@/components/ReturnPreventionBanner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingBag, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShoppingBag, RefreshCw, ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
 export default function ProductDetailClient({ product, riskData, refurbishedAlternative }: any) {
@@ -90,15 +90,14 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
 
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-8 space-y-8 font-sans pb-20">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs md:text-sm text-gray-500 font-semibold mb-2">
-        <Link href="/" className="hover:text-gray-900 transition-colors">Home</Link>
-        <span>→</span>
-        <Link href={`/?category=${encodeURIComponent(product.category)}`} className="hover:text-gray-900 transition-colors">
+      <nav className="flex items-center gap-1.5 text-xs text-slate-400 font-medium mb-4">
+        <Link href="/" className="hover:text-slate-700 transition-colors">Home</Link>
+        <span>/</span>
+        <Link href={`/?category=${encodeURIComponent(product.category)}`} className="hover:text-slate-700 transition-colors">
           {product.category}
         </Link>
-        <span>→</span>
-        <span className="text-gray-900 truncate">{product.title}</span>
+        <span>/</span>
+        <span className="text-slate-700 truncate">{product.title}</span>
       </nav>
 
       {/* Header Info */}
@@ -108,12 +107,12 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
             {product.category}
           </span>
           {isRefurbished && (
-            <span className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded shadow-sm border border-emerald-100 w-fit">
-              <RefreshCw className="w-3 h-3" /> Refurbished
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-md border border-emerald-200 dark:border-emerald-800/80 shadow-xs tracking-wide w-fit">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" /> AI Verified
             </span>
           )}
         </div>
-        <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight leading-tight">
           {product.title}
         </h1>
         <div className="flex items-end gap-3 mt-4">
@@ -121,10 +120,10 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
             <>
               <div className="flex flex-col">
                 <div className="flex items-center gap-3">
-                  <span className={isLocalDeal ? "text-4xl font-black text-amber-500" : "text-4xl font-black text-emerald-600"}>
+                  <span className={isLocalDeal ? "text-3xl font-bold text-amber-500" : "text-3xl font-bold text-slate-900"}>
                     ₹{displayPrice.toLocaleString("en-IN")}
                   </span>
-                  <span className="text-lg font-bold text-gray-400 line-through mb-1">
+                  <span className="text-base text-slate-400 line-through">
                     ₹{(product.original_price || 0).toLocaleString("en-IN")}
                   </span>
                 </div>
@@ -136,7 +135,7 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
               </div>
             </>
           ) : (
-            <span className="text-4xl font-black text-gray-900">
+            <span className="text-3xl font-bold text-gray-900">
               ₹{(product.original_price || 0).toLocaleString("en-IN")}
             </span>
           )}
@@ -190,9 +189,14 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
 
         {isRefurbished && (
           <>
-            <Badge className="absolute top-4 right-4 bg-green-500 hover:bg-green-600 z-10 text-xs px-3 py-1 shadow-md border-none text-white font-black tracking-wide">AI Verified ✓</Badge>
+            <div 
+              className="absolute top-0 right-0 z-10 bg-emerald-600 text-white font-bold text-xs sm:text-sm px-4 py-1.5 shadow-md rounded-tr-2xl flex items-center select-none" 
+              style={{ clipPath: 'polygon(14px 0%, 100% 0%, 100% 100%, 0% 100%)', paddingLeft: '22px' }}
+            >
+              Refurbished
+            </div>
             {(product.grade || product.health_data?.grade) && (
-              <Badge className="absolute top-4 left-4 bg-slate-900 hover:bg-slate-800 z-10 text-xs px-3 py-1 shadow-md border-none text-white font-black tracking-wide">Grade {product.grade || product.health_data?.grade}</Badge>
+              <span className="absolute top-4 left-4 bg-slate-900/90 text-white z-10 text-xs font-medium px-3 py-1 rounded shadow-md">Grade {product.grade || product.health_data?.grade}</span>
             )}
           </>
         )}
@@ -224,8 +228,8 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
           <div className="flex items-center justify-between">
             <span className="text-sm font-black text-slate-800 dark:text-slate-200">Select Size:</span>
             {sizeWarning && (
-              <span className="text-red-500 font-extrabold text-xs flex items-center gap-1 animate-bounce">
-                ⚠️ Size selection is required!
+              <span className="text-red-500 font-semibold text-xs flex items-center gap-1">
+                Size selection is required
               </span>
             )}
           </div>
@@ -280,7 +284,7 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
                 const finalSize = (isFashion() && isRefurbished) ? "M" : selectedSize;
                 addToCart(product, finalSize, displayPrice, isLocalDeal);
               }}
-              className="w-full py-5 rounded-xl bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:opacity-95 text-white font-black text-lg tracking-wide shadow-xl transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer"
+              className="w-full py-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-base tracking-wide shadow-md transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer"
             >
               <ShoppingBag className="w-5 h-5" />
               <span>Add to Cart</span>
