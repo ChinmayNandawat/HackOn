@@ -82,8 +82,6 @@ export default function MarketplaceClient({ products }: { products: Product[] })
   const [now, setNow] = useState<number>(0);
 
   const { addToCart } = useCart();
-  const [selectedSizes, setSelectedSizes] = useState<Record<string, string>>({});
-  const [sizeWarning, setSizeWarning] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     setNow(Date.now());
@@ -106,13 +104,6 @@ export default function MarketplaceClient({ products }: { products: Product[] })
     );
   };
 
-  const handleSizeClick = (e: React.MouseEvent, productId: string, size: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setSelectedSizes((prev) => ({ ...prev, [productId]: size }));
-    setSizeWarning((prev) => ({ ...prev, [productId]: false }));
-  };
-
   const handleAddToCartClick = (
     e: React.MouseEvent,
     product: Product,
@@ -124,15 +115,12 @@ export default function MarketplaceClient({ products }: { products: Product[] })
     
     const isRefurb = product.condition === 'refurbished' || product.is_refurbished;
     
-    if (isFashionProduct(product) && !isRefurb && !selectedSizes[product.id]) {
-      setSizeWarning((prev) => ({ ...prev, [product.id]: true }));
-      setTimeout(() => {
-        setSizeWarning((prev) => ({ ...prev, [product.id]: false }));
-      }, 1500);
+    if (isFashionProduct(product) && !isRefurb) {
+      window.location.href = `/product/${product.id}`;
       return;
     }
     
-    const finalSize = (isFashionProduct(product) && isRefurb) ? "M" : selectedSizes[product.id];
+    const finalSize = (isFashionProduct(product) && isRefurb) ? "M" : undefined;
     addToCart(product, finalSize, displayPrice, isLocalDeal);
   };
 
@@ -247,47 +235,7 @@ export default function MarketplaceClient({ products }: { products: Product[] })
                     </div>
                   </div>
 
-                  {/* Size Selection for Fashion Items */}
-                  {isFashion && !isRefurb && (
-                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                        <span>Select Size:</span>
-                        {sizeWarning[product.id] && (
-                          <span className="text-red-500 font-extrabold flex items-center gap-0.5 animate-bounce">
-                            ⚠️ Required!
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {["XS", "S", "M", "L", "XL", "XXL"].map((size) => {
-                          const isSelected = selectedSizes[product.id] === size;
-                          return (
-                            <button
-                              key={size}
-                              onClick={(e) => handleSizeClick(e, product.id, size)}
-                              className={`px-2 py-1 rounded text-[11px] font-black transition-all border ${
-                                isSelected
-                                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-slate-900 shadow-sm scale-105"
-                                  : "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400 hover:bg-slate-100"
-                              }`}
-                            >
-                              {size}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                  {isFashion && isRefurb && (
-                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                        <span>Size:</span>
-                      </div>
-                      <span className="inline-flex px-2 py-1 rounded text-[11px] font-black bg-slate-900 text-white dark:bg-white dark:text-slate-900 border border-slate-900 shadow-sm">
-                        M
-                      </span>
-                    </div>
-                  )}
+
 
                   {/* Add to Cart Button */}
                   <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -297,10 +245,10 @@ export default function MarketplaceClient({ products }: { products: Product[] })
                         isRefurb
                           ? "bg-emerald-600 hover:bg-emerald-700 text-white"
                           : "bg-slate-900 hover:bg-slate-800 text-white"
-                      } ${sizeWarning[product.id] ? "ring-2 ring-red-500 ring-offset-2 animate-pulse" : ""}`}
+                      }`}
                     >
                       <ShoppingBag className="w-4 h-4" />
-                      <span>Add to Cart</span>
+                      <span>{isFashion && !isRefurb ? "Select Options" : "Add to Cart"}</span>
                     </button>
                   </div>
                 </CardContent>
