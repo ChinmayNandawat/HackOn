@@ -8,7 +8,7 @@ import BuyNewButton from "@/components/BuyNewButton";
 import ReturnPreventionBanner from "@/components/ReturnPreventionBanner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingBag, RefreshCw } from "lucide-react";
+import { ShoppingBag, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
 export default function ProductDetailClient({ product, riskData, refurbishedAlternative }: any) {
@@ -19,6 +19,7 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
   const { addToCart } = useCart();
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [sizeWarning, setSizeWarning] = useState<boolean>(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     setNow(Date.now());
@@ -83,9 +84,9 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
      }
   }
 
-  const displayImage = (product.health_data?.return_photo_urls && product.health_data.return_photo_urls.length > 0)
-    ? product.health_data.return_photo_urls[0]
-    : product.image_url || 'https://via.placeholder.com/600';
+  const displayImages = (isRefurbished && product.health_data?.return_photo_urls && product.health_data.return_photo_urls.length > 0)
+    ? product.health_data.return_photo_urls
+    : [product.image_url || 'https://via.placeholder.com/600'];
 
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-8 space-y-8 font-sans pb-20">
@@ -153,12 +154,40 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
       )}
 
       {/* Main Image */}
-      <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden border border-gray-200 relative flex items-center justify-center">
+      <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden border border-gray-200 relative flex items-center justify-center group">
         <img 
-          src={displayImage} 
-          alt={product.title} 
-          className="w-full h-full object-contain p-4 mix-blend-multiply"
+          src={displayImages[currentImageIndex] || displayImages[0]} 
+          alt={`${product.title} - Image ${currentImageIndex + 1}`} 
+          className="w-full h-full object-contain p-4 mix-blend-multiply transition-opacity duration-300"
         />
+
+        {displayImages.length > 1 && (
+          <>
+            <button 
+              onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1))}
+              className="absolute left-4 p-2 bg-white/80 hover:bg-white rounded-full shadow-md text-gray-800 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <button 
+              onClick={() => setCurrentImageIndex((prev) => (prev === displayImages.length - 1 ? 0 : prev + 1))}
+              className="absolute right-4 p-2 bg-white/80 hover:bg-white rounded-full shadow-md text-gray-800 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+            
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-20">
+              {displayImages.map((_: any, idx: number) => (
+                <button 
+                  key={idx} 
+                  onClick={() => setCurrentImageIndex(idx)}
+                  className={`w-2.5 h-2.5 rounded-full transition-colors shadow-sm ${idx === currentImageIndex ? 'bg-gray-800' : 'bg-gray-400 hover:bg-gray-600'}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
+
         {isRefurbished && (
           <>
             <Badge className="absolute top-4 right-4 bg-green-500 hover:bg-green-600 z-10 text-xs px-3 py-1 shadow-md border-none text-white font-black tracking-wide">AI Verified ✓</Badge>
@@ -168,7 +197,7 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
           </>
         )}
         {isLocalDeal && (
-          <div className="absolute bottom-4 left-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black px-4 py-2 rounded-lg shadow-lg">
+          <div className="absolute bottom-4 left-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black px-4 py-2 rounded-lg shadow-lg z-10">
             Local Deal
           </div>
         )}

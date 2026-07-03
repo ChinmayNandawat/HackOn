@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Product } from "@/types/database";
 import AnnotatedImage from "./AnnotatedImage";
 import { 
@@ -8,7 +8,11 @@ import {
   Shield, 
   Leaf, 
   Clock, 
-  CheckCircle
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Maximize2
 } from "lucide-react";
 
 interface ProductHealthCardProps {
@@ -18,6 +22,9 @@ interface ProductHealthCardProps {
 }
 
 export default function ProductHealthCard({ product, showFullDetail = true, overridePrice }: ProductHealthCardProps) {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+
   const {
     health_data,
     estimated_resale_price,
@@ -35,20 +42,9 @@ export default function ProductHealthCard({ product, showFullDetail = true, over
   const return_photo_urls = health_data?.return_photo_urls || [];
 
   // Determine which image to show with annotations
-  let annotatedImageUrl = image_url;
-  let flawsToDraw = flaws;
-
-  if (return_photo_urls.length > 0 && flaws.length > 0) {
-    // Find the image index that actually has the flaws (usually 3 for the damage close-up)
-    // Default to the first flaw's index
-    const targetIndex = flaws[0].image_index ?? 0;
-    
-    if (return_photo_urls[targetIndex]) {
-      annotatedImageUrl = return_photo_urls[targetIndex];
-      // Only draw flaws that actually belong to this specific image!
-      flawsToDraw = flaws.filter((f: any) => f.image_index === targetIndex || f.image_index === undefined);
-    }
-  }
+  const displayImages = return_photo_urls.length > 0 ? return_photo_urls : [image_url || 'https://via.placeholder.com/600'];
+  const currentImageUrl = displayImages[currentImageIndex] || displayImages[0];
+  const flawsToDraw = flaws.filter((f: any) => f.image_index === currentImageIndex || (f.image_index === undefined && currentImageIndex === 0));
 
   // Derived prices
   const origPrice = Number(original_price) || 0;
@@ -129,16 +125,128 @@ export default function ProductHealthCard({ product, showFullDetail = true, over
 
         {/* SECTION 3: Annotated Photo */}
         {showFullDetail && (
-          <div className="flex flex-col items-center border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-            <AnnotatedImage 
-              imageUrl={annotatedImageUrl} 
-              flaws={flawsToDraw} 
-              width={380} 
-              height={380} 
-            />
+          <div className="flex flex-col items-center border border-gray-100 bg-gray-50/50 rounded-xl p-3 relative">
+            <div 
+              className="relative group flex items-center justify-center w-full max-w-[380px] overflow-hidden rounded-lg cursor-pointer"
+              onClick={() => setLightboxOpen(true)}
+            >
+              <AnnotatedImage 
+                imageUrl={currentImageUrl} 
+                flaws={flawsToDraw} 
+                width={380} 
+                height={380} 
+              />
+
+              
+              {displayImages.length > 1 && (
+                <>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setCurrentImageIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1)); }}
+                    className="absolute left-2 p-1.5 bg-white/80 hover:bg-white rounded-full shadow-md text-gray-800 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setCurrentImageIndex((prev) => (prev === displayImages.length - 1 ? 0 : prev + 1)); }}
+                    className="absolute right-2 p-1.5 bg-white/80 hover:bg-white rounded-full shadow-md text-gray-800 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                  <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-20">
+                    {displayImages.map((_: any, idx: number) => (
+                      <button 
+                        key={idx} 
+                        onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(idx); }}
+                        className={`w-2 h-2 rounded-full transition-colors shadow-sm ${idx === currentImageIndex ? 'bg-gray-800' : 'bg-gray-400 hover:bg-gray-600'}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
             <p className="text-[11px] text-gray-500 mt-3 italic text-center">
-              AI-detected issues are highlighted on this photo.
+              Click image to expand · AI-detected issues are highlighted.
             </p>
+          </div>
+        )}
+
+        {/* Lightbox Modal */}
+        {lightboxOpen && (
+          <div 
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setLightboxOpen(false)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setLightboxOpen(false);
+              if (e.key === 'ArrowLeft') setCurrentImageIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1));
+              if (e.key === 'ArrowRight') setCurrentImageIndex((prev) => (prev === displayImages.length - 1 ? 0 : prev + 1));
+            }}
+            tabIndex={0}
+            role="dialog"
+            ref={(el) => el?.focus()}
+          >
+            <div 
+              className="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <button 
+                onClick={() => setLightboxOpen(false)}
+                className="absolute -top-3 -right-3 p-2 bg-white rounded-full shadow-xl text-gray-800 hover:bg-gray-100 transition-colors z-30"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Expanded annotated image */}
+              <div className="relative bg-white rounded-2xl overflow-hidden shadow-2xl">
+                <AnnotatedImage 
+                  imageUrl={currentImageUrl} 
+                  flaws={flawsToDraw} 
+                  width={700} 
+                  height={700} 
+                />
+
+                {/* Nav arrows */}
+                {displayImages.length > 1 && (
+                  <>
+                    <button 
+                      onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1))}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 bg-white/90 hover:bg-white rounded-full shadow-lg text-gray-800 transition-colors z-20"
+                    >
+                      <ChevronLeft className="w-6 h-6" />
+                    </button>
+                    <button 
+                      onClick={() => setCurrentImageIndex((prev) => (prev === displayImages.length - 1 ? 0 : prev + 1))}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 bg-white/90 hover:bg-white rounded-full shadow-lg text-gray-800 transition-colors z-20"
+                    >
+                      <ChevronRight className="w-6 h-6" />
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* Dots + caption below the image */}
+              <div className="mt-4 flex flex-col items-center gap-2">
+                {displayImages.length > 1 && (
+                  <div className="flex justify-center gap-2">
+                    {displayImages.map((_: any, idx: number) => (
+                      <button 
+                        key={idx} 
+                        onClick={() => setCurrentImageIndex(idx)}
+                        className={`w-3 h-3 rounded-full transition-colors shadow-sm border-2 ${
+                          idx === currentImageIndex 
+                            ? 'bg-white border-white' 
+                            : 'bg-white/40 border-white/40 hover:bg-white/70'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+                <p className="text-white/80 text-sm font-medium">
+                  Image {currentImageIndex + 1} of {displayImages.length}
+                  {flawsToDraw.length > 0 && ` · ${flawsToDraw.length} issue${flawsToDraw.length > 1 ? 's' : ''} detected`}
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
