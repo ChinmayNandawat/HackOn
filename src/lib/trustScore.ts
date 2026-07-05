@@ -37,7 +37,7 @@ export function calculateBuyerTrustScore(item: {
   }
 
   // 1. Elapsed Timing (timingHours)
-  let timingHours = 14;
+  let timingHours = item.flaws_json?.custom_timing_hours !== undefined ? Number(item.flaws_json.custom_timing_hours) : 14;
   if (item.delivery_timestamp && item.created_at) {
     const deliveryTime = new Date(item.delivery_timestamp).getTime();
     const returnTime = new Date(item.created_at).getTime();
