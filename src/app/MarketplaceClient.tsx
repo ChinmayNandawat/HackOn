@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingBag, RefreshCw } from "lucide-react";
+import { ShoppingBag, RefreshCw, ShieldCheck } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
 interface Product {
@@ -149,26 +149,27 @@ export default function MarketplaceClient({ products }: { products: Product[] })
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Marketplace</h1>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Marketplace</h1>
+        <p className="text-sm text-slate-500 mt-1">Browse new and refurbished products</p>
       </div>
       
       <div className="flex gap-2">
         <button onClick={() => setFilter("all")}>
-          <Badge variant={filter === "all" ? "default" : "outline"} className={filter === "all" ? "bg-slate-900 text-white" : ""}>
+          <Badge variant={filter === "all" ? "default" : "outline"} className={`rounded-full px-4 py-1 text-xs font-medium transition-colors ${filter === "all" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"}`}>
             All
           </Badge>
         </button>
         <button onClick={() => setFilter("new")}>
-          <Badge variant={filter === "new" ? "default" : "outline"} className={filter === "new" ? "bg-slate-900 text-white" : ""}>
-            New Only
+          <Badge variant={filter === "new" ? "default" : "outline"} className={`rounded-full px-4 py-1 text-xs font-medium transition-colors ${filter === "new" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"}`}>
+            New
           </Badge>
         </button>
         <button onClick={() => setFilter("refurbished")}>
           <Badge 
             variant={filter === "refurbished" ? "default" : "outline"} 
-            className={filter === "refurbished" ? "bg-green-600 hover:bg-green-700 text-white border-transparent" : "text-green-700 border-green-200 bg-green-50"}
+            className={`rounded-full px-4 py-1 text-xs font-medium transition-colors ${filter === "refurbished" ? "bg-emerald-600 hover:bg-emerald-700 text-white border-transparent" : "text-emerald-700 border-emerald-200 bg-emerald-50 hover:bg-emerald-100"}`}
           >
             Refurbished
           </Badge>
@@ -195,8 +196,8 @@ export default function MarketplaceClient({ products }: { products: Product[] })
 
           return (
             <Link href={`/product/${product.id}`} key={product.id}>
-              <Card className={`hover:shadow-lg transition-all duration-300 cursor-pointer h-full flex flex-col ${isRefurb ? 'border-green-200 bg-gradient-to-b from-green-50/20 to-white' : 'bg-white'} ${isLocalDeal ? 'ring-2 ring-amber-400' : ''}`}>
-                <div className="h-44 sm:h-52 bg-slate-100 dark:bg-slate-900 relative flex items-center justify-center overflow-hidden shrink-0 rounded-t-xl">
+              <Card className={`hover:shadow-md transition-all duration-300 cursor-pointer h-full flex flex-col border-slate-200/80 ${isRefurb ? 'bg-white' : 'bg-white'} ${isLocalDeal ? 'ring-1 ring-amber-300' : ''}`}>
+                <div className="h-44 sm:h-52 bg-slate-50 relative flex items-center justify-center overflow-hidden shrink-0 rounded-t-xl">
                   {product.image_url ? (
                     <img src={product.image_url} alt={product.title} className="object-contain w-full h-full p-4 mix-blend-multiply dark:mix-blend-normal transition-transform duration-500 hover:scale-105" />
                   ) : (
@@ -204,9 +205,14 @@ export default function MarketplaceClient({ products }: { products: Product[] })
                   )}
                   {isRefurb && (
                     <>
-                      <Badge className="absolute top-2 right-2 bg-green-500 hover:bg-green-600 z-10 text-[10px] sm:text-xs px-2 py-0.5 shadow-sm">AI Verified ✓</Badge>
+                      <div 
+                        className="absolute top-0 right-0 z-10 bg-emerald-600 text-white font-bold text-[11px] sm:text-xs px-3 py-1 shadow-md rounded-tr-xl flex items-center select-none" 
+                        style={{ clipPath: 'polygon(12px 0%, 100% 0%, 100% 100%, 0% 100%)', paddingLeft: '18px' }}
+                      >
+                        Refurbished
+                      </div>
                       {(product.grade || product.health_data?.grade) && (
-                        <Badge className="absolute top-2 left-2 bg-slate-900 hover:bg-slate-800 z-10 text-[10px] sm:text-xs px-2 py-0.5 shadow-sm">Grade {product.grade || product.health_data?.grade}</Badge>
+                        <span className="absolute top-2 left-2 bg-slate-900/90 text-white z-10 text-[10px] sm:text-xs font-medium px-2 py-0.5 rounded shadow-sm">Grade {product.grade || product.health_data?.grade}</span>
                       )}
                       {isLocalDeal && (
                         <Badge className="absolute bottom-2 left-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 border-none text-white font-bold px-2 py-0.5 flex items-center shadow-lg z-10 text-[10px] sm:text-xs">
@@ -218,36 +224,36 @@ export default function MarketplaceClient({ products }: { products: Product[] })
                 </div>
                 <CardContent className="p-4 relative flex flex-col flex-1 justify-between gap-3">
                   <div>
-                    <h3 className="font-bold text-sm sm:text-base line-clamp-2 leading-snug text-slate-900 dark:text-white min-h-[40px]">{cleanProductTitle(product.title) || product.title}</h3>
+                    <h3 className="font-semibold text-sm sm:text-base line-clamp-2 leading-snug text-slate-900 dark:text-white min-h-[40px]">{cleanProductTitle(product.title) || product.title}</h3>
                     {isRefurb && (
                       <div className="flex items-center gap-1.5 mt-1.5">
-                        <RefreshCw className="w-3 h-3 text-emerald-500" />
-                        <span className="text-[10px] sm:text-[11px] font-bold text-emerald-600 tracking-wide uppercase">Refurbished</span>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 tracking-wide shadow-2xs">
+                          <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" /> AI Verified
+                        </span>
                       </div>
                     )}
                     <div className="flex items-baseline gap-2 mt-2">
-                      <p className={isRefurb ? (isLocalDeal ? 'text-amber-600 font-black text-lg sm:text-xl' : 'text-green-700 font-extrabold text-lg sm:text-xl') : 'text-slate-900 font-bold text-base sm:text-lg'}>
+                      <p className={isRefurb ? (isLocalDeal ? 'text-amber-600 font-bold text-lg' : 'text-slate-900 font-bold text-lg') : 'text-slate-900 font-semibold text-base sm:text-lg'}>
                         ₹{displayPrice.toLocaleString("en-IN")}
                       </p>
                       {isRefurb && product.original_price && (
-                        <p className="text-slate-400 line-through text-xs sm:text-sm">₹{product.original_price.toLocaleString("en-IN")}</p>
+                        <p className="text-slate-400 line-through text-xs">₹{product.original_price.toLocaleString("en-IN")}</p>
                       )}
                     </div>
                   </div>
 
 
 
-                  {/* Add to Cart Button */}
                   <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                     <button
                       onClick={(e) => handleAddToCartClick(e, product, displayPrice, isLocalDeal)}
-                      className={`w-full py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 ${
+                      className={`w-full py-2 px-3 rounded-lg font-medium text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] ${
                         isRefurb
-                          ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                          ? "bg-slate-900 hover:bg-slate-800 text-white"
                           : "bg-slate-900 hover:bg-slate-800 text-white"
                       }`}
                     >
-                      <ShoppingBag className="w-4 h-4" />
+                      <ShoppingBag className="w-3.5 h-3.5" />
                       <span>{isFashion && !isRefurb ? "Select Options" : "Add to Cart"}</span>
                     </button>
                   </div>

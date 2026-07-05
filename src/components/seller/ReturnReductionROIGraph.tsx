@@ -16,9 +16,9 @@ const data: MonthlyData[] = [
   { month: "Jan", yourRate: 18.5, platformAvg: 15.2, returnsAvoided: 0, savingsInr: 0 },
   { month: "Feb", yourRate: 17.8, platformAvg: 14.9, returnsAvoided: 2, savingsInr: 1000 },
   { month: "Mar", yourRate: 16.2, platformAvg: 15.1, returnsAvoided: 6, savingsInr: 3000 },
-  { month: "Apr", yourRate: 11.4, platformAvg: 14.8, returnsAvoided: 18, savingsInr: 9000, note: "✨ AI Cart Size Advisor Enabled" },
+  { month: "Apr", yourRate: 11.4, platformAvg: 14.8, returnsAvoided: 18, savingsInr: 9000, note: "AI Cart Size Advisor Enabled" },
   { month: "May", yourRate: 8.6, platformAvg: 15.0, returnsAvoided: 29, savingsInr: 14500 },
-  { month: "Jun", yourRate: 6.2, platformAvg: 14.7, returnsAvoided: 38, savingsInr: 19000, note: "⚡ Automated Overrides Activated" },
+  { month: "Jun", yourRate: 6.2, platformAvg: 14.7, returnsAvoided: 38, savingsInr: 19000, note: "Automated Overrides Activated" },
 ];
 
 export default function ReturnReductionROIGraph() {
@@ -255,7 +255,7 @@ export default function ReturnReductionROIGraph() {
             <g transform={`translate(${getX(3) - 80}, ${getY(data[3].yourRate) - 45})`}>
               <rect width="160" height="26" rx="6" fill="#ecfdf5" stroke="#10b981" strokeWidth="1.5" />
               <text x="80" y="17" textAnchor="middle" fontSize="10" fontWeight="extrabold" fill="#059669">
-                ✨ AI Cart Advisor Enabled
+                AI Cart Advisor Enabled
               </text>
             </g>
           </svg>

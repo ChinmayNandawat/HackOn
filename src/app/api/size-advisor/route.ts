@@ -28,16 +28,16 @@ export async function POST(request: Request) {
     // Determine logic based on keywords
     if (title.includes("shoe") || title.includes("sneaker") || title.includes("boot") || category.includes("footwear") || category === "shoes") {
       recommendedSize = sizeUp(selectedSize);
-      reasonText = "⚠️ This item runs small. Buy 1 size larger than your usual size.";
+      reasonText = "This item runs small. Buy 1 size larger than your usual size.";
     } else if (title.includes("shirt") || title.includes("jacket") || title.includes("hoodie") || category.includes("tops")) {
       recommendedSize = sizeUp(selectedSize);
-      reasonText = "⚠️ This item has a slim fit. Buy 1 size larger than your usual size.";
+      reasonText = "This item has a slim fit. Buy 1 size larger than your usual size.";
     } else if (title.includes("jeans") || title.includes("pants") || category.includes("bottoms")) {
       recommendedSize = sizeUp(selectedSize);
-      reasonText = "⚠️ This item runs tight at the waist. Buy 1 size larger than your usual size.";
+      reasonText = "This item runs tight at the waist. Buy 1 size larger than your usual size.";
     } else {
       recommendedSize = sizeUp(selectedSize);
-      reasonText = "⚠️ Based on reviews, buy 1 size larger than your usual size.";
+      reasonText = "Based on reviews, buy 1 size larger than your usual size.";
     }
 
     return NextResponse.json({

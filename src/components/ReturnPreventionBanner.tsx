@@ -31,12 +31,12 @@ export default function ReturnPreventionBanner({
         <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
         <div className="space-y-2">
           <h3 className="font-bold text-amber-900 text-sm tracking-tight">
-            ⚠️ {riskPercent}% of buyers return this — {reason}
+            {riskPercent}% of buyers return this — {reason}
           </h3>
           {suggestion && (
             <p className="text-amber-800 text-xs font-semibold flex items-center gap-1.5 bg-amber-100/50 p-2 rounded-md w-fit">
-              <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
-              💡 Try {suggestion} instead
+               <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
+              Try {suggestion} instead
             </p>
           )}
         </div>

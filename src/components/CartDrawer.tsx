@@ -200,10 +200,10 @@ export default function CartDrawer() {
                   <CheckCircle2 className="w-10 h-10" />
                 </div>
                 <h3 className="text-2xl font-black text-slate-900 dark:text-white">
-                  Order Placed Successfully! 🎉
+                  Order Placed Successfully
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-slate-300">
-                  Your sustainable order has been processed. Return prevention protocols were active on your fashion items!
+                  Your order has been processed. Redirecting to your orders page.
                 </p>
                 {greenCreditsEarned > 0 && (
                   <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 text-emerald-700 font-bold text-sm border border-emerald-200 shadow-sm">
@@ -251,8 +251,8 @@ export default function CartDrawer() {
                             className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" 
                           />
                           {isRefurb && (
-                            <span className="absolute top-1 left-1 bg-emerald-500 text-white text-[8px] font-black px-1 py-0.2 rounded shadow">
-                              AI ✓
+                            <span className="absolute top-1 left-1 bg-emerald-600 text-white text-[8px] font-bold px-1.5 py-0.5 rounded shadow">
+                              Refurbished
                             </span>
                           )}
                         </div>
@@ -369,7 +369,7 @@ export default function CartDrawer() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="flex items-center gap-1">
-                    Shipping <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">CO₂ Neutral 🌱</span>
+                    Shipping <span className="text-[10px] text-emerald-600 font-medium bg-emerald-50 px-1.5 py-0.5 rounded">CO₂ Neutral</span>
                   </span>
                   <span className="font-bold text-emerald-600">FREE</span>
                 </div>
