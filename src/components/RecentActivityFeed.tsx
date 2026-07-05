@@ -31,15 +31,15 @@ const recentActivities: ActivityItem[] = [
   },
   {
     id: "act-2",
-    action: "Kept Dyson V11 Vacuum with Slight Cosmetic Box Dent",
-    description: "Accepted partial refund instead of returning • Prevented return transit emissions",
+    action: "Purchased Refurbished Samsung Galaxy S23",
+    description: "Verified AI-inspected smartphone • Saved from e-waste stream",
     credits: 120,
     co2Saved: 5,
     timestamp: "Yesterday",
     icon: ShieldCheck,
     iconBg: "bg-blue-50 border-blue-200",
     iconColor: "text-[#008AE6]",
-    category: "Keep + Refund",
+    category: "Refurbished Buy",
   },
   {
     id: "act-3",
@@ -55,15 +55,15 @@ const recentActivities: ActivityItem[] = [
   },
   {
     id: "act-4",
-    action: "Donated Gently Used iPad 8th Gen to Local STEM Charity",
-    description: "Direct community routing • Zero landfill footprint & tax deductible voucher",
+    action: "Purchased Renewed Dell UltraSharp 27 Monitor",
+    description: "Grade A Refurbished Display • Certified perfect working condition",
     credits: 100,
     co2Saved: 4,
     timestamp: "Jul 1, 2026",
     icon: HeartHandshake,
     iconBg: "bg-purple-50 border-purple-200",
     iconColor: "text-purple-600",
-    category: "Community Donate",
+    category: "Refurbished Buy",
   },
 ];
 

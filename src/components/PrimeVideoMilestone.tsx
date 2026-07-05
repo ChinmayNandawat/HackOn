@@ -47,7 +47,7 @@ export default function PrimeVideoMilestone() {
               Next Tier Reward: Amazon Prime Video
             </h3>
             <p className="text-xs text-gray-600 mt-1.5 leading-relaxed font-medium">
-              Our Sustainability Flywheel rewards you for reducing environmental impact. Every refurbished item purchased, return diverted, or item kept out of landfills powers your progress toward premium entertainment access.
+              Our Sustainability Flywheel rewards you for reducing environmental impact. Every refurbished item purchased powers your progress toward premium entertainment access.
             </p>
 
             {/* Branded Progress Bar Section */}
@@ -88,10 +88,10 @@ export default function PrimeVideoMilestone() {
           {/* Quick Actions / Flywheel Boosters */}
           <div className="mt-6 pt-5 border-t border-gray-100">
             <div className="text-xs font-bold text-gray-700 mb-2.5 flex items-center justify-between">
-              <span>Fastest ways to earn your remaining <strong className="text-emerald-600">{creditsNeeded} credits</strong>:</span>
+              <span>Fastest way to earn your remaining <strong className="text-emerald-600">{creditsNeeded} credits</strong>:</span>
               <span className="text-[10px] text-emerald-600 font-bold uppercase bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">Instant Boost</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-1 sm:max-w-[250px] gap-2.5">
               <div
                 className="flex items-center gap-2.5 p-2.5 rounded-xl bg-emerald-50/60 border border-emerald-100/80 text-xs font-semibold text-emerald-900 shadow-2xs"
               >
@@ -101,30 +101,6 @@ export default function PrimeVideoMilestone() {
                 <div>
                   <div className="font-bold">Buy Refurbished</div>
                   <div className="text-[10px] text-emerald-600 font-medium">+100 to +200 pts</div>
-                </div>
-              </div>
-
-              <div
-                className="flex items-center gap-2.5 p-2.5 rounded-xl bg-blue-50/60 border border-blue-100/80 text-xs font-semibold text-blue-900 shadow-2xs"
-              >
-                <div className="w-7 h-7 rounded-lg bg-[#00A8E1] text-white flex items-center justify-center shrink-0 shadow-2xs">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                </div>
-                <div>
-                  <div className="font-bold">Keep + Partial Refund</div>
-                  <div className="text-[10px] text-[#008AE6] font-medium">+50 to +150 pts</div>
-                </div>
-              </div>
-
-              <div
-                className="flex items-center gap-2.5 p-2.5 rounded-xl bg-purple-50/60 border border-purple-100/80 text-xs font-semibold text-purple-900 shadow-2xs"
-              >
-                <div className="w-7 h-7 rounded-lg bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                  <HeartHandshake className="w-3.5 h-3.5" />
-                </div>
-                <div>
-                  <div className="font-bold">Direct Donate</div>
-                  <div className="text-[10px] text-purple-600 font-medium">+100 Bonus pts</div>
                 </div>
               </div>
             </div>
@@ -198,7 +174,7 @@ export default function PrimeVideoMilestone() {
               <span>Almost There ({creditsNeeded} Credits to Go)</span>
             </button>
             <div className="text-center text-[11px] text-cyan-200/80 mt-2 font-semibold">
-              Complete 1 more circular action to unlock instantly
+              Complete 1 more refurbished purchase to unlock instantly
             </div>
           </div>
 

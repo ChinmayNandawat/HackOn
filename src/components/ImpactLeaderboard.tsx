@@ -20,7 +20,7 @@ interface LeaderboardUser {
 
 const localUsers: LeaderboardUser[] = [
   { id: "loc-1", rank: 1, name: "EcoWarrior", initials: "EW", avatarColor: "bg-gradient-to-br from-amber-400 to-amber-600 text-white border-amber-300 shadow-md", location: "Hyderabad", tier: "Tree", circularActivity: "14 Refurbished Gadgets Saved", credits: 1200 },
-  { id: "loc-2", rank: 2, name: "You (Conscious Shopper)", initials: "YOU", avatarColor: "bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-md ring-2 ring-emerald-400/50", location: "Hyderabad", tier: "Sapling", circularActivity: "3 Items Kept from Landfills", credits: 420, isCurrentUser: true },
+  { id: "loc-2", rank: 2, name: "You (Conscious Shopper)", initials: "YOU", avatarColor: "bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-md ring-2 ring-emerald-400/50", location: "Hyderabad", tier: "Sapling", circularActivity: "3 Refurbished Items Bought", credits: 420, isCurrentUser: true },
   { id: "loc-3", rank: 3, name: "GreenGuardian", initials: "GG", avatarColor: "bg-teal-100 text-teal-800 border-teal-300", location: "Hyderabad", tier: "Sapling", circularActivity: "8 kg CO₂ Emissions Prevented", credits: 390 },
   { id: "loc-4", rank: 4, name: "CircularSam", initials: "CS", avatarColor: "bg-blue-100 text-blue-800 border-blue-300", location: "Hyderabad", tier: "Sapling", circularActivity: "5 Renewed Apparel Saves", credits: 310 },
   { id: "loc-5", rank: 5, name: "Aarav Tech", initials: "AT", avatarColor: "bg-purple-100 text-purple-800 border-purple-300", location: "Hyderabad", tier: "Sapling", circularActivity: "4 Open-Box Orders Kept", credits: 280 },
@@ -35,7 +35,7 @@ const nationalUsers: LeaderboardUser[] = [
   { id: "nat-3", rank: 3, name: "Rhea M.", initials: "RM", avatarColor: "bg-emerald-100 text-emerald-800 border-emerald-300", location: "Mumbai", tier: "Tree", circularActivity: "24 Renewed Gadgets Orders", credits: 820 },
   { id: "nat-4", rank: 4, name: "Kabir N.", initials: "KN", avatarColor: "bg-teal-100 text-teal-800 border-teal-300", location: "New Delhi", tier: "Tree", circularActivity: "18 Renewed Tech Items Saved", credits: 750 },
   { id: "nat-5", rank: 5, name: "Ananya V.", initials: "AV", avatarColor: "bg-indigo-100 text-indigo-800 border-indigo-300", location: "Pune", tier: "Tree", circularActivity: "150 kg E-Waste Prevented", credits: 610 },
-  { id: "nat-6", rank: 14, name: "You (Conscious Shopper)", initials: "YOU", avatarColor: "bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-md", location: "Hyderabad", tier: "Sapling", circularActivity: "3 Items Kept from Landfills", credits: 420, isCurrentUser: true },
+  { id: "nat-6", rank: 14, name: "You (Conscious Shopper)", initials: "YOU", avatarColor: "bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-md", location: "Hyderabad", tier: "Sapling", circularActivity: "3 Refurbished Items Bought", credits: 420, isCurrentUser: true },
 ];
 
 const globalUsers: LeaderboardUser[] = [
@@ -43,7 +43,7 @@ const globalUsers: LeaderboardUser[] = [
   { id: "glob-2", rank: 2, name: "Marcus T.", initials: "MT", avatarColor: "bg-blue-100 text-blue-800 border-blue-300", location: "London, UK", tier: "Tree", circularActivity: "480 kg E-Waste Prevented", credits: 1980 },
   { id: "glob-3", rank: 3, name: "EcoWarrior", initials: "EW", avatarColor: "bg-gradient-to-br from-amber-400 to-amber-600 text-white border-amber-300", location: "Hyderabad, IN", tier: "Tree", circularActivity: "14 Refurbished Gadgets Saved", credits: 1200 },
   { id: "glob-4", rank: 4, name: "Kenji S.", initials: "KS", avatarColor: "bg-amber-100 text-amber-800 border-amber-300", location: "Tokyo, JP", tier: "Tree", circularActivity: "388 kg CO₂ Emissions Avoided", credits: 1040 },
-  { id: "glob-5", rank: 88, name: "You (Conscious Shopper)", initials: "YOU", avatarColor: "bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-md", location: "Hyderabad, IN", tier: "Sapling", circularActivity: "3 Items Kept from Landfills", credits: 420, isCurrentUser: true },
+  { id: "glob-5", rank: 88, name: "You (Conscious Shopper)", initials: "YOU", avatarColor: "bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-md", location: "Hyderabad, IN", tier: "Sapling", circularActivity: "3 Refurbished Items Bought", credits: 420, isCurrentUser: true },
 ];
 
 export default function ImpactLeaderboard() {
@@ -59,7 +59,7 @@ export default function ImpactLeaderboard() {
     },
     national: {
       title: "Your Rank: #14 Nationwide",
-      description: "You are in the top 1% circular shoppers across India! Keep diverting returns from landfill to enter the Top 10.",
+      description: "You are in the top 1% circular shoppers across India! Keep buying refurbished items to enter the Top 10.",
       credits: 420,
     },
     global: {

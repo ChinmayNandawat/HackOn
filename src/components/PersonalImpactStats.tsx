@@ -34,7 +34,7 @@ export default function PersonalImpactStats() {
                 <span className="text-xs font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full">+15% this month</span>
               </div>
               <div className="text-sm font-extrabold text-gray-800 leading-tight">Green Credits Earned</div>
-              <p className="text-xs text-gray-500 font-medium">Earned through refurbished buys & keeping items</p>
+              <p className="text-xs text-gray-500 font-medium">Earned by choosing refurbished over new</p>
             </div>
             <div className="w-11 h-11 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform shrink-0">
               <Sparkles className="w-5 h-5 fill-white" />
@@ -68,10 +68,10 @@ export default function PersonalImpactStats() {
             <div className="space-y-1.5">
               <div className="flex items-baseline gap-1.5">
                 <span className="text-4xl font-black text-gray-900 tracking-tight">{data.items_diverted}</span>
-                <span className="text-xs font-bold text-cyan-700 bg-cyan-100/80 px-2 py-0.5 rounded-full">Direct circular save</span>
+                <span className="text-xs font-bold text-cyan-700 bg-cyan-100/80 px-2 py-0.5 rounded-full">Smart circular choice</span>
               </div>
-              <div className="text-sm font-extrabold text-gray-800 leading-tight">Items Kept from Landfills</div>
-              <p className="text-xs text-gray-500 font-medium">Diverted from e-waste & landfill disposal streams</p>
+              <div className="text-sm font-extrabold text-gray-800 leading-tight">Refurbished Items Bought</div>
+              <p className="text-xs text-gray-500 font-medium">Chosen instead of buying brand new products</p>
             </div>
             <div className="w-11 h-11 rounded-xl bg-cyan-600 text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform shrink-0">
               <PackageOpen className="w-5 h-5" />

@@ -2,7 +2,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import SellerNav from "@/components/SellerNav";
-import ReturnReductionROIGraph from "@/components/seller/ReturnReductionROIGraph";
 import CategorizedAIInsights from "@/components/seller/CategorizedAIInsights";
 
 export default async function SellerAnalytics() {
@@ -170,8 +169,6 @@ export default async function SellerAnalytics() {
       </div>
 
       <SellerNav />
-
-      <ReturnReductionROIGraph />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="shadow-sm border-slate-200">

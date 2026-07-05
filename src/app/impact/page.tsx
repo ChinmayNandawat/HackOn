@@ -73,8 +73,8 @@ export default function ImpactPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             <div className="text-center md:text-left p-4 rounded-xl bg-gray-50/60 border border-gray-100">
               <div className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">{platformStats.returns_processed}</div>
-              <div className="text-xs text-emerald-600 font-extrabold mt-1 uppercase tracking-wider">Returns Processed</div>
-              <p className="text-[11px] text-gray-500 mt-1 font-medium">Successfully diverted from landfill & refurbished</p>
+              <div className="text-xs text-emerald-600 font-extrabold mt-1 uppercase tracking-wider">Refurbished Items Sold</div>
+              <p className="text-[11px] text-gray-500 mt-1 font-medium">High-quality renewed products purchased</p>
             </div>
             <div className="text-center md:text-left p-4 rounded-xl bg-gray-50/60 border border-gray-100">
               <div className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">{platformStats.co2_saved} <span className="text-lg md:text-xl text-gray-500 font-bold">tonnes</span></div>
@@ -96,23 +96,10 @@ export default function ImpactPage() {
               <TrendingUp className="w-5 h-5 text-emerald-600" />
               <h3 className="text-lg font-extrabold text-gray-900 tracking-tight">Powering Your Sustainability Flywheel</h3>
             </div>
-            <span className="text-xs text-gray-500 font-semibold">3 Simple Ways to Earn</span>
+            <span className="text-xs text-gray-500 font-semibold">How to Earn</span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:max-w-md gap-5">
             
-            <div className="bg-white border border-gray-100 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden">
-              <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-white transition-all border border-emerald-100 group-hover:border-emerald-500 shadow-2xs">
-                <RefreshCcw className="w-6 h-6" />
-              </div>
-              <div className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded uppercase tracking-wider mb-2 border border-emerald-100">
-                +50 to +150 Credits
-              </div>
-              <h4 className="font-extrabold text-gray-900 text-base">Keep + Partial Refund</h4>
-              <p className="text-xs text-gray-600 mt-2 font-medium leading-relaxed">
-                Earn instant credits when you decide to keep a slightly-flawed or box-damaged item with a generous discount instead of shipping it back.
-              </p>
-            </div>
-
             <div className="bg-white border border-gray-100 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden">
               <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-[#008AE6] mb-4 group-hover:scale-110 group-hover:bg-[#008AE6] group-hover:text-white transition-all border border-blue-100 group-hover:border-[#008AE6] shadow-2xs">
                 <ShieldCheck className="w-6 h-6" />
@@ -123,19 +110,6 @@ export default function ImpactPage() {
               <h4 className="font-extrabold text-gray-900 text-base">Buy AI-Verified Refurbished</h4>
               <p className="text-xs text-gray-600 mt-2 font-medium leading-relaxed">
                 Earn generous Green Credits every time you choose an AI-inspected, grade A renewed product over a brand new one.
-              </p>
-            </div>
-
-            <div className="bg-white border border-gray-100 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden">
-              <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 mb-4 group-hover:scale-110 group-hover:bg-purple-600 group-hover:text-white transition-all border border-purple-100 group-hover:border-purple-600 shadow-2xs">
-                <HeartHandshake className="w-6 h-6" />
-              </div>
-              <div className="inline-flex items-center gap-1 text-[10px] font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded uppercase tracking-wider mb-2 border border-purple-100">
-                +100 Bonus Credits
-              </div>
-              <h4 className="font-extrabold text-gray-900 text-base">Direct Community Donation</h4>
-              <p className="text-xs text-gray-600 mt-2 font-medium leading-relaxed">
-                Earn bonus credits when you route an unreturnable or highly damaged item directly to local NGO partners instead of the landfill.
               </p>
             </div>
 
