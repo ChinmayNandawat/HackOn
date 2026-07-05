@@ -176,7 +176,7 @@ export default function MarketplaceClient({ products }: { products: Product[] })
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
         {filteredProducts.map((product) => {
           const isRefurb = product.condition === 'refurbished' || product.is_refurbished;
           const isFashion = isFashionProduct(product);
