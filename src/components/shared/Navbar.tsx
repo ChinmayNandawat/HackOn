@@ -4,12 +4,15 @@ import Link from 'next/link';
 import { Leaf, MapPin, ShoppingBag } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
+import { usePathname, useRouter } from 'next/navigation';
 
 const CITIES = ["Mumbai", "Delhi", "Bangalore", "Chennai"];
 
 export default function Navbar() {
   const [location, setLocation] = useState<string>("Mumbai"); // Default
   const { totalCount, openCart } = useCart();
+  const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     const saved = localStorage.getItem("relife_buyer_location");
@@ -68,8 +71,25 @@ export default function Navbar() {
           )}
         </button>
 
-        <span className="text-slate-200">|</span>
-        <Link href="/seller" className="text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors whitespace-nowrap">Seller Dashboard</Link>
+        {/* 3-Role View Mode Dropdown */}
+        <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-full text-xs text-slate-600 font-medium hover:border-slate-300 transition-colors shadow-2xs">
+          <span className="text-slate-400">👤 View:</span>
+          <select
+            className="bg-transparent border-none outline-none font-bold text-slate-800 cursor-pointer text-xs pr-1"
+            value={
+              pathname?.startsWith('/hub')
+                ? '/hub'
+                : pathname?.startsWith('/seller') || pathname?.startsWith('/admin')
+                ? '/seller/returns'
+                : '/'
+            }
+            onChange={(e) => router.push(e.target.value)}
+          >
+            <option value="/" className="bg-white text-slate-800 py-1">🛍️ Buyer View</option>
+            <option value="/seller/returns" className="bg-white text-slate-800 py-1">🏪 Seller Dashboard</option>
+            <option value="/hub" className="bg-white text-slate-800 py-1">🏭 Hub Employee (FBA Dock)</option>
+          </select>
+        </div>
       </div>
     </nav>
   );
