@@ -35,6 +35,7 @@ export default function CartDrawer() {
 
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const [switchedFitItems, setSwitchedFitItems] = useState<Record<string, boolean>>({});
   const router = useRouter();
   // Helper to identify fashion items in cart
   const isFashion = (item: CartItem) => {
@@ -82,6 +83,7 @@ export default function CartDrawer() {
     if (fashionItems.length > 0) {
       fetchAllAdvice();
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSizeAdviceMap({});
     }
   }, [analysisKey]);
@@ -290,12 +292,35 @@ export default function CartDrawer() {
                             </div>
                           </div>
 
-                          {/* Inline Sizing Warning */}
-                          {sizeAdviceMap[item.id] && (
+                          {/* Smart Fit Interceptor Banner */}
+                          {switchedFitItems[item.id] ? (
+                            <div className="mt-2 text-xs font-semibold text-emerald-900 bg-emerald-50 border border-emerald-300 p-2.5 rounded-xl">
+                              ✅ Switched to Size &apos;L&apos; — Perfect Fit Guaranteed
+                            </div>
+                          ) : isFashion(item) && item.selectedSize === "L" ? (
+                            /* No prevention warning if buyer chose perfect match Size L */
+                            null
+                          ) : isFashion(item) && item.selectedSize && item.selectedSize !== "L" ? (
+                            <div className="mt-2 text-xs text-amber-900 bg-amber-50 border border-amber-300 p-3 rounded-xl space-y-2">
+                              <div className="font-semibold leading-snug">
+                                ⚠️ Fit Interceptor Alert: You selected Size &apos;{item.selectedSize}&apos;, but this item runs small. Switch to Size &apos;L&apos; (Your AI Match) for guaranteed comfort and to avoid return pickup delays!
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  updateSize(item.id, "L");
+                                  setSwitchedFitItems((prev) => ({ ...prev, [item.id]: true }));
+                                }}
+                                className="w-full bg-slate-900 hover:bg-emerald-800 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition-all cursor-pointer"
+                              >
+                                Switch to Size L
+                              </button>
+                            </div>
+                          ) : sizeAdviceMap[item.id] && (!isFashion(item) || item.selectedSize !== "L") ? (
                             <div className="mt-2 text-[10px] text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded-lg leading-snug">
                               {sizeAdviceMap[item.id]}
                             </div>
-                          )}
+                          ) : null}
 
                           {/* Quantity controls */}
                           <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-700/50">

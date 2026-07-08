@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,7 +10,7 @@ export default function NewReturnPage() {
   const router = useRouter();
   
   // Step State
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   
   // Products
   const [products, setProducts] = useState<any[]>([]);
@@ -18,6 +19,22 @@ export default function NewReturnPage() {
   // Form State
   const [selectedProductId, setSelectedProductId] = useState("");
   const [returnReason, setReturnReason] = useState("");
+
+  const fastTrackReasons = [
+    "Size too small / doesn't fit",
+    "Don't like the colour / style",
+    "Don't like fabric / texture",
+    "Ordered by mistake / changed mind",
+  ];
+
+  const aiInspectionReasons = [
+    "Item arrived damaged or scratched",
+    "Functional defect / doesn't power on",
+    "Wrong item or accessory missing",
+  ];
+
+  const isFastTrack = fastTrackReasons.includes(returnReason);
+  const isAiInspection = aiInspectionReasons.includes(returnReason);
   
   // Angle Config
   type AngleKeys = "front" | "back" | "side" | "damage";
@@ -70,7 +87,21 @@ export default function NewReturnPage() {
             uniqueProducts.push(p);
           }
         }
-        setProducts(uniqueProducts);
+        if (uniqueProducts.length > 0) {
+          setProducts(uniqueProducts);
+        } else {
+          setProducts([
+            { id: "demo-prod-1", title: "DIGIROOT iPad Pencil (2nd Gen)", category: "electronics" },
+            { id: "demo-prod-2", title: "FLITE Slides for Men FL 370", category: "footwear" },
+            { id: "demo-prod-3", title: "boAt Nirvana Ion ANC Pro Earbuds", category: "audio" },
+          ]);
+        }
+      } else {
+        setProducts([
+          { id: "demo-prod-1", title: "DIGIROOT iPad Pencil (2nd Gen)", category: "electronics" },
+          { id: "demo-prod-2", title: "FLITE Slides for Men FL 370", category: "footwear" },
+          { id: "demo-prod-3", title: "boAt Nirvana Ion ANC Pro Earbuds", category: "audio" },
+        ]);
       }
       setLoadingProducts(false);
       
@@ -259,24 +290,68 @@ export default function NewReturnPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Why are you returning it?</label>
-                <textarea 
-                  rows={3}
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  placeholder="e.g., Too small, defective, didn't match description..."
+                <label className="block text-sm font-medium text-slate-700 mb-2">Why are you returning this item?</label>
+                <select
+                  className="w-full p-3 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-slate-800"
                   value={returnReason}
                   onChange={(e) => setReturnReason(e.target.value)}
-                />
+                >
+                  <option value="">-- Choose return reason --</option>
+                  <optgroup label="Fit & Style (No Damage — Fast Track)">
+                    {fastTrackReasons.map((reason) => (
+                      <option key={reason} value={reason}>
+                        {reason}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Damage & Quality (AI Inspection Required)">
+                    {aiInspectionReasons.map((reason) => (
+                      <option key={reason} value={reason}>
+                        {reason}
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
               </div>
               
-              <div className="flex justify-end pt-4">
-                <button 
-                  onClick={() => setStep(2)}
-                  disabled={!selectedProductId || !returnReason}
-                  className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg disabled:opacity-50 hover:bg-blue-700 transition"
-                >
-                  Next: Capture Photos
-                </button>
+              <div className="pt-2">
+                {isFastTrack ? (
+                  <>
+                    <div className="bg-blue-50 border border-blue-200 text-blue-900 text-xs p-3.5 rounded-xl mb-4 leading-relaxed font-medium">
+                      ⚡ <strong>Fast-Track Eligible:</strong> No AI photo scan required for size/preference returns. Our pickup agent will perform a quick tag & unworn check at your doorstep.
+                    </div>
+                    <button
+                      type="button"
+                      disabled={!selectedProductId}
+                      onClick={() => setStep(3)}
+                      className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm text-sm transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      ⚡ Submit Fast-Track Return (Generate Barcode)
+                    </button>
+                  </>
+                ) : isAiInspection ? (
+                  <>
+                    <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs p-3.5 rounded-xl mb-4 leading-relaxed font-medium">
+                      🤖 <strong>AI Grading Required:</strong> Please take 4 quick photos to verify damage severity and calculate your instant refund estimate.
+                    </div>
+                    <button
+                      type="button"
+                      disabled={!selectedProductId}
+                      onClick={() => setStep(2)}
+                      className="w-full py-3.5 bg-slate-900 hover:bg-emerald-800 text-white font-bold rounded-xl shadow-sm text-sm transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      Next: Capture 4 Guided Photos for AI Grading
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    className="w-full py-3.5 bg-slate-200 text-slate-400 font-bold rounded-xl shadow-sm text-sm cursor-not-allowed"
+                  >
+                    Select a return reason to continue
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -403,6 +478,66 @@ export default function NewReturnPage() {
             </div>
           )}
           
+          {/* STEP 3: Fast-Track Confirmation & Barcode */}
+          {step === 3 && (
+            <div className="space-y-6 text-center py-4 animate-in fade-in duration-200">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto text-blue-600">
+                <CheckCircle className="w-9 h-9" />
+              </div>
+              <div>
+                <span className="inline-block px-3 py-1 bg-blue-50 text-blue-800 border border-blue-200 text-xs font-bold rounded-full mb-2">
+                  ⚡ Fast-Track Manual Return Approved
+                </span>
+                <h2 className="text-xl font-extrabold text-slate-900">Return Request Initiated!</h2>
+                <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                  No AI photo upload needed. Our Doorstep Field Agent will inspect tag &amp; unworn condition at pickup.
+                </p>
+              </div>
+
+              {/* Air Waybill Barcode Box */}
+              <div className="bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl p-6 space-y-3 max-w-sm mx-auto">
+                <div className="text-xs font-extrabold text-slate-700 tracking-wider uppercase">
+                  Air Waybill Barcode
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-2">
+                  {/* Visual Barcode Lines */}
+                  <div className="h-14 flex items-center justify-center gap-1 overflow-hidden px-4">
+                    {[4,2,6,1,3,2,5,1,2,4,3,1,5,2,4,1,3,2,4,2,5,1,3,4,2,1,3].map((w, i) => (
+                      <div
+                        key={i}
+                        className="bg-slate-900 h-full"
+                        style={{ width: `${w * 2}px` }}
+                      />
+                    ))}
+                  </div>
+                  <div className="font-mono font-extrabold text-lg text-slate-900 tracking-widest">
+                    AWB-8821A9
+                  </div>
+                </div>
+                <p className="text-[11px] text-slate-500 font-medium">
+                  Show this barcode to the agent during doorstep pickup verification.
+                </p>
+              </div>
+
+              <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  type="button"
+                  onClick={() => router.push("/pickup")}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow-xs cursor-pointer"
+                >
+                  🚚 View Pickup Agent Terminal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push("/")}
+                  className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition shadow-xs cursor-pointer"
+                >
+                  Back to Store
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
     </main>

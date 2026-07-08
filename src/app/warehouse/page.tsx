@@ -242,6 +242,110 @@ export default function WarehouseQueuePage() {
           </div>
         </header>
 
+        {/* 5-Tier Zero-Landfill Routing Matrix Bar */}
+        <div className="mb-6 bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3.5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+              ⚡ Real-Time EV Routing Destinations (Zero Landfill)
+            </h2>
+            <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+              100% Diverted from Landfill
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {/* Card 1: Grade A+ */}
+            <div className="bg-white hover:bg-emerald-50/30 border border-gray-200 hover:border-emerald-300 rounded-xl p-3.5 text-left transition-all space-y-1.5 flex flex-col justify-between">
+              <div>
+                <div className="text-xs font-extrabold text-gray-900 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span>Grade A+ (Unopened)</span>
+                  </span>
+                  <span className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full font-bold">
+                    38 Binned
+                  </span>
+                </div>
+                <div className="text-[11px] text-gray-500 font-medium mt-1.5">
+                  Destination: <strong className="text-gray-900">Amazon Now Dark Store</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Grade A */}
+            <div className="bg-white hover:bg-emerald-50/30 border border-gray-200 hover:border-emerald-300 rounded-xl p-3.5 text-left transition-all space-y-1.5 flex flex-col justify-between">
+              <div>
+                <div className="text-xs font-extrabold text-gray-900 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span>Grade A (Like New)</span>
+                  </span>
+                  <span className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full font-bold">
+                    44 Binned
+                  </span>
+                </div>
+                <div className="text-[11px] text-gray-500 font-medium mt-1.5">
+                  Destination: <strong className="text-gray-900">ReLife Relist (15-20% Off)</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Grade B */}
+            <div className="bg-white hover:bg-emerald-50/30 border border-gray-200 hover:border-emerald-300 rounded-xl p-3.5 text-left transition-all space-y-1.5 flex flex-col justify-between">
+              <div>
+                <div className="text-xs font-extrabold text-gray-900 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span>Grade B (Minor Flaws)</span>
+                  </span>
+                  <span className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full font-bold">
+                    29 Binned
+                  </span>
+                </div>
+                <div className="text-[11px] text-gray-500 font-medium mt-1.5">
+                  Destination: <strong className="text-gray-900">ReLife Refurbished (25-30% Off)</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4: Grade C */}
+            <div className="bg-white hover:bg-emerald-50/30 border border-gray-200 hover:border-emerald-300 rounded-xl p-3.5 text-left transition-all space-y-1.5 flex flex-col justify-between">
+              <div>
+                <div className="text-xs font-extrabold text-gray-900 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span>Grade C (Cosmetic Wear)</span>
+                  </span>
+                  <span className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full font-bold">
+                    18 Binned
+                  </span>
+                </div>
+                <div className="text-[11px] text-gray-500 font-medium mt-1.5">
+                  Destination: <strong className="text-gray-900">Deep Discount (50% Off) / NGO</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 5: Grade D */}
+            <div className="bg-white hover:bg-emerald-50/30 border border-gray-200 hover:border-emerald-300 rounded-xl p-3.5 text-left transition-all space-y-1.5 flex flex-col justify-between">
+              <div>
+                <div className="text-xs font-extrabold text-gray-900 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span>Grade D (Severe / Broken)</span>
+                  </span>
+                  <span className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full font-bold">
+                    13 Binned
+                  </span>
+                </div>
+                <div className="text-[11px] text-gray-500 font-medium mt-1.5">
+                  Destination: <strong className="text-gray-900">NGO Donation or E-Waste Harvesting</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Barcode Scanner / Search */}
         <div className="mb-8 bg-white p-4 rounded-xl border border-blue-100 shadow-sm ring-1 ring-blue-50">
           <div className="relative flex items-center">
