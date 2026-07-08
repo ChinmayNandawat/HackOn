@@ -149,8 +149,9 @@ export default function MarketplaceClient({ products }: { products: Product[] })
   });
 
   return (
-    <div className="w-full bg-white min-h-screen bg-gradient-to-b from-emerald-50/40 via-white to-white space-y-8 px-4 sm:px-8 lg:px-12 py-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pt-2 pb-4 border-b border-slate-100">
+    <div className="w-full bg-white min-h-screen bg-gradient-to-b from-emerald-50/40 via-white to-white py-6">
+      <div className="max-w-[90rem] mx-auto px-8 sm:px-16 lg:px-24 space-y-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pt-2 pb-4 border-b border-slate-100">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Marketplace</h1>
           <p className="text-sm text-slate-500 mt-1">Browse new and refurbished products</p>
@@ -190,7 +191,7 @@ export default function MarketplaceClient({ products }: { products: Product[] })
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 sm:gap-8">
         {filteredProducts.map((product) => {
           const isRefurb = product.condition === "refurbished" || product.is_refurbished;
           const isFashion = isFashionProduct(product);
@@ -287,12 +288,12 @@ export default function MarketplaceClient({ products }: { products: Product[] })
             </Link>
           );
         })}
-
         {filteredProducts.length === 0 && (
           <div className="col-span-full py-16 text-center text-slate-500 bg-white rounded-2xl border border-slate-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)]">
             No products found matching the selected filter in your location.
           </div>
         )}
+      </div>
       </div>
     </div>
   );

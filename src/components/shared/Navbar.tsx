@@ -47,21 +47,20 @@ export default function Navbar() {
   const pathname = usePathname();
 
   const [activeRole, setActiveRole] = useState<ActiveRole>(() => {
-    if (typeof window === 'undefined') {
-      return deriveRoleFromPath(pathname ?? '') ?? 'Buyer';
-    }
-    return (
-      deriveRoleFromPath(pathname ?? '') ??
-      (localStorage.getItem(ROLE_STORAGE_KEY) as ActiveRole | null) ??
-      'Buyer'
-    );
+    return deriveRoleFromPath(pathname ?? '') ?? 'Buyer';
   });
 
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    setMounted(true);
     const derived = deriveRoleFromPath(pathname ?? '');
     if (derived !== null) {
       setActiveRole(derived);
       localStorage.setItem(ROLE_STORAGE_KEY, derived);
+    } else {
+      const savedRole = localStorage.getItem(ROLE_STORAGE_KEY) as ActiveRole | null;
+      if (savedRole) setActiveRole(savedRole);
     }
   }, [pathname]);
 
@@ -212,7 +211,7 @@ export default function Navbar() {
             onClick={() => setIsDemoMenuOpen(!isDemoMenuOpen)}
             className="flex items-center gap-1.5 bg-slate-100/80 hover:bg-slate-200/80 border border-slate-200/60 text-slate-800 font-semibold text-xs px-3.5 py-2 rounded-full transition-all cursor-pointer whitespace-nowrap"
           >
-            <span>Hi, Chinmay ({activeRole})</span>
+            <span>Hi, Chinmay {mounted ? `(${activeRole})` : ''}</span>
             <ChevronDown
               className={`w-3.5 h-3.5 transition-transform duration-300 text-slate-500 ${
                 isDemoMenuOpen ? "-rotate-180" : ""
