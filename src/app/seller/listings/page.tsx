@@ -4,7 +4,6 @@ import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import ListingStatusActions from "./ListingStatusActions";
-import SellerNav from "@/components/SellerNav";
 import { FileText, Tag, TrendingUp, IndianRupee, BarChart3 } from "lucide-react";
 
 export const revalidate = 0;
@@ -116,8 +115,6 @@ export default async function SellerListings() {
           <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100 font-bold">Live Data</Badge>
         )}
       </div>
-
-      <SellerNav />
       
       {/* Metrics Bar */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

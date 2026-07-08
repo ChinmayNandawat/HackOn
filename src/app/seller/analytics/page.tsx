@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
-import SellerNav from "@/components/SellerNav";
 import CategorizedAIInsights from "@/components/seller/CategorizedAIInsights";
 
 export default async function SellerAnalytics() {
@@ -167,8 +166,6 @@ export default async function SellerAnalytics() {
           <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100 font-bold">Live Data</Badge>
         )}
       </div>
-
-      <SellerNav />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="shadow-sm border-slate-200">

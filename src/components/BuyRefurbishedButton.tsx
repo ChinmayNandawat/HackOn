@@ -61,7 +61,7 @@ export default function BuyRefurbishedButton({ productId, originalPrice, estimat
       <Button 
         onClick={handleBuy}
         disabled={loading}
-        className="w-full py-7 text-lg font-black tracking-wide rounded-xl shadow-xl hover:scale-[1.01] transition-transform active:scale-95 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-70"
+        className="w-full py-4 text-sm font-semibold tracking-wide rounded-xl shadow-md hover:scale-[1.01] transition-transform active:scale-95 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-70 cursor-pointer"
       >
         {loading ? "Processing..." : `Buy Refurbished — Save ${discountPercent}%`}
       </Button>
