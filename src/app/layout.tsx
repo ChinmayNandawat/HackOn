@@ -42,7 +42,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-slate-50 font-sans">
         <CartProviderWrapper>
           <Navbar />
-          <main className="flex-1 max-w-5xl mx-auto w-full p-4 md:p-6">
+          <main className="flex-1 w-full">
             {children}
           </main>
         </CartProviderWrapper>

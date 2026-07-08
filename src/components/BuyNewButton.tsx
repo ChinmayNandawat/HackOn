@@ -42,7 +42,7 @@ export default function BuyNewButton({ productId }: { productId: string }) {
       <Button 
         onClick={handleBuy}
         disabled={loading}
-        className="w-full py-7 text-lg font-black tracking-wide rounded-xl shadow-xl hover:scale-[1.01] transition-transform active:scale-95 bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-70"
+        className="w-full py-4 text-sm font-semibold tracking-wide rounded-xl shadow-md hover:scale-[1.01] transition-transform active:scale-95 bg-slate-900 hover:bg-slate-800 text-white disabled:opacity-70 cursor-pointer"
       >
         {loading ? "Processing..." : "Buy Now"}
       </Button>
