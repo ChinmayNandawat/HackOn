@@ -1,15 +1,21 @@
 "use client";
 
 import Link from 'next/link';
-import { Leaf, MapPin, ShoppingBag } from 'lucide-react';
+import { Leaf, MapPin, ShoppingBag, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
+import { usePathname } from 'next/navigation';
 
 const CITIES = ["Mumbai", "Delhi", "Bangalore", "Chennai"];
 
 export default function Navbar() {
   const [location, setLocation] = useState<string>("Mumbai"); // Default
+  const [isDemoMenuOpen, setIsDemoMenuOpen] = useState(false);
   const { totalCount, openCart } = useCart();
+  const pathname = usePathname();
+  
+  const isSeller = pathname?.startsWith('/seller');
+  const currentRole = isSeller ? "Seller" : "Buyer";
 
   useEffect(() => {
     const saved = localStorage.getItem("relife_buyer_location");
@@ -47,7 +53,7 @@ export default function Navbar() {
           </select>
         </div>
       </div>
-      <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 no-scrollbar">
+      <div className="flex items-center gap-3 w-full md:w-auto flex-wrap sm:flex-nowrap pb-1 md:pb-0">
         <Link href="/orders" className="text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors whitespace-nowrap">Orders</Link>
         <Link href="/impact" className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 rounded-full hover:bg-emerald-100 transition-colors whitespace-nowrap border border-emerald-100">
           <Leaf className="w-3 h-3" />
@@ -69,7 +75,44 @@ export default function Navbar() {
         </button>
 
         <span className="text-slate-200">|</span>
-        <Link href="/seller" className="text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors whitespace-nowrap">Seller Dashboard</Link>
+        
+        <div className="relative">
+          <button 
+            onClick={() => setIsDemoMenuOpen(!isDemoMenuOpen)}
+            className="flex items-center gap-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 transition-colors whitespace-nowrap py-1"
+          >
+            Hi, Chinmay ({currentRole})
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 text-slate-500 ${isDemoMenuOpen ? '-rotate-180' : ''}`} />
+          </button>
+          
+          {isDemoMenuOpen && (
+            <>
+              <div 
+                className="fixed inset-0 z-40" 
+                onClick={() => setIsDemoMenuOpen(false)}
+              ></div>
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200/80 rounded-xl shadow-xl shadow-slate-200/50 py-1.5 z-50 origin-top-right animate-in fade-in zoom-in-95 duration-200">
+                <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 mb-1">
+                  Demo Accounts
+                </div>
+                <Link 
+                  href="/" 
+                  onClick={() => setIsDemoMenuOpen(false)}
+                  className={`block px-3 py-2 text-xs font-medium mx-1.5 rounded-md transition-colors ${!isSeller ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                >
+                  Buyer Account
+                </Link>
+                <Link 
+                  href="/seller" 
+                  onClick={() => setIsDemoMenuOpen(false)}
+                  className={`block px-3 py-2 text-xs font-medium mx-1.5 rounded-md mt-0.5 transition-colors ${isSeller ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                >
+                  Seller Dashboard
+                </Link>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </nav>
   );
