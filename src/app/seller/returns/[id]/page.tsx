@@ -91,6 +91,8 @@ function AdminReturnDetailPageContent() {
           routing_decision:ai_routing_decision,
           confidence:ai_confidence,
           flaws_json,
+          warehouse_confirmed_at,
+          damage_origin,
           created_at,
           products (
             id,
@@ -125,6 +127,8 @@ function AdminReturnDetailPageContent() {
         routing_reasoning: rawItem.flaws_json?.routing_reasoning || null,
         estimated_resale_price: rawItem.flaws_json?.estimated_resale_price || null,
         flaws_json: rawItem.flaws_json || null,
+        warehouse_confirmed_at: rawItem.warehouse_confirmed_at || null,
+        damage_origin: rawItem.damage_origin || null,
         created_at: rawItem.created_at,
         products: rawItem.products ? {
           id: rawItem.products.id,
