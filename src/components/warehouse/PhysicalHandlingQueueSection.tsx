@@ -14,6 +14,7 @@ export interface PhysicalHandlingQueueItem extends WarehouseReturnRecord {
   ai_grade: string | null;
   ai_score: number | null;
   awb?: string;
+  created_at?: string;
   image_urls?: string[]; // Added for Health Card support
   product: {
     title: string;

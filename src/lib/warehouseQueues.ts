@@ -21,7 +21,7 @@ export interface WarehouseReturnRecord {
   status: string;
   ai_routing_decision: string | null;
   warehouse_confirmed_at: string | null;
-  flaws_json: { auto_approved?: boolean } | null;
+  flaws_json: any | null;
   damage_origin: string | null;
 }
 
