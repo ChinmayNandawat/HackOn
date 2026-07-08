@@ -42,6 +42,8 @@ export interface Return {
   estimated_resale_price: number | null;
   flaws_json?: any;
   created_at: string;
+  warehouse_confirmed_at: string | null;
+  damage_origin: 'manufacturing_defect' | 'transit_damage' | 'customer_caused' | 'inconclusive' | null;
 }
 
 export interface ReturnWithProduct extends Return {

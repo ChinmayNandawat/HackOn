@@ -9,7 +9,9 @@
     "lint": "eslint",
     "seed:impact": "npx ts-node --project tsconfig.json src/scripts/seed-demo-impact.ts",
     "seed:deals": "npx ts-node --project tsconfig.json src/scripts/seed-local-deals.ts",
-    "seed:fashion": "npx ts-node --project tsconfig.json src/scripts/seed-fashion-items.ts"
+    "seed:fashion": "npx ts-node --project tsconfig.json src/scripts/seed-fashion-items.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock": "^3.1068.0",
@@ -36,7 +38,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "fast-check": "4.8.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "4.1.10"
   }
 }

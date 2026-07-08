@@ -22,6 +22,34 @@ export interface GradingResult {
   flaws: GradingFlaw[];
   confidence: "high" | "medium" | "low";
   summary: string;
+  damage_origin:
+    | "manufacturing_defect"
+    | "transit_damage"
+    | "customer_caused"
+    | "inconclusive";
+}
+
+const VALID_DAMAGE_ORIGINS = [
+  "manufacturing_defect",
+  "transit_damage",
+  "customer_caused",
+  "inconclusive",
+] as const;
+
+/**
+ * Normalizes any raw damage_origin value to one of the four allowed
+ * classification strings, mapping anything unrecognized to "inconclusive".
+ */
+function normalizeDamageOrigin(
+  raw: unknown
+): GradingResult["damage_origin"] {
+  if (
+    typeof raw === "string" &&
+    (VALID_DAMAGE_ORIGINS as readonly string[]).includes(raw)
+  ) {
+    return raw as GradingResult["damage_origin"];
+  }
+  return "inconclusive";
 }
 
 interface ErrorResponse {
@@ -98,7 +126,8 @@ Return ONLY a raw, valid JSON object (no markdown wrapping, no code fences) matc
     }
   ],
   "confidence": "high" | "medium" | "low",
-  "summary": "one sentence concise condition summary"
+  "summary": "one sentence concise condition summary",
+  "damage_origin": "manufacturing_defect" | "transit_damage" | "customer_caused" | "inconclusive"
 }
 
 CRITICAL INSPECTION & COORDINATE RULES:
@@ -110,7 +139,12 @@ CRITICAL INSPECTION & COORDINATE RULES:
    - Grade C (40-64): Fair condition, noticeable wear or minor missing accessory, functional.
    - Grade D (0-39): Poor condition, functional impairment, or heavy damage.
 4. FRAUD & MISMATCH PROTECTION (CRITICAL):
-   - If the item in the photo is completely unrelated to "${productCategory}" (e.g. soap or brick instead of tech), set grade="D", score=0, confidence="high", and summary="🚨 CRITICAL ITEM MISMATCH: Item received does not match ordered product category."`;
+   - If the item in the photo is completely unrelated to "${productCategory}" (e.g. soap or brick instead of tech), set grade="D", score=0, confidence="high", and summary="🚨 CRITICAL ITEM MISMATCH: Item received does not match ordered product category."
+5. DAMAGE ORIGIN CLASSIFICATION: Classify the likely origin of any observed damage as one of:
+   - "manufacturing_defect": flaw appears consistent with a factory/production defect (e.g. uneven seams, material flaws present from new).
+   - "transit_damage": flaw appears consistent with shipping/handling damage (e.g. crushed packaging, impact dents, box-shaped scuffs).
+   - "customer_caused": flaw appears consistent with use/wear after delivery (e.g. dirt, scratches from use, missing accessories).
+   - "inconclusive": use this whenever the evidence does not clearly support one of the above — do not guess.`;
 
     // 4. Invoke the Bedrock Vision Model
     let rawResponse: string;
@@ -135,7 +169,8 @@ CRITICAL INSPECTION & COORDINATE RULES:
           }
         ],
         confidence: "high",
-        summary: "The item is in good condition with only minor cosmetic wear."
+        summary: "The item is in good condition with only minor cosmetic wear.",
+        damage_origin: "inconclusive"
       });
     }
 
@@ -174,7 +209,12 @@ CRITICAL INSPECTION & COORDINATE RULES:
       );
     }
 
-    // 7. Return the validated grading result
+    // 7. Normalize damage_origin to one of the four allowed values
+    parsedResult.damage_origin = normalizeDamageOrigin(
+      parsedResult.damage_origin
+    );
+
+    // 8. Return the validated grading result
     return NextResponse.json(parsedResult, { status: 200 });
 
   } catch (globalErr: any) {

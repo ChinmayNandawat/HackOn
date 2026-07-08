@@ -8,14 +8,67 @@ import { usePathname } from 'next/navigation';
 
 const CITIES = ["Mumbai", "Delhi", "Bangalore", "Chennai"];
 
+export type ActiveRole = 'Buyer' | 'Seller' | 'Warehouse';
+
+export const ROLE_STORAGE_KEY = 'relife_active_role';
+
+/**
+ * Derives the Active_Role_Label from a pathname's route prefix alone.
+ * Returns `null` for shared routes where the prefix doesn't determine a role
+ * (e.g. `/orders`, `/impact`, `/`).
+ */
+export function deriveRoleFromPath(pathname: string): ActiveRole | null {
+  if (pathname.startsWith('/warehouse')) return 'Warehouse';
+  if (pathname.startsWith('/seller')) return 'Seller';
+  return null;
+}
+
+/**
+ * Pure persistence reducer for the Active_Role_Label.
+ * - An explicit selection (clicking a Role_Switcher option) always wins.
+ * - Otherwise, if the pathname's prefix determines a role, that role wins.
+ * - Otherwise (a shared route with no explicit selection), the previous role is kept.
+ */
+export function resolveActiveRole(
+  prevRole: ActiveRole,
+  pathname: string,
+  explicitSelection: ActiveRole | null
+): ActiveRole {
+  if (explicitSelection !== null) return explicitSelection;
+  const derived = deriveRoleFromPath(pathname);
+  if (derived !== null) return derived;
+  return prevRole;
+}
+
 export default function Navbar() {
   const [location, setLocation] = useState<string>("Mumbai"); // Default
   const [isDemoMenuOpen, setIsDemoMenuOpen] = useState(false);
   const { totalCount, openCart } = useCart();
   const pathname = usePathname();
-  
-  const isSeller = pathname?.startsWith('/seller');
-  const currentRole = isSeller ? "Seller" : "Buyer";
+
+  const [activeRole, setActiveRole] = useState<ActiveRole>(() => {
+    if (typeof window === 'undefined') {
+      return deriveRoleFromPath(pathname ?? '') ?? 'Buyer';
+    }
+    return (
+      deriveRoleFromPath(pathname ?? '') ??
+      (localStorage.getItem(ROLE_STORAGE_KEY) as ActiveRole | null) ??
+      'Buyer'
+    );
+  });
+
+  useEffect(() => {
+    const derived = deriveRoleFromPath(pathname ?? '');
+    if (derived !== null) {
+      setActiveRole(derived);
+      localStorage.setItem(ROLE_STORAGE_KEY, derived);
+    }
+  }, [pathname]);
+
+  const selectRole = (role: ActiveRole) => {
+    setActiveRole(role);
+    localStorage.setItem(ROLE_STORAGE_KEY, role);
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem("relife_buyer_location");
@@ -81,7 +134,7 @@ export default function Navbar() {
             onClick={() => setIsDemoMenuOpen(!isDemoMenuOpen)}
             className="flex items-center gap-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 transition-colors whitespace-nowrap py-1"
           >
-            Hi, Chinmay ({currentRole})
+            Hi, Chinmay ({activeRole})
             <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 text-slate-500 ${isDemoMenuOpen ? '-rotate-180' : ''}`} />
           </button>
           
@@ -97,17 +150,33 @@ export default function Navbar() {
                 </div>
                 <Link 
                   href="/" 
-                  onClick={() => setIsDemoMenuOpen(false)}
-                  className={`block px-3 py-2 text-xs font-medium mx-1.5 rounded-md transition-colors ${!isSeller ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                  onClick={() => {
+                    selectRole('Buyer');
+                    setIsDemoMenuOpen(false);
+                  }}
+                  className={`block px-3 py-2 text-xs font-medium mx-1.5 rounded-md transition-colors ${activeRole === 'Buyer' ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                 >
                   Buyer Account
                 </Link>
                 <Link 
                   href="/seller" 
-                  onClick={() => setIsDemoMenuOpen(false)}
-                  className={`block px-3 py-2 text-xs font-medium mx-1.5 rounded-md mt-0.5 transition-colors ${isSeller ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                  onClick={() => {
+                    selectRole('Seller');
+                    setIsDemoMenuOpen(false);
+                  }}
+                  className={`block px-3 py-2 text-xs font-medium mx-1.5 rounded-md mt-0.5 transition-colors ${activeRole === 'Seller' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                 >
                   Seller Dashboard
+                </Link>
+                <Link 
+                  href="/warehouse" 
+                  onClick={() => {
+                    selectRole('Warehouse');
+                    setIsDemoMenuOpen(false);
+                  }}
+                  className={`block px-3 py-2 text-xs font-medium mx-1.5 rounded-md mt-0.5 transition-colors ${activeRole === 'Warehouse' ? 'bg-amber-50 text-amber-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                >
+                  Warehouse Staff
                 </Link>
               </div>
             </>

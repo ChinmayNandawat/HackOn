@@ -152,6 +152,7 @@ export async function POST(req: NextRequest) {
         ai_routing_decision: routeResult.decision,
         status: finalStatus,
         flaws_json: combinedFlawsJson,
+        damage_origin: gradeResult.damage_origin,
       })
       .eq("id", returnId);
 
