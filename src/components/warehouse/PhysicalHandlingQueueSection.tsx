@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { PackageCheck, ShieldAlert, X, AlertTriangle, CheckCircle2, ChevronRight } from "lucide-react";
+import { PackageCheck, ShieldAlert, X, AlertTriangle, CheckCircle2, ChevronRight, ShieldCheck, Box } from "lucide-react";
 import { WarehouseReturnRecord, getDestinationLabel } from "@/lib/warehouseQueues";
-import ProductHealthCard from "@/components/ProductHealthCard";
+import WarehouseInspectionCard from "./WarehouseInspectionCard";
 import { Product } from "@/types/database";
 
 /**
@@ -66,22 +66,18 @@ export default function PhysicalHandlingQueueSection({
 
   return (
     <section>
-      <h2 className="text-lg font-extrabold text-gray-900 mb-3">
-        Inbound Verification & Binning (FC)
-      </h2>
-
       {records.length === 0 ? (
-        <div className="bg-white p-12 text-center rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-center">
+        <div className="p-12 text-center flex flex-col items-center justify-center">
           <PackageCheck className="w-12 h-12 text-gray-300 mb-3" />
           <p className="text-sm font-semibold text-gray-700">
             No items pending physical handling
           </p>
           <p className="text-xs text-gray-400 mt-1 max-w-xs">
-            Auto-approved returns will appear here once they&apos;re ready to move.
+            Auto-approved returns will appear here once they're ready to move.
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="divide-y divide-gray-100">
           {records.map((record) => {
             const title = record.product?.title || "Unknown Product";
             const imageUrl = record.product?.image_url || null;
@@ -94,61 +90,73 @@ export default function PhysicalHandlingQueueSection({
             return (
               <div
                 key={record.id}
-                className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-start gap-4 hover:border-blue-300 transition-colors cursor-pointer"
-                onClick={() => !isConfirming && setActiveItem(record)}
+                className="group grid grid-cols-1 md:grid-cols-12 gap-4 items-center px-6 md:px-8 py-5 hover:bg-blue-50/50 transition-colors cursor-pointer"
+                onClick={() => {
+                  if (!isConfirming) {
+                    setActiveItem(record);
+                    setSelectedRoute(record.ai_routing_decision);
+                    setVerificationStatus("match");
+                  }
+                }}
               >
-                {/* Thumbnail */}
-                {imageUrl ? (
-                  <img
-                    src={imageUrl}
-                    alt={title}
-                    referrerPolicy="no-referrer"
-                    className="w-12 h-12 rounded-lg object-cover border border-gray-100 flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-lg bg-gray-100 text-gray-400 flex items-center justify-center flex-shrink-0 text-xs font-semibold uppercase">
-                    {title.substring(0, 2)}
-                  </div>
-                )}
-
-                {/* Main info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-extrabold text-gray-800 truncate">
-                        {title}
-                      </h3>
-                      {record.awb && (
-                        <span className="text-[10px] font-mono font-semibold bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200">
-                          {record.awb}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {record.ai_grade && (
-                        <span className={`px-2 py-0.5 rounded border text-[10px] font-bold ${gradeClass}`}>
-                          Grade {record.ai_grade}
-                        </span>
-                      )}
-                      {destinationLabel && (
-                        <span className="px-2 py-0.5 rounded border text-[10px] font-bold bg-blue-50 text-blue-700 border-blue-200">
-                          {destinationLabel}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {record.damage_origin !== null && (
-                    <div className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 w-fit">
-                      <ShieldAlert className="w-3.5 h-3.5" />
-                      <span>AI Suspects: {record.damage_origin.replace('_', ' ')}</span>
+                {/* Package / Item (Col 1-4) */}
+                <div className="col-span-4 flex items-center gap-5">
+                  {imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt={title}
+                      referrerPolicy="no-referrer"
+                      className="w-20 h-20 rounded-lg object-cover border border-gray-200 flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-lg bg-gray-100 text-gray-400 flex items-center justify-center flex-shrink-0 text-xs font-semibold uppercase">
+                      {title.substring(0, 2)}
                     </div>
                   )}
+                  <div className="min-w-0 flex flex-col gap-1">
+                    <h3 className="text-sm font-extrabold text-gray-900 truncate">
+                      {title}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                       {record.awb && (
+                         <span className="text-[10px] font-mono font-semibold bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                           {record.awb}
+                         </span>
+                       )}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Action */}
-                <div className="flex-shrink-0 self-center flex items-center text-blue-600 gap-1 text-xs font-bold">
-                  Inspect <ChevronRight className="w-4 h-4" />
+                {/* AI Grade (Col 5-6) */}
+                <div className="col-span-2 flex flex-col gap-1">
+                   <span className={`w-fit px-2.5 py-1 rounded-md text-[11px] font-extrabold tracking-wide uppercase ${gradeClass}`}>
+                     Grade {record.ai_grade}
+                   </span>
+                   <span className="text-[10px] text-gray-500 font-semibold">
+                     Score: {record.ai_score}/100
+                   </span>
+                </div>
+
+                {/* Target Route (Col 7-9) */}
+                <div className="col-span-3 flex flex-col gap-1">
+                   {destinationLabel && (
+                     <span className="text-xs font-bold text-gray-900">
+                       {destinationLabel}
+                     </span>
+                   )}
+                   {record.flaws_json?.pickup_flagged && (
+                     <div className="flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded w-fit border border-amber-200">
+                       <ShieldAlert className="w-3 h-3" />
+                       <span>Agent Flagged (Review Needed)</span>
+                     </div>
+                   )}
+                </div>
+
+                {/* Action (Col 10-12) */}
+                <div className="col-span-3 flex justify-end">
+                  <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 group-hover:bg-blue-600 text-gray-700 group-hover:text-white rounded-lg text-xs font-bold transition-colors">
+                    Inspect & Route <ChevronRight className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             );
@@ -192,329 +200,179 @@ export default function PhysicalHandlingQueueSection({
           <div className="flex-1 max-w-7xl mx-auto w-full p-6 md:p-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left Column (lg:col-span-7): Full AI Assessment & Health Card */}
             <div className="lg:col-span-7 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h4 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                  <span>AI Assessment & Pre-Grade Passport</span>
-                </h4>
-                <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-                  Grade {activeItem.ai_grade || "A"} • Confidence: {activeItem.ai_score || 85}%
-                </span>
-              </div>
-
-              <ProductHealthCard
-                product={{
-                  id: "temp",
-                  title: activeItem.product?.title || "Unknown Product",
-                  original_price: 0,
-                  category: "Return",
-                  image_url: activeItem.product?.image_url || "",
-                  created_at: activeItem.created_at || new Date().toISOString(),
-                  health_data: {
-                    grade: activeItem.ai_grade,
-                    score: activeItem.ai_score,
-                    confidence: "High",
-                    flaws:
-                      activeItem.flaws_json?.flaws ||
-                      (activeItem.flaws_json?.note
-                        ? [
-                            {
-                              name: "Condition Note",
-                              description: activeItem.flaws_json.note,
-                              severity: "minor",
-                            },
-                          ]
-                        : []),
-                    return_photo_urls:
-                      activeItem.image_urls ||
-                      (activeItem.product?.image_url ? [activeItem.product.image_url] : []),
-                  },
-                } as unknown as Product}
-                showFullDetail={true}
-              />
+              <WarehouseInspectionCard item={activeItem} />
             </div>
 
-            {/* Right Column (lg:col-span-5): Full-Height Physical Check & Final Disposition Routing Console */}
-            <div className="lg:col-span-5 bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-5 sticky top-24">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
-                <h4 className="text-sm font-extrabold text-slate-900 uppercase tracking-wide">
-                  Physical Check & Intake Verdict
+            {/* Right Column (lg:col-span-5): Execution Console */}
+            <div className="lg:col-span-5 bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-6 sticky top-24">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                <h4 className="text-sm font-extrabold text-gray-900 uppercase tracking-wide flex items-center gap-2">
+                  <Box className="w-4 h-4 text-blue-600" />
+                  Execution Console
                 </h4>
               </div>
 
-              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2.5 text-xs text-slate-700">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-slate-500">AI Damage Origin:</span>
-                  <span className="text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200 font-bold">
-                    {activeItem.damage_origin?.replace('_', ' ') || "None"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-slate-500">Target Bin:</span>
-                  <span className="text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-lg border border-blue-200 font-bold">
-                    {getDestinationLabel(activeItem.ai_routing_decision)}
-                  </span>
-                </div>
-              </div>
-
-              <p className="text-xs font-semibold text-slate-800">
-                Does the physical item match the AI&apos;s assessment above?
-              </p>
-
-              <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={() => setVerificationStatus("match")}
-                  className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-start gap-3 cursor-pointer ${
-                    verificationStatus === "match"
-                      ? "border-emerald-500 bg-emerald-50"
-                      : "border-slate-200 hover:border-emerald-300 hover:bg-slate-50"
-                  }`}
-                >
-                  <CheckCircle2
-                    className={`w-5 h-5 mt-0.5 shrink-0 ${
-                      verificationStatus === "match" ? "text-emerald-600" : "text-slate-400"
-                    }`}
-                  />
-                  <div>
-                    <div
-                      className={`font-bold text-sm ${
-                        verificationStatus === "match" ? "text-emerald-950" : "text-slate-800"
-                      }`}
-                    >
-                      Yes, Condition Matches
-                    </div>
-                    <div
-                      className={`text-xs mt-0.5 ${
-                        verificationStatus === "match" ? "text-emerald-800" : "text-slate-500"
-                      }`}
-                    >
-                      The item has the exact flaws described by AI.
-                    </div>
-                  </div>
-                </button>
-
-                {/* Final Disposition Routing Selector */}
-                {verificationStatus === "match" && (() => {
+              {(() => {
                   const currentGrade = overrideGrade || activeItem.ai_grade || "A";
-                  const gradeOptionsMap: Record<string, string[]> = {
-                    "A+": [
-                      "⚡ Route to Amazon Dark Store (Immediate 10-Min Resale)",
-                      "✨ Restock & Relist as Brand New Inventory",
-                    ],
-                    "A": [
-                      "♻️ Relist on ReLife at 15-20% Discount",
-                      "🛒 Route to Local Neighborhood Deal Showcase",
-                    ],
-                    "B": [
-                      "🏷️ Relist on ReLife Refurbished at 25-30% Discount",
-                      "🛒 Route to Local Neighborhood Deal Showcase",
-                    ],
-                    "C": [
-                      "🔥 Deep Discount Relist on ReLife (50% Off Max)",
-                      "💚 Route to NGO Community Partner",
-                    ],
-                    "D": [
-                      "💚 Donate to NGO Partner (Functional / Usable Condition)",
-                      "♻️ Route to E-Waste Component Harvesting (Broken / Unusable)",
-                    ],
-                  };
+                  const routingOptions = [
+                    { id: "relist_as_refurbished", label: "Relist as Refurbished" },
+                    { id: "standard_return", label: "Standard Return" },
+                    { id: "keep_and_refund", label: "Keep & Partial Refund" },
+                    { id: "donate", label: "Donate" },
+                    { id: "recycle", label: "Recycle" },
+                    { id: "reject", label: "Reject Return" }
+                  ];
 
-                  const options = gradeOptionsMap[currentGrade] || gradeOptionsMap["A"];
+                  // Add dark store option for top-grade items
+                  if (currentGrade === "A+" || currentGrade === "A") {
+                    routingOptions.unshift({ 
+                      id: "hyperlocal_restock", 
+                      label: "Hyperlocal Restock"
+                    });
+                  }
+
+                  const suggestedRouteId = activeItem.ai_routing_decision || routingOptions[0].id;
+                  const currentSelectedRoute = selectedRoute || suggestedRouteId;
 
                   return (
-                    <div className="mt-3 bg-white border border-emerald-200 rounded-2xl p-4 space-y-3.5 shadow-xs animate-in fade-in duration-200">
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-extrabold text-xs text-gray-900 flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                            <span>Select & Confirm Final Route for Grade {currentGrade}:</span>
-                          </span>
-                        </div>
-
-                        {/* Interactive Grade Tier Switcher for Hub Worker / Live Demo */}
-                        <div className="flex items-center gap-1.5 bg-gray-50 p-1.5 rounded-xl border border-gray-200">
-                          <span className="text-[10px] font-bold text-gray-500 uppercase px-1">Grade:</span>
-                          {(["A+", "A", "B", "C", "D"] as const).map((gradeTier) => (
-                            <button
-                              key={gradeTier}
-                              type="button"
-                              onClick={() => {
-                                setOverrideGrade(gradeTier);
-                                setSelectedRoute(null);
-                              }}
-                              className={`px-2.5 py-1 rounded-lg text-xs font-extrabold transition cursor-pointer ${
-                                currentGrade === gradeTier
-                                  ? "bg-emerald-600 text-white shadow-2xs"
-                                  : "bg-white text-gray-700 hover:bg-emerald-50 border border-gray-200/60"
-                              }`}
-                            >
-                              {gradeTier}
-                            </button>
+                    <>
+                      <div className="space-y-4">
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Step 1: Final Warehouse Grade</p>
+                        <div className="grid grid-cols-5 gap-2">
+                          {(["A+", "A", "B", "C", "D"] as const).map((g) => (
+                              <button
+                                key={g}
+                                onClick={() => {
+                                  setOverrideGrade(g);
+                                  if (!selectedRoute) setSelectedRoute(suggestedRouteId);
+                                  setVerificationStatus("match");
+                                }}
+                                className={`py-3 rounded-xl font-black text-lg transition-all border-2 ${
+                                  currentGrade === g
+                                    ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm"
+                                    : "border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300"
+                                }`}
+                              >
+                                {g}
+                              </button>
                           ))}
                         </div>
+                        {overrideGrade && overrideGrade !== activeItem.ai_grade && (
+                            <p className="text-[11px] font-bold text-amber-700 bg-amber-50 px-3 py-2 rounded-lg inline-flex items-center gap-2 border border-amber-200">
+                              <AlertTriangle className="w-4 h-4 shrink-0" />
+                              <span>Grade manually overridden from <strong>{activeItem.ai_grade}</strong> to <strong>{overrideGrade}</strong></span>
+                            </p>
+                        )}
                       </div>
 
-                      {currentGrade === "D" && (
-                        <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 font-medium">
-                          💡 <strong>Hub Employee Guidance:</strong> Inspect item condition. Select NGO donation if the product is functional/useful for community partners; otherwise route to E-Waste Harvesting.
+                      <div className="space-y-4">
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Step 2: Routing Destination</p>
+                        
+                        <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4">
+                           <div className="flex items-center gap-2 mb-3">
+                             <CheckCircle2 className="w-4 h-4 text-blue-600" />
+                             <span className="text-xs font-bold text-blue-800 uppercase tracking-wider">System / Seller Authorized Route</span>
+                           </div>
+                           <button
+                             onClick={() => { setSelectedRoute(suggestedRouteId); setVerificationStatus("match"); }}
+                             className={`w-full p-4 rounded-xl text-left font-bold transition-all border-2 ${
+                               currentSelectedRoute === suggestedRouteId
+                                 ? "border-blue-500 bg-white text-blue-900 shadow-sm"
+                                 : "border-blue-200 bg-blue-50 text-blue-700 hover:bg-white"
+                             }`}
+                           >
+                             {routingOptions.find(o => o.id === suggestedRouteId)?.label || suggestedRouteId}
+                           </button>
                         </div>
-                      )}
 
-                      <div className="grid grid-cols-1 gap-2">
-                        {options.map((option) => (
-                          <button
-                            key={option}
-                            type="button"
-                            onClick={() => setSelectedRoute(option)}
-                            className={`p-3 rounded-xl text-left text-xs font-bold transition-all cursor-pointer border ${
-                              selectedRoute === option
-                                ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
-                                : "bg-white hover:bg-emerald-50/50 hover:border-emerald-300 text-gray-800 border-gray-200"
+                        <div className="pt-2">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 block">Manual Overrides</span>
+                          <div className="grid grid-cols-2 gap-2">
+                            {routingOptions.filter(opt => opt.id !== suggestedRouteId).map(opt => {
+                              const isHyperlocal = opt.id === "hyperlocal_restock";
+                              const isSelected = currentSelectedRoute === opt.id;
+
+                              let baseStyle = "";
+                              if (isHyperlocal) {
+                                baseStyle = isSelected
+                                  ? "border-emerald-500 bg-emerald-500 text-white shadow-sm"
+                                  : "border-emerald-200 bg-emerald-50 text-emerald-800 hover:border-emerald-300 hover:bg-emerald-100";
+                              } else {
+                                baseStyle = isSelected
+                                  ? "border-amber-500 bg-amber-50 text-amber-800"
+                                  : "border-gray-200 hover:border-gray-300 bg-white text-gray-600";
+                              }
+
+                              return (
+                                <button
+                                    key={opt.id}
+                                    onClick={() => { setSelectedRoute(opt.id); setVerificationStatus("match"); }}
+                                    className={`w-full p-3 rounded-xl text-left transition-all border-2 flex flex-col justify-center min-h-[3.5rem] ${baseStyle}`}
+                                >
+                                  {isHyperlocal && (
+                                    <span className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1 ${isSelected ? 'text-emerald-100' : 'text-emerald-600'}`}>
+                                      <Box className="w-3 h-3" />
+                                      NearDrop Eligible
+                                    </span>
+                                  )}
+                                  <div className="flex items-center justify-between w-full">
+                                    <span className={`text-xs font-bold ${isHyperlocal ? 'text-sm' : ''}`}>
+                                      {opt.label}
+                                    </span>
+                                    {isHyperlocal && (
+                                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isSelected ? 'bg-emerald-600 text-emerald-50' : 'bg-emerald-100 text-emerald-700'}`}>
+                                        2.4 mi
+                                      </span>
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-4 border-t border-gray-100 space-y-3">
+                        {routingSuccess && (
+                          <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-xl text-xs font-bold flex items-center gap-2">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                            <span>{routingSuccess}</span>
+                          </div>
+                        )}
+                        <button
+                          disabled={!verificationStatus && !activeItem.ai_routing_decision && !selectedRoute}
+                          onClick={() => {
+                            if (verificationStatus === "match" || (!verificationStatus && (selectedRoute || activeItem.ai_routing_decision))) {
+                              setVerificationStatus("match");
+                              setRoutingSuccess(`Route confirmed and inventory updated.`);
+                              setTimeout(() => handleConfirmClick(activeItem.id), 1200);
+                            } else {
+                              handleConfirmClick(activeItem.id);
+                            }
+                          }}
+                          className={`w-full py-4 rounded-xl font-bold text-sm flex justify-center items-center gap-2 transition-all shadow-sm ${
+                              currentSelectedRoute 
+                                ? "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer" 
+                                : "bg-gray-200 text-gray-400 cursor-not-allowed"
                             }`}
-                          >
-                            {option}
-                          </button>
-                        ))}
+                        >
+                          Confirm & Execute Route
+                        </button>
                       </div>
-
-                      {routingSuccess && (
-                        <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-xl text-xs font-extrabold flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                          <span>{routingSuccess}</span>
-                        </div>
-                      )}
-
-                      <button
-                        type="button"
-                        disabled={!selectedRoute}
-                        onClick={() => {
-                          if (!selectedRoute) return;
-                          setRoutingSuccess(`✅ BINNED TO DESTINATION (${currentGrade}): Route confirmed and inventory updated.`);
-                          setTimeout(() => {
-                            handleConfirmClick(activeItem.id);
-                          }, 1200);
-                        }}
-                        className={`w-full py-3 font-bold rounded-xl text-sm transition-all shadow-xs ${
-                          selectedRoute
-                            ? "bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
-                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        }`}
-                      >
-                        🚀 Confirm & Execute Routing Decision
-                      </button>
-                    </div>
+                    </>
                   );
-                })()}
-
-                <div className="relative py-1">
-                  <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                    <div className="w-full border-t border-slate-200" />
-                  </div>
-                  <div className="relative flex justify-center">
-                    <span className="bg-white px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                      Overrides
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setVerificationStatus("fraud")}
-                  className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-start gap-3 cursor-pointer ${
-                    verificationStatus === "fraud"
-                      ? "border-red-500 bg-red-50"
-                      : "border-slate-200 hover:border-red-200 hover:bg-slate-50"
-                  }`}
-                >
-                  <AlertTriangle
-                    className={`w-5 h-5 mt-0.5 shrink-0 ${
-                      verificationStatus === "fraud" ? "text-red-600" : "text-slate-400"
-                    }`}
-                  />
-                  <div>
-                    <div
-                      className={`font-bold text-sm ${
-                        verificationStatus === "fraud" ? "text-red-900" : "text-slate-800"
-                      }`}
-                    >
-                      Fraud (Wrong Item / Empty Box)
-                    </div>
-                    <div
-                      className={`text-xs mt-0.5 ${
-                        verificationStatus === "fraud" ? "text-red-700" : "text-slate-500"
-                      }`}
-                    >
-                      Halt refund. Route to Quarantine.
-                    </div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setVerificationStatus("downgrade")}
-                  className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-start gap-3 cursor-pointer ${
-                    verificationStatus === "downgrade"
-                      ? "border-amber-500 bg-amber-50"
-                      : "border-slate-200 hover:border-amber-200 hover:bg-slate-50"
-                  }`}
-                >
-                  <ShieldAlert
-                    className={`w-5 h-5 mt-0.5 shrink-0 ${
-                      verificationStatus === "downgrade" ? "text-amber-600" : "text-slate-400"
-                    }`}
-                  />
-                  <div>
-                    <div
-                      className={`font-bold text-sm ${
-                        verificationStatus === "downgrade" ? "text-amber-900" : "text-slate-800"
-                      }`}
-                    >
-                      Condition Worse Than Expected
-                    </div>
-                    <div
-                      className={`text-xs mt-0.5 ${
-                        verificationStatus === "downgrade" ? "text-amber-700" : "text-slate-500"
-                      }`}
-                    >
-                      AI missed major damage. Downgrade to Scrap/Liquidation.
-                    </div>
-                  </div>
-                </button>
-              </div>
+              })()}
             </div>
           </div>
 
           {/* Full-Width Sticky Footer Bar */}
-          <div className="sticky bottom-0 z-20 bg-slate-50 border-t border-slate-200 px-6 md:px-10 py-4 flex justify-end items-center gap-3 mt-auto">
+          <div className="sticky bottom-0 z-20 bg-gray-50 border-t border-gray-200 px-6 md:px-10 py-4 flex justify-between items-center mt-auto">
             <button
               type="button"
               onClick={closeModal}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition cursor-pointer"
+              className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-200 transition cursor-pointer flex items-center gap-2"
             >
-              Cancel
-            </button>
-            <button
-              type="button"
-              disabled={!verificationStatus}
-              onClick={() => handleConfirmClick(activeItem.id)}
-              className={`px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer ${
-                !verificationStatus
-                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                  : verificationStatus === "match"
-                  ? "bg-emerald-900 text-white hover:bg-emerald-800"
-                  : verificationStatus === "fraud"
-                  ? "bg-red-600 text-white hover:bg-red-700"
-                  : "bg-amber-600 text-white hover:bg-amber-700"
-              }`}
-            >
-              {verificationStatus === "match"
-                ? `Confirm Move to: ${getDestinationLabel(activeItem.ai_routing_decision)}`
-                : verificationStatus === "fraud"
-                ? "Submit to Quarantine"
-                : verificationStatus === "downgrade"
-                ? "Downgrade & Reroute"
-                : "Select an option"}
+              <X className="w-4 h-4" /> Cancel Assessment
             </button>
           </div>
         </div>

@@ -45,16 +45,9 @@ const gradeClasses: Record<string, string> = {
  */
 export default function EscalatedQueueSection({ records }: EscalatedQueueSectionProps) {
   return (
-    <section className="mb-8">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-extrabold text-gray-900 tracking-tight">Escalated Queue</h2>
-        <span className="text-xs text-gray-400 font-medium">
-          {records.length} return{records.length !== 1 ? "s" : ""} awaiting seller decision
-        </span>
-      </div>
-
+    <section>
       {records.length === 0 ? (
-        <div className="bg-white p-12 text-center rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-center">
+        <div className="p-12 text-center flex flex-col items-center justify-center">
           <FileText className="w-12 h-12 text-gray-300 mb-3" />
           <p className="text-sm font-semibold text-gray-700">No returns currently awaiting seller decision</p>
           <p className="text-xs text-gray-400 mt-1 max-w-xs">
@@ -62,7 +55,7 @@ export default function EscalatedQueueSection({ records }: EscalatedQueueSection
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="divide-y divide-gray-100">
           {records.map((item) => {
             const title = item.product?.title || "Unknown Product";
             const imageUrl = item.product?.image_url || null;
@@ -71,48 +64,59 @@ export default function EscalatedQueueSection({ records }: EscalatedQueueSection
             return (
               <div
                 key={item.id}
-                className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-start gap-4"
+                className="group grid grid-cols-1 md:grid-cols-12 gap-4 items-center px-6 md:px-8 py-5 hover:bg-amber-50/50 transition-colors"
               >
-                {/* Thumbnail */}
-                {imageUrl ? (
-                  <img
-                    src={imageUrl}
-                    alt={title}
-                    className="w-12 h-12 rounded-lg object-cover border border-gray-100 flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-lg bg-gray-100 text-gray-400 flex items-center justify-center flex-shrink-0 text-xs font-semibold uppercase">
-                    {title.substring(0, 2)}
-                  </div>
-                )}
-
-                {/* Card Main Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
-                    <h3 className="text-sm font-extrabold text-gray-800 truncate">{title}</h3>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="px-2 py-0.5 rounded border text-[10px] font-bold bg-blue-50 text-blue-700 border-blue-200">
-                        Needs Seller Review
-                      </span>
-                      {item.ai_grade && (
-                        <span className={`px-2 py-0.5 rounded border text-[10px] font-bold ${gradeClass}`}>
-                          Grade {item.ai_grade}
-                        </span>
-                      )}
+                {/* Package / Item (Col 1-4) */}
+                <div className="col-span-4 flex items-center gap-5">
+                  {imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt={title}
+                      className="w-20 h-20 rounded-lg object-cover border border-gray-200 flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-lg bg-gray-100 text-gray-400 flex items-center justify-center flex-shrink-0 text-xs font-semibold uppercase">
+                      {title.substring(0, 2)}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex flex-col gap-1">
+                    <h3 className="text-sm font-extrabold text-gray-900 truncate">
+                      {title}
+                    </h3>
+                    {/* AWB not available in basic escalated record currently, omit or stub */}
+                    <div className="flex items-center gap-2">
+                       <span className="text-[10px] font-mono font-semibold bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded">
+                         AWB-PENDING
+                       </span>
                     </div>
                   </div>
+                </div>
 
-                  <div className="text-[11px] text-gray-400 font-semibold space-x-2 flex items-center flex-wrap gap-y-1">
-                    {item.ai_score !== null && (
-                      <>
-                        <span className="text-gray-600 font-bold">Score: {item.ai_score}/100</span>
-                        <span className="text-gray-300">•</span>
-                      </>
-                    )}
-                    <span>
-                      Routing: <span className="text-gray-500 font-normal">{item.ai_routing_decision ?? "N/A"}</span>
-                    </span>
-                  </div>
+                {/* AI Grade (Col 5-6) */}
+                <div className="col-span-2 flex flex-col gap-1">
+                   <span className={`w-fit px-2.5 py-1 rounded-md text-[11px] font-extrabold tracking-wide uppercase ${gradeClass}`}>
+                     Grade {item.ai_grade}
+                   </span>
+                   <span className="text-[10px] text-gray-500 font-semibold">
+                     Score: {item.ai_score}/100
+                   </span>
+                </div>
+
+                {/* Target Route (Col 7-9) */}
+                <div className="col-span-3 flex flex-col gap-1">
+                   <span className="text-xs font-bold text-gray-900">
+                     {item.ai_routing_decision ? item.ai_routing_decision.replace(/_/g, ' ') : "Pending"}
+                   </span>
+                   <div className="flex items-center gap-1 text-[10px] font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded w-fit">
+                     <span>Awaiting Seller Review</span>
+                   </div>
+                </div>
+
+                {/* Action (Col 10-12) */}
+                <div className="col-span-3 flex justify-end">
+                  <button disabled className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-400 rounded-lg text-xs font-bold border border-gray-200 cursor-not-allowed">
+                    Locked
+                  </button>
                 </div>
               </div>
             );
