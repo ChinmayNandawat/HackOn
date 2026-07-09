@@ -146,7 +146,22 @@ export default function PickupAgentApp() {
       
       if (!isDummy) {
         let updateData: any = {};
-        if (agentDecision === "match") updateData = { status: "accepted" };
+        if (agentDecision === "match") {
+          updateData = { status: "accepted" };
+          if (activePickup.flaws_json?.auto_approved) {
+            if (activePickup.ai_routing_decision === "donate" || activePickup.ai_routing_decision === "recycle") {
+              updateData.status = "completed";
+            }
+            if (activePickup.ai_routing_decision === "relist_as_refurbished") {
+              // Trigger relist immediately in the background since it was auto-approved
+              fetch(`/api/relist`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ returnId: activePickup.id })
+              }).catch(err => console.error("[Pickup] Auto-relist trigger failed:", err));
+            }
+          }
+        }
         else if (agentDecision === "mismatch") updateData = { status: "accepted", flaws_json: { ...activePickup.flaws_json, pickup_flagged: true } };
         else if (agentDecision === "wrong_item") updateData = { status: "rejected" };
 
@@ -352,8 +367,8 @@ export default function PickupAgentApp() {
                    {/* AI Evidence Carousel & Image-Specific Checklist */}
                    {currentImageUrl && (
                      <div className="w-full max-w-sm mx-auto bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm">
-                        <div className="relative group p-2">
-                          <AnnotatedImage imageUrl={currentImageUrl} flaws={flawsToDraw} width={380} height={380} />
+                        <div className="relative group p-2 flex justify-center">
+                          <AnnotatedImage imageUrl={currentImageUrl} flaws={flawsToDraw} width={300} height={300} />
                           
                           {displayImages.length > 1 && (
                             <>

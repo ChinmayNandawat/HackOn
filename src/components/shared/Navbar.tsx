@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Leaf, MapPin, ShoppingBag, ChevronDown, Layers, Tag, BarChart3, Ruler, X, Check, Truck, Inbox, Zap } from 'lucide-react';
+import { Leaf, MapPin, ShoppingBag, ChevronDown, Layers, Tag, BarChart3, Ruler, X, Check, Truck, Inbox, Zap, Menu } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { usePathname } from 'next/navigation';
@@ -61,6 +61,7 @@ export function resolveActiveRole(
 export default function Navbar() {
   const [location, setLocation] = useState<string>("Mumbai"); // Default
   const [isDemoMenuOpen, setIsDemoMenuOpen] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const { totalCount, openCart } = useCart();
   const pathname = usePathname();
 
@@ -133,9 +134,17 @@ export default function Navbar() {
   const isPickupRoute = pathname?.startsWith("/pickup") || activeRole === "PickupAgent";
 
   return (
-    <nav className="w-full bg-white/95 backdrop-blur-md border-b border-emerald-100/80 shadow-[0_2px_15px_-3px_rgba(16,185,129,0.05)] px-4 sm:px-8 lg:px-12 py-3.5 flex flex-col md:flex-row justify-between items-center sticky top-0 z-50 gap-4 md:gap-0 font-sans">
+    <nav className="w-full bg-white/95 backdrop-blur-md border-b border-emerald-100/80 shadow-[0_2px_15px_-3px_rgba(16,185,129,0.05)] px-3 sm:px-8 lg:px-12 py-2 sm:py-3.5 flex flex-nowrap md:flex-wrap justify-between items-center sticky top-0 z-50 gap-2 sm:gap-0 font-sans">
       {/* Left side: Logo & Interactive Location Selector */}
-      <div className="flex items-center justify-between w-full md:w-auto gap-6 sm:gap-8">
+      <div className="flex items-center w-auto gap-2 sm:gap-4 lg:gap-8">
+        {/* Hamburger Menu Toggle (Moved to Left) */}
+        <button 
+          onClick={() => setIsMobileNavOpen(true)}
+          className="md:hidden p-1.5 -ml-1 text-slate-700 hover:bg-slate-100 rounded-lg cursor-pointer"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
         <Link
           href="/"
           className="flex items-center gap-2.5 text-xl md:text-2xl font-extrabold tracking-tight text-slate-900 hover:opacity-90 transition-opacity shrink-0"
@@ -150,8 +159,8 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* Location Selector Pill */}
-        <div className="flex items-center gap-1.5 bg-emerald-50/80 hover:bg-emerald-100/70 border border-emerald-200/80 text-emerald-900 text-xs font-semibold px-3.5 py-1.5 rounded-full transition-colors shadow-2xs shrink-0">
+        {/* Location Selector Pill (Hidden on Mobile for all routes) */}
+        <div className={`hidden md:flex items-center gap-1.5 bg-emerald-50/80 hover:bg-emerald-100/70 border border-emerald-200/80 text-emerald-900 text-xs font-semibold px-3.5 py-1.5 rounded-full transition-colors shadow-2xs shrink-0`}>
           <MapPin className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
           <select
             className="bg-transparent border-none outline-none font-semibold text-emerald-900 cursor-pointer text-xs"
@@ -168,7 +177,8 @@ export default function Navbar() {
       </div>
 
       {/* Right side: Navigation Links, Actions & Role Switcher */}
-      <div className="flex items-center justify-end gap-2 sm:gap-3 lg:gap-5 w-full md:w-auto flex-wrap sm:flex-nowrap">
+      <div className="flex items-center justify-end gap-1.5 sm:gap-3 lg:gap-5 w-auto flex-nowrap shrink-0">
+        <div className="hidden md:flex items-center gap-1.5 sm:gap-3 lg:gap-5">
         {isSellerRoute ? (
           /* Seller Navigation Links */
           <div className="flex items-center gap-1 sm:gap-2">
@@ -218,22 +228,37 @@ export default function Navbar() {
             </Link>
           </div>
         ) : isPickupRoute ? (
-          /* Pickup Agent Navigation Pills */
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-50 text-emerald-900 border border-emerald-200/80 rounded-full text-xs font-bold shadow-2xs">
-              <Truck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-              <span>Hub: Amazon EasyShip (Bandra West)</span>
-            </div>
+          /* Pickup Agent Navigation Links */
+          <div className="flex items-center gap-1 sm:gap-2">
             <Link
               href="/pickup"
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 text-white rounded-full text-xs font-bold shadow-sm hover:bg-emerald-800 transition-all"
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                pathname === "/pickup"
+                  ? "bg-emerald-100/90 text-emerald-950 border border-emerald-300/70 shadow-2xs"
+                  : "text-slate-700 hover:text-emerald-800 hover:bg-emerald-50/60"
+              }`}
             >
-              <Inbox className="w-3.5 h-3.5 shrink-0" />
-              <span>Active Doorstep Queue (3 Pending)</span>
+              <Inbox className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Doorstep Queue</span>
             </Link>
+            <Link
+              href="/pickup/history"
+              className={`hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                pathname === "/pickup/history"
+                  ? "bg-emerald-100/90 text-emerald-950 border border-emerald-300/70 shadow-2xs"
+                  : "text-slate-700 hover:text-emerald-800 hover:bg-emerald-50/60"
+              }`}
+            >
+              <Truck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Route History</span>
+            </Link>
+            <div className="hidden md:flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-500 whitespace-nowrap">
+              <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+              <span>Hub: Amazon EasyShip (Bandra West)</span>
+            </div>
           </div>
         ) : isWarehouseRoute ? (
-          /* Warehouse Staff — hide shopping links & cart */
+          /* Warehouse Staff â€” hide shopping links & cart */
           null
         ) : (
           /* Buyer Navigation Links & Cart */
@@ -253,33 +278,37 @@ export default function Navbar() {
                 My Impact
               </Link>
             </div>
+          </>
+        )}
+        </div>
 
-            {/* My Fit Profile Button */}
+        {/* Action Buttons (Fit / Cart) always visible on right for buyers */}
+        {!isWarehouseRoute && !isSellerRoute && !isPickupRoute && (
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <button
               type="button"
               onClick={() => setIsFitModalOpen(true)}
-              className="bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 text-xs font-semibold px-3.5 py-1.5 rounded-full border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+              className="bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 text-xs font-semibold px-2 sm:px-3.5 py-1.5 rounded-full border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
               title="Open AI Fit Profile"
             >
               <Ruler className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>My Fit Profile</span>
+              <span className="hidden sm:inline">My Fit Profile</span>
             </button>
 
-            {/* Cart Button */}
             <button
               onClick={openCart}
-              className="bg-emerald-900 hover:bg-emerald-800 active:scale-95 text-white font-semibold text-xs sm:text-sm px-4 sm:px-5 py-2 rounded-full shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+              className="bg-emerald-900 hover:bg-emerald-800 active:scale-95 text-white font-semibold text-xs sm:text-sm px-3 sm:px-5 py-1.5 sm:py-2 rounded-full shadow-sm transition-all flex items-center gap-2 cursor-pointer"
               title="Open Cart"
             >
               <ShoppingBag className="w-4 h-4 shrink-0" />
-              <span>Cart</span>
+              <span className="hidden sm:inline">Cart</span>
               {totalCount > 0 && (
                 <span className="flex h-5 min-w-5 px-1.5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white shadow-2xs">
                   {totalCount}
                 </span>
               )}
             </button>
-          </>
+          </div>
         )}
 
         {!isWarehouseRoute && !isPickupRoute && (
@@ -290,9 +319,10 @@ export default function Navbar() {
         <div className="relative">
           <button
             onClick={() => setIsDemoMenuOpen(!isDemoMenuOpen)}
-            className="flex items-center gap-1.5 bg-slate-100/80 hover:bg-slate-200/80 border border-slate-200/60 text-slate-800 font-semibold text-xs px-3.5 py-2 rounded-full transition-all cursor-pointer whitespace-nowrap"
+            className="flex items-center gap-1.5 bg-slate-100/80 hover:bg-slate-200/80 border border-slate-200/60 text-slate-800 font-semibold text-xs px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-full transition-all cursor-pointer whitespace-nowrap"
           >
-            <span>Hi, Chinmay {mounted ? `(${activeRole})` : ''}</span>
+            <span className="hidden sm:inline">Hi, Chinmay {mounted ? `(${activeRole})` : ''}</span>
+            <span className="sm:hidden">{mounted ? activeRole : 'Menu'}</span>
             <ChevronDown
               className={`w-3.5 h-3.5 transition-transform duration-300 text-slate-500 ${
                 isDemoMenuOpen ? "-rotate-180" : ""
@@ -376,7 +406,7 @@ export default function Navbar() {
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
                 <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                  📏 AI Fit & Body Profile
+                  ðŸ“ AI Fit & Body Profile
                 </h3>
                 <p className="text-xs text-slate-500 mt-1">
                   Personalize fit recommendations & eliminate size returns
@@ -471,7 +501,7 @@ export default function Navbar() {
               <div className="bg-emerald-50/80 border border-emerald-200/80 rounded-2xl px-4 py-3 flex items-center justify-between text-xs text-emerald-900 mt-2.5 shadow-2xs">
                 <span className="font-semibold">Auto-Converted Size:</span>
                 <span className="font-extrabold text-emerald-950">
-                  {FOOTWEAR_CONVERSIONS[footwearUK]?.us || "US 9"} • {FOOTWEAR_CONVERSIONS[footwearUK]?.eu || "EU 42"}
+                  {FOOTWEAR_CONVERSIONS[footwearUK]?.us || "US 9"} â€¢ {FOOTWEAR_CONVERSIONS[footwearUK]?.eu || "EU 42"}
                 </span>
               </div>
             </div>
@@ -489,7 +519,55 @@ export default function Navbar() {
         </div>,
         document.body
       )}
+
+      {/* Mobile Drawer */}
+      {mounted && isMobileNavOpen && createPortal(
+        <div className="md:hidden fixed inset-0 z-[100] flex justify-start">
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsMobileNavOpen(false)} />
+          <div className="relative w-64 h-full bg-white shadow-2xl flex flex-col animate-in slide-in-from-left duration-300 z-10">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <span className="font-black text-slate-900 uppercase tracking-wider text-sm">Menu</span>
+              <button onClick={() => setIsMobileNavOpen(false)} className="p-2 bg-slate-200 hover:bg-slate-300 rounded-full transition-colors cursor-pointer">
+                <X className="w-4 h-4 text-slate-700" />
+              </button>
+            </div>
+            
+            <div className="p-4 flex flex-col gap-2 overflow-y-auto flex-1">
+              {isSellerRoute ? (
+                <>
+                  <Link href="/seller/returns" onClick={() => setIsMobileNavOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${pathname === '/seller/returns' ? 'bg-emerald-100/90 text-emerald-950 border border-emerald-300/70 shadow-2xs' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50/60'}`}><Layers className="w-4 h-4 text-emerald-600 shrink-0" /> <span>Returns Dashboard</span></Link>
+                  <Link href="/seller/listings" onClick={() => setIsMobileNavOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${pathname === '/seller/listings' ? 'bg-emerald-100/90 text-emerald-950 border border-emerald-300/70 shadow-2xs' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50/60'}`}><Tag className="w-4 h-4 text-emerald-600 shrink-0" /> <span>My Listings</span></Link>
+                  <Link href="/seller/analytics" onClick={() => setIsMobileNavOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${pathname === '/seller/analytics' ? 'bg-emerald-100/90 text-emerald-950 border border-emerald-300/70 shadow-2xs' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50/60'}`}><BarChart3 className="w-4 h-4 text-emerald-600 shrink-0" /> <span>Analytics</span></Link>
+                  <Link href="/seller/automation" onClick={() => setIsMobileNavOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${pathname === '/seller/automation' ? 'bg-emerald-100/90 text-emerald-950 border border-emerald-300/70 shadow-2xs' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50/60'}`}><Zap className="w-4 h-4 text-emerald-600 shrink-0" /> <span>Automation</span></Link>
+                </>
+              ) : isPickupRoute ? (
+                <>
+                  <Link href="/pickup" onClick={() => setIsMobileNavOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${pathname === '/pickup' ? 'bg-emerald-100/90 text-emerald-950 border border-emerald-300/70 shadow-2xs' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50/60'}`}><Inbox className="w-4 h-4 text-emerald-600 shrink-0" /> <span>Doorstep Queue</span></Link>
+                  <Link href="/pickup/history" onClick={() => setIsMobileNavOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${pathname === '/pickup/history' ? 'bg-emerald-100/90 text-emerald-950 border border-emerald-300/70 shadow-2xs' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50/60'}`}><Truck className="w-4 h-4 text-emerald-600 shrink-0" /> <span>Route History</span></Link>
+                </>
+              ) : isWarehouseRoute ? null : (
+                <>
+                  <Link href="/orders" onClick={() => setIsMobileNavOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${pathname === '/orders' ? 'bg-emerald-100/90 text-emerald-950 border border-emerald-300/70 shadow-2xs' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50/60'}`}>Orders</Link>
+                  <Link href="/impact" onClick={() => setIsMobileNavOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${pathname === '/impact' ? 'bg-emerald-100/90 text-emerald-950 border border-emerald-300/70 shadow-2xs' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50/60'}`}><Leaf className="w-4 h-4 text-emerald-600 shrink-0" /> My Impact</Link>
+                </>
+              )}
+            </div>
+            
+            {!isWarehouseRoute && (
+              <div className="mt-auto p-5 border-t border-slate-100 bg-slate-50">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Location</p>
+                <div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-2 rounded-xl">
+                  <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <select className="bg-transparent border-none outline-none font-semibold text-slate-800 text-sm w-full" value={location} onChange={handleLocationChange}>
+                    {CITIES.map((city) => <option key={city} value={city}>{city}</option>)}
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
     </nav>
   );
 }
-
