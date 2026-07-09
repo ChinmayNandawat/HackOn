@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import AnnotatedImage from "@/components/AnnotatedImage";
+import { PickupScanner } from "@/components/PickupScanner";
 
 type Screen = "queue" | "verification" | "success";
 
@@ -595,10 +596,17 @@ export default function PickupAgentApp() {
               </button>
             </div>
             
-            <div className="bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl h-40 flex items-center justify-center mb-6 relative overflow-hidden">
-              <div className="absolute top-1/2 left-0 w-full h-0.5 bg-blue-500/50 shadow-[0_0_12px_rgba(59,130,246,0.8)] animate-[pulse_1.5s_ease-in-out_infinite]"></div>
-              <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0%,rgba(59,130,246,0.05)_50%,transparent_100%)] animate-[pulse_2s_ease-in-out_infinite]"></div>
-              <p className="text-slate-400 font-bold text-sm z-10">Align barcode within frame</p>
+            <div className="bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl min-h-[200px] flex items-center justify-center mb-6 relative overflow-hidden p-2">
+              <PickupScanner onScan={(text) => {
+                const match = pickups.find(p => getAWB(p.id) === text);
+                if (match) {
+                  setScannerOpen(false);
+                  setScannedAwb("");
+                  handleSelectPickup(match);
+                } else {
+                  alert("AWB not found in today's route.");
+                }
+              }} />
             </div>
             
             <div className="relative">

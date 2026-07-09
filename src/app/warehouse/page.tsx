@@ -27,6 +27,7 @@ import PhysicalHandlingQueueSection, {
 import EscalatedQueueSection, {
   EscalatedQueueItem,
 } from "@/components/warehouse/EscalatedQueueSection";
+import BarcodeScanner from "@/components/warehouse/BarcodeScanner";
 
 /**
  * A `WarehouseReturnRecord` enriched with the display fields both queue sections
@@ -105,6 +106,7 @@ export default function WarehouseQueuePage() {
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"pending" | "escalated">("pending");
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
 
   const fetchRows = async () => {
@@ -358,6 +360,7 @@ export default function WarehouseQueuePage() {
                   )}
                   <button
                     type="button"
+                    onClick={() => setIsScannerOpen(true)}
                     className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"
                     title="Use Camera Scanner"
                   >
@@ -421,6 +424,15 @@ export default function WarehouseQueuePage() {
         </div>
       </div>
 
+      {isScannerOpen && (
+        <BarcodeScanner 
+          onClose={() => setIsScannerOpen(false)} 
+          onScan={(decodedText) => {
+            setSearchQuery(decodedText);
+            setIsScannerOpen(false);
+          }} 
+        />
+      )}
 
     </main>
   );
