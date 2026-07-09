@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Leaf, MapPin, ShoppingBag, ChevronDown, Layers, Tag, BarChart3, Ruler, X, Check, Truck, Inbox } from 'lucide-react';
+import { Leaf, MapPin, ShoppingBag, ChevronDown, Layers, Tag, BarChart3, Ruler, X, Check, Truck, Inbox, Zap } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { usePathname } from 'next/navigation';
@@ -204,6 +204,17 @@ export default function Navbar() {
             >
               <BarChart3 className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>Analytics</span>
+            </Link>
+            <Link
+              href="/seller/automation"
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                pathname === "/seller/automation"
+                  ? "bg-emerald-100/90 text-emerald-950 border border-emerald-300/70 shadow-2xs"
+                  : "text-slate-700 hover:text-emerald-800 hover:bg-emerald-50/60"
+              }`}
+            >
+              <Zap className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Automation</span>
             </Link>
           </div>
         ) : isPickupRoute ? (

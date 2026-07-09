@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Layers, Tag, BarChart3 } from "lucide-react";
+import { Layers, Tag, BarChart3, Zap } from "lucide-react";
 
 export default function SellerNav() {
   const pathname = usePathname();
@@ -11,6 +11,7 @@ export default function SellerNav() {
     { name: "Returns Dashboard", href: "/seller/returns", icon: Layers },
     { name: "My Listings", href: "/seller/listings", icon: Tag },
     { name: "Analytics", href: "/seller/analytics", icon: BarChart3 },
+    { name: "Automation", href: "/seller/automation", icon: Zap },
   ];
 
   return (

@@ -103,7 +103,8 @@ export default async function SellerListings() {
   }
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto pb-12">
+    <main className="min-h-screen bg-gray-50/50 p-6 md:p-8 font-sans">
+      <div className="space-y-8 max-w-5xl mx-auto">
       <div className="flex justify-between items-end mb-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">My Refurbished Listings</h1>
@@ -226,6 +227,7 @@ export default async function SellerListings() {
           })
         )}
       </div>
-    </div>
+      </div>
+    </main>
   );
 }
