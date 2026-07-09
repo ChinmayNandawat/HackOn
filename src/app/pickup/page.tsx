@@ -1,23 +1,75 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { formatDistanceToNow } from "date-fns";
 import { 
-  Package, MapPin, ChevronRight, ArrowLeft,
-  CheckCircle2, AlertTriangle, XCircle, CheckSquare, ScanLine, Clock
+  MapPin, ChevronRight, ArrowLeft,
+  CheckCircle2, AlertTriangle, XCircle, CheckSquare, ScanLine, Clock, Package, ChevronLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
+import AnnotatedImage from "@/components/AnnotatedImage";
 
 type Screen = "queue" | "verification" | "success";
 
-const MobileContainer = ({ children }: { children: React.ReactNode }) => (
-  <div className="min-h-screen bg-slate-100 flex justify-center pb-20 sm:pb-0">
-    <div className="w-full max-w-[480px] bg-slate-50 min-h-screen relative shadow-2xl overflow-hidden flex flex-col">
-      {children}
-    </div>
-  </div>
-);
+// Temporary dummy data for UI testing
+const DUMMY_PICKUPS = [
+  {
+    id: "uuid-1234-5678-abc1",
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+    status: "inspected",
+    ai_grade: "B",
+    flaws_json: {
+      buyer_description: "There is a small scratch on the screen.",
+      summary: "Detected 1 minor scratch (1.2cm) on the display. Functionality is intact.",
+      is_fast_track: false,
+      return_photo_urls: [
+        "https://m.media-amazon.com/images/I/61jLiCovxVL._SX679_.jpg",
+        "https://m.media-amazon.com/images/I/71Y5VM-LxQL._SX679_.jpg"
+      ],
+      flaws: [
+        {
+          name: "Screen Scratch",
+          severity: "moderate",
+          image_index: 0,
+          x_percent: 45,
+          y_percent: 30,
+          width_percent: 15,
+          height_percent: 10
+        },
+        {
+          name: "Edge Dent",
+          severity: "minor",
+          image_index: 1,
+          x_percent: 10,
+          y_percent: 10,
+          width_percent: 25,
+          height_percent: 25
+        }
+      ]
+    },
+    products: {
+      title: "Apple iPhone 13 Pro (128GB)",
+      category: "Smartphone",
+      image_url: "https://m.media-amazon.com/images/I/61jLiCovxVL._SX679_.jpg"
+    }
+  },
+  {
+    id: "uuid-9876-5432-xyz9",
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
+    status: "inspected",
+    ai_grade: "A",
+    flaws_json: {
+      buyer_description: "Product is unopened, I just changed my mind.",
+      is_fast_track: true
+    },
+    products: {
+      title: "Sony WH-1000XM5 Headphones",
+      category: "Audio",
+      image_url: "https://m.media-amazon.com/images/I/51aXvjzcukL._SX522_.jpg"
+    }
+  }
+];
 
 export default function PickupAgentApp() {
   const [screen, setScreen] = useState<Screen>("queue");
@@ -26,24 +78,42 @@ export default function PickupAgentApp() {
   const [activePickup, setActivePickup] = useState<any | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scannedAwb, setScannedAwb] = useState("");
+
+  // Interactive Checklist States
+  const [aiChecks, setAiChecks] = useState<Record<string, boolean>>({});
+  const [physicalChecks, setPhysicalChecks] = useState<Record<number, boolean>>({});
+  const [agentDecision, setAgentDecision] = useState<"match" | "mismatch" | "wrong_item" | null>(null);
 
   const fetchPickups = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("returns")
-      .select("*, products(id, title, image_url, category)")
-      .eq("status", "inspected")
-      .order("created_at", { ascending: false });
+    
+    try {
+      const { data, error } = await supabase
+        .from("returns")
+        .select("*, products(id, title, image_url, category)")
+        .eq("status", "inspected")
+        .order("created_at", { ascending: false });
+        
+      if (error) throw error;
       
-    if (data) {
-      // Filter out keep_and_refund since they don't require pickup
-      const filtered = data.filter(r => {
-         const decision = r.ai_routing_decision || r.routing_decision || "";
-         return !decision.includes("keep");
-      });
-      setPickups(filtered);
+      if (data) {
+        const filtered = data.filter(r => {
+           const decision = r.ai_routing_decision || r.routing_decision || "";
+           return !decision.includes("keep");
+        });
+        
+        // Use real data if it exists, otherwise fallback to dummy data for UI testing
+        setPickups(filtered.length > 0 ? filtered : DUMMY_PICKUPS);
+      }
+    } catch (err) {
+      console.error(err);
+      setPickups(DUMMY_PICKUPS);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -52,41 +122,46 @@ export default function PickupAgentApp() {
 
   const handleSelectPickup = (pickup: any) => {
     setActivePickup(pickup);
+    setCurrentImageIndex(0);
+    setAiChecks({});
+    setPhysicalChecks({});
+    setAgentDecision(null);
     setScreen("verification");
   };
 
-  const processPickup = async (action: "accept" | "flag" | "reject") => {
-    if (!activePickup) return;
+  const processPickup = async () => {
+    if (!activePickup || !agentDecision) return;
     setActionLoading(true);
 
     try {
-      let updateData: any = {};
-      
-      if (action === "accept") {
-        updateData = { status: "accepted" };
+      if (agentDecision === "match") {
         setSuccessMessage("Item verified and picked up successfully. Route to warehouse.");
-      } else if (action === "flag") {
-        updateData = { 
-          status: "accepted", 
-          flaws_json: { ...activePickup.flaws_json, pickup_flagged: true }
-        };
-        setSuccessMessage("Item picked up but flagged for mismatch. Warehouse will inspect carefully.");
-      } else if (action === "reject") {
-        updateData = { status: "rejected" };
-        setSuccessMessage("Pickup rejected. Wrong item detected.");
+      } else if (agentDecision === "mismatch") {
+        setSuccessMessage("Item picked up but flagged for warehouse inspection due to discrepancies.");
+      } else if (agentDecision === "wrong_item") {
+        setSuccessMessage("Pickup rejected. Wrong item or severe condition mismatch.");
+      }
+      
+      const isDummy = activePickup.id.startsWith("uuid-");
+      
+      if (!isDummy) {
+        let updateData: any = {};
+        if (agentDecision === "match") updateData = { status: "accepted" };
+        else if (agentDecision === "mismatch") updateData = { status: "accepted", flaws_json: { ...activePickup.flaws_json, pickup_flagged: true } };
+        else if (agentDecision === "wrong_item") updateData = { status: "rejected" };
+
+        const { error } = await supabase.from("returns").update(updateData).eq("id", activePickup.id);
+        if (error) throw error;
+      } else {
+        await new Promise(resolve => setTimeout(resolve, 800)); // simulate network delay for dummy
       }
 
-      const { error } = await supabase
-        .from("returns")
-        .update(updateData)
-        .eq("id", activePickup.id);
-
-      if (error) throw error;
-      
+      // Remove from queue locally
+      setPickups(prev => prev.filter(p => p.id !== activePickup.id));
       setScreen("success");
     } catch (err) {
       console.error(err);
-      alert("Failed to process pickup. Please try again.");
+      alert("Failed to process pickup.");
     } finally {
       setActionLoading(false);
     }
@@ -94,271 +169,471 @@ export default function PickupAgentApp() {
 
   const getAWB = (id: string) => `AWB-${id.substring(0, 8).toUpperCase()}`;
 
-  // ==========================================
-  // SCREEN 1: QUEUE
-  // ==========================================
-  if (screen === "queue") {
-    return (
-      <MobileContainer>
-        {/* App Header */}
-        <div className="bg-blue-600 text-white pt-12 pb-6 px-6 rounded-b-3xl shadow-md z-10 shrink-0">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <p className="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">Agent ID #DEL-884</p>
-              <h1 className="text-2xl font-black tracking-tight">Today's Route</h1>
-            </div>
-            <div className="bg-blue-500/50 p-3 rounded-full">
-              <ScanLine className="w-6 h-6 text-white" />
-            </div>
-          </div>
-          
-          <div className="bg-white/20 rounded-2xl p-4 flex justify-between items-center backdrop-blur-sm border border-white/10">
-            <div>
-              <p className="text-3xl font-black leading-none">{loading ? "-" : pickups.length}</p>
-              <p className="text-xs font-bold text-blue-100 mt-1 uppercase tracking-wider">Pending Pickups</p>
-            </div>
-            <div className="h-10 w-px bg-white/20 mx-4"></div>
-            <div>
-              <p className="text-3xl font-black leading-none">0</p>
-              <p className="text-xs font-bold text-blue-100 mt-1 uppercase tracking-wider">Completed</p>
-            </div>
-          </div>
-        </div>
+  // CSS classes for responsive layout
+  // On Mobile: Only one section is visible at a time
+  // On Desktop: Split screen (Queue on left, Details on right)
+  
+  const isQueueVisible = screen === "queue" || screen === "success";
+  const isDetailsVisible = screen === "verification" || screen === "success";
 
-        {/* List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 pt-6 pb-24 bg-slate-50">
-          {loading ? (
-            <div className="space-y-4 animate-pulse">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="h-32 bg-slate-200 rounded-3xl w-full"></div>
-              ))}
-            </div>
-          ) : pickups.length === 0 ? (
-            <div className="flex flex-col items-center justify-center text-center p-8 mt-12 bg-white rounded-3xl border border-dashed border-slate-300">
-              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                <CheckCircle2 className="w-8 h-8 text-slate-400" />
+  // Variables for Annotated Image Carousel
+  const return_photo_urls = activePickup?.flaws_json?.return_photo_urls || [];
+  const displayImages = return_photo_urls.length > 0 ? return_photo_urls : [activePickup?.products?.image_url || ''];
+  const currentImageUrl = displayImages[currentImageIndex] || displayImages[0];
+  const flawsToDraw = (activePickup?.flaws_json?.flaws || []).filter((f: any) => f.image_index === currentImageIndex || (f.image_index === undefined && currentImageIndex === 0));
+
+  return (
+    <div className="min-h-screen bg-slate-200 md:p-6 lg:p-8 flex justify-center font-sans">
+      <div className="w-full max-w-[1200px] bg-slate-50 md:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row relative min-h-screen md:min-h-[85vh]">
+        
+        {/* ==========================================
+            LEFT PANEL: QUEUE 
+            ========================================== */}
+        <div className={`w-full md:w-[400px] lg:w-[450px] bg-slate-50 flex flex-col border-r border-slate-200 ${isQueueVisible ? 'flex' : 'hidden md:flex'}`}>
+          
+          <div className="bg-blue-600 text-white pt-10 md:pt-8 pb-6 px-6 md:rounded-tl-[2.5rem] shadow-sm z-10 shrink-0">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <p className="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">Agent ID #DEL-884</p>
+                <h1 className="text-2xl font-black tracking-tight">Today's Route</h1>
               </div>
-              <h3 className="font-bold text-slate-900 text-lg">All caught up!</h3>
-              <p className="text-sm text-slate-500 mt-2">There are no pending return pickups assigned to you right now.</p>
-              <Button onClick={fetchPickups} variant="outline" className="mt-6 font-bold w-full rounded-2xl">
-                Refresh Queue
-              </Button>
+              <button 
+                onClick={() => setScannerOpen(true)}
+                className="bg-blue-500/50 p-3 rounded-full hover:bg-blue-400 transition-colors cursor-pointer active:scale-95"
+              >
+                <ScanLine className="w-5 h-5 text-white" />
+              </button>
             </div>
-          ) : (
-            pickups.map(pickup => {
-              const product = Array.isArray(pickup.products) ? pickup.products[0] : pickup.products;
-              const awb = getAWB(pickup.id);
-              
-              return (
-                <div 
-                  key={pickup.id} 
-                  onClick={() => handleSelectPickup(pickup)}
-                  className="bg-white rounded-3xl p-5 shadow-sm border border-slate-200 cursor-pointer hover:shadow-md active:scale-[0.98] transition-all flex flex-col gap-4 relative overflow-hidden group"
-                >
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-blue-50 rounded-bl-full -z-0 transition-transform group-active:scale-150"></div>
-                  
-                  <div className="flex justify-between items-start relative z-10">
-                    <div className="flex items-center gap-2">
-                      <span className="bg-blue-100 text-blue-800 text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-widest border border-blue-200">
-                        {awb}
+            
+            <div className="bg-white/10 rounded-2xl p-4 flex justify-between items-center backdrop-blur-md border border-white/20">
+              <div>
+                <p className="text-3xl font-black leading-none">{loading ? "-" : pickups.length}</p>
+                <p className="text-[10px] font-bold text-blue-100 mt-1 uppercase tracking-widest">Pending Pickups</p>
+              </div>
+              <div className="h-10 w-px bg-white/20 mx-4"></div>
+              <div>
+                <p className="text-3xl font-black leading-none">0</p>
+                <p className="text-[10px] font-bold text-blue-100 mt-1 uppercase tracking-widest">Completed</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 pt-5 pb-24 md:pb-5 bg-slate-100/50">
+            {loading ? (
+              <div className="space-y-4 animate-pulse px-2">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-28 bg-slate-200 rounded-3xl w-full"></div>
+                ))}
+              </div>
+            ) : pickups.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center p-8 mt-12 bg-white rounded-3xl border border-dashed border-slate-300 mx-2">
+                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                  <CheckCircle2 className="w-8 h-8 text-slate-300" />
+                </div>
+                <h3 className="font-bold text-slate-900 text-base">All caught up!</h3>
+                <p className="text-xs text-slate-500 mt-2">No pending return pickups assigned.</p>
+                <Button onClick={fetchPickups} variant="outline" className="mt-6 font-bold w-full rounded-2xl h-12 text-blue-600 border-blue-200 hover:bg-blue-50">
+                  Refresh Queue
+                </Button>
+              </div>
+            ) : (
+              pickups.map(pickup => {
+                const product = Array.isArray(pickup.products) ? pickup.products[0] : pickup.products;
+                const awb = getAWB(pickup.id);
+                const isActive = activePickup?.id === pickup.id;
+                
+                return (
+                  <div 
+                    key={pickup.id} 
+                    onClick={() => handleSelectPickup(pickup)}
+                    className={`rounded-3xl p-4 cursor-pointer transition-all flex flex-col gap-3 relative overflow-hidden group border ${
+                      isActive 
+                        ? 'bg-blue-50 border-blue-300 shadow-md ring-4 ring-blue-50' 
+                        : 'bg-white border-slate-200 shadow-sm hover:border-blue-300 hover:shadow-md active:scale-[0.98]'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start relative z-10">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-widest border ${
+                          isActive ? 'bg-blue-600 text-white border-blue-700' : 'bg-slate-100 text-slate-600 border-slate-200 group-hover:bg-blue-100 group-hover:text-blue-800'
+                        }`}>
+                          {awb}
+                        </span>
+                      </div>
+                      <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-1 rounded-md">
+                        <Clock className="w-3 h-3" />
+                        {formatDistanceToNow(new Date(pickup.created_at))}
                       </span>
                     </div>
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg">
-                      <Clock className="w-3 h-3" />
-                      {formatDistanceToNow(new Date(pickup.created_at))}
-                    </span>
-                  </div>
-                  
-                  <div className="flex gap-4 items-center relative z-10">
-                    <div className="w-16 h-16 bg-slate-100 rounded-2xl shrink-0 overflow-hidden border border-slate-200">
-                      {product?.image_url && (
-                        <img src={product.image_url} alt={product.title} className="w-full h-full object-cover" />
-                      )}
+                    
+                    <div className="flex gap-3 items-center relative z-10">
+                      <div className="w-14 h-14 bg-white rounded-2xl shrink-0 overflow-hidden border border-slate-200 p-1">
+                        {product?.image_url && (
+                          <img src={product.image_url} alt={product.title} className="w-full h-full object-cover rounded-xl" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className={`font-black text-sm leading-tight truncate ${isActive ? 'text-blue-950' : 'text-slate-900'}`}>{product?.title}</h3>
+                        <p className="text-xs text-slate-500 mt-1 flex items-center gap-1 truncate font-medium">
+                          <MapPin className="w-3.5 h-3.5 shrink-0" />
+                          Tech Park, Sector 4
+                        </p>
+                      </div>
+                      <ChevronRight className={`w-5 h-5 shrink-0 ${isActive ? 'text-blue-500' : 'text-slate-300'}`} />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-black text-slate-900 text-base leading-tight truncate">{product?.title}</h3>
-                      <p className="text-xs text-slate-500 mt-1 flex items-center gap-1 truncate">
-                        <MapPin className="w-3.5 h-3.5 shrink-0" />
-                        123 Main St, Tech Park, BLR
-                      </p>
-                    </div>
-                    <ChevronRight className="w-6 h-6 text-slate-300 shrink-0" />
                   </div>
-                </div>
-              )
-            })
-          )}
-        </div>
-      </MobileContainer>
-    );
-  }
-
-  // ==========================================
-  // SCREEN 2: VERIFICATION
-  // ==========================================
-  if (screen === "verification" && activePickup) {
-    const product = Array.isArray(activePickup.products) ? activePickup.products[0] : activePickup.products;
-    const awb = getAWB(activePickup.id);
-    const grade = activePickup.ai_grade || activePickup.grade || "B";
-    const isFastTrack = activePickup.flaws_json?.is_fast_track;
-
-    return (
-      <MobileContainer>
-        {/* Header */}
-        <div className="bg-white border-b border-slate-200 p-4 pt-10 sticky top-0 z-20 flex items-center gap-4">
-          <button 
-            onClick={() => setScreen("queue")}
-            className="p-2 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-slate-700" />
-          </button>
-          <div className="flex-1">
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Verify Pickup</p>
-            <h2 className="text-lg font-black text-slate-900">{awb}</h2>
+                )
+              })
+            )}
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5 space-y-6 pb-32">
+        {/* ==========================================
+            RIGHT PANEL: DETAILS / SUCCESS
+            ========================================== */}
+        <div className={`flex-1 flex flex-col bg-slate-50 relative ${isDetailsVisible ? 'flex' : 'hidden md:flex'}`}>
           
-          {/* Product Details */}
-          <div className="flex gap-4">
-             <div className="w-24 h-24 bg-slate-100 rounded-2xl shrink-0 overflow-hidden border border-slate-200">
-                {product?.image_url && (
-                  <img src={product.image_url} alt={product.title} className="w-full h-full object-cover" />
-                )}
+          {screen === "success" ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-6">
+              <div className="w-28 h-28 bg-emerald-100 rounded-full flex items-center justify-center animate-in zoom-in duration-500 shadow-xl shadow-emerald-100">
+                <CheckCircle2 className="w-14 h-14 text-emerald-600" />
               </div>
-              <div>
-                <h3 className="font-black text-slate-900 text-lg leading-tight">{product?.title}</h3>
-                <span className="inline-block mt-2 bg-slate-100 text-slate-800 text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-widest border border-slate-200">
-                  {product?.category || "Electronics"}
-                </span>
+              
+              <div className="space-y-3 max-w-sm">
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight">Done!</h2>
+                <p className="text-slate-600 font-medium leading-relaxed">{successMessage}</p>
               </div>
-          </div>
 
-          {/* AI Pre-grade block */}
-          {!isFastTrack ? (
-            <div className="bg-blue-50 rounded-3xl p-5 border border-blue-200 space-y-4 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100/50 rounded-bl-full -z-0"></div>
-              
-              <div className="relative z-10 flex items-center justify-between">
-                <h4 className="font-black text-blue-900 text-sm flex items-center gap-2">
-                  <ScanLine className="w-4 h-4" /> AI Inspection Summary
-                </h4>
-                <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-black flex items-center justify-center text-sm shadow-sm">
-                  {grade}
-                </div>
+              <Button 
+                onClick={() => {
+                  setScreen("queue");
+                  setActivePickup(null);
+                }}
+                className="w-full max-w-[240px] bg-slate-900 hover:bg-slate-800 text-white font-black py-7 rounded-2xl mt-8 shadow-lg md:hidden"
+              >
+                Back to Queue
+              </Button>
+            </div>
+          ) : !activePickup ? (
+            // Desktop empty state
+            <div className="flex-1 hidden md:flex flex-col items-center justify-center text-center p-8">
+              <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-6 border-4 border-white shadow-sm">
+                <Package className="w-10 h-10 text-slate-300" />
               </div>
-              
-              <p className="text-sm font-semibold text-blue-800 relative z-10">
-                {activePickup.flaws_json?.buyer_description || "Customer reported minor flaws."}
-              </p>
-              
-              {activePickup.flaws_json?.summary && (
-                <div className="bg-white/60 backdrop-blur-sm p-3 rounded-2xl text-xs font-medium text-blue-900 relative z-10">
-                  {activePickup.flaws_json.summary}
-                </div>
-              )}
+              <h3 className="font-bold text-slate-900 text-xl">Select a Pickup</h3>
+              <p className="text-sm text-slate-500 mt-2 max-w-xs">Tap a return on the left to view verification details and process the item.</p>
             </div>
           ) : (
-            <div className="bg-emerald-50 rounded-3xl p-5 border border-emerald-200 space-y-4">
-               <h4 className="font-black text-emerald-900 text-sm flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" /> Fast-Track Return
-                </h4>
-                <p className="text-sm font-semibold text-emerald-800">
-                  Customer has a high trust score. No AI photo was required.
-                </p>
-            </div>
-          )}
-
-          {/* Checklist */}
-          <div className="space-y-3 pt-2">
-            <h4 className="font-black text-slate-900 text-sm flex items-center gap-2">
-              <CheckSquare className="w-4 h-4 text-slate-400" /> Physical Checks
-            </h4>
-            
-            <div className="bg-white rounded-3xl p-2 border border-slate-200 shadow-sm">
-              {[
-                `Item matches ${product?.title}`,
-                "Original packaging is included",
-                "No severe unmentioned physical damage"
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 border-b border-slate-100 last:border-0">
-                  <div className="w-6 h-6 rounded-full border-2 border-slate-300 flex-shrink-0"></div>
-                  <span className="text-sm font-semibold text-slate-700">{item}</span>
+            // Verification details
+            <>
+              {/* Mobile Header (Hidden on desktop since queue is visible) */}
+              <div className="bg-white border-b border-slate-200 p-4 pt-10 sticky top-0 z-20 flex items-center gap-4 md:hidden">
+                <button 
+                  onClick={() => setScreen("queue")}
+                  className="p-2 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5 text-slate-700" />
+                </button>
+                <div className="flex-1">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Verify Pickup</p>
+                  <h2 className="text-lg font-black text-slate-900">{getAWB(activePickup.id)}</h2>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+
+              {/* Desktop Header */}
+              <div className="hidden md:block bg-white border-b border-slate-200 p-8">
+                 <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Return Verification</p>
+                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">{getAWB(activePickup.id)}</h2>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-5 md:p-8 space-y-8 pb-40 md:pb-32">
+                
+                <div className="flex flex-col gap-6">
+                   {/* AI Evidence Carousel & Image-Specific Checklist */}
+                   {currentImageUrl && (
+                     <div className="w-full max-w-sm mx-auto bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm">
+                        <div className="relative group p-2">
+                          <AnnotatedImage imageUrl={currentImageUrl} flaws={flawsToDraw} width={380} height={380} />
+                          
+                          {displayImages.length > 1 && (
+                            <>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setCurrentImageIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1)); }}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white rounded-full shadow-md text-slate-800 transition-colors z-20 cursor-pointer"
+                              >
+                                <ChevronLeft className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setCurrentImageIndex((prev) => (prev === displayImages.length - 1 ? 0 : prev + 1)); }}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white rounded-full shadow-md text-slate-800 transition-colors z-20 cursor-pointer"
+                              >
+                                <ChevronRight className="w-5 h-5" />
+                              </button>
+                              <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 z-20">
+                                {displayImages.map((_: any, idx: number) => (
+                                  <div key={idx} className={`w-2 h-2 rounded-full transition-colors shadow-sm ${idx === currentImageIndex ? "bg-blue-600" : "bg-white/80 border border-slate-300"}`} />
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Image-Specific Checklist */}
+                        {flawsToDraw.length > 0 ? (
+                          <div className="bg-blue-50/50 p-4 border-t border-slate-100">
+                            <h4 className="font-black text-blue-900 text-[11px] uppercase tracking-wider flex items-center gap-1.5 mb-3">
+                              <ScanLine className="w-3.5 h-3.5 text-blue-500" /> Verify flaws in this image
+                            </h4>
+                            <div className="space-y-2">
+                              {flawsToDraw.map((flaw: any, i: number) => (
+                                <div key={i} className="flex items-center justify-between gap-3 bg-white p-3 rounded-xl border border-blue-100 shadow-sm">
+                                  <span className="text-xs font-bold text-slate-800 leading-tight flex-1">{flaw.name}</span>
+                                  <div className="flex gap-1.5 shrink-0">
+                                    <button 
+                                      onClick={() => setAiChecks(prev => ({ ...prev, [flaw.name]: true }))}
+                                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border ${aiChecks[flaw.name] === true ? 'bg-emerald-100 border-emerald-300 text-emerald-800' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}
+                                    >
+                                      Yes
+                                    </button>
+                                    <button 
+                                      onClick={() => setAiChecks(prev => ({ ...prev, [flaw.name]: false }))}
+                                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border ${aiChecks[flaw.name] === false ? 'bg-red-100 border-red-300 text-red-800' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}
+                                    >
+                                      No
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="bg-slate-50/50 p-4 border-t border-slate-100 text-center">
+                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">No AI flaws marked in this image</span>
+                          </div>
+                        )}
+                     </div>
+                   )}
+
+                   {/* Product Details */}
+                   <div className="text-center">
+                     <span className="inline-block mb-2 bg-slate-100 text-slate-700 text-[10px] font-black px-3 py-1.5 rounded-lg uppercase tracking-widest border border-slate-200">
+                       {activePickup.products?.category || "Electronics"}
+                     </span>
+                     <h3 className="font-black text-slate-900 text-xl sm:text-2xl leading-tight tracking-tight">{activePickup.products?.title}</h3>
+                   </div>
+                </div>
+
+                {/* AI Pre-grade block */}
+                {!activePickup.flaws_json?.is_fast_track ? (
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50/30 rounded-[2rem] p-6 sm:p-8 border border-blue-100 space-y-5 relative overflow-hidden shadow-sm">
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-blue-200/40 rounded-bl-full -z-0"></div>
+                    
+                    <div className="relative z-10 flex items-center justify-between">
+                      <h4 className="font-black text-blue-900 text-base flex items-center gap-2">
+                        <ScanLine className="w-5 h-5 text-blue-600" /> AI Inspection Summary
+                      </h4>
+                      <div className="w-10 h-10 rounded-xl bg-blue-600 text-white font-black flex items-center justify-center text-lg shadow-md shadow-blue-600/20">
+                        {activePickup.ai_grade || activePickup.grade || "B"}
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm font-semibold text-blue-800 relative z-10 border-l-2 border-blue-300 pl-3">
+                      "{activePickup.flaws_json?.buyer_description || "Customer reported minor flaws."}"
+                    </p>
+                    
+                    {activePickup.flaws_json?.summary && (
+                      <div className="bg-white/80 backdrop-blur-md p-4 rounded-2xl text-sm font-bold text-blue-950 relative z-10 border border-blue-100 shadow-sm leading-relaxed">
+                        {activePickup.flaws_json.summary}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-emerald-50 rounded-[2rem] p-6 border border-emerald-200 space-y-4 shadow-sm">
+                     <h4 className="font-black text-emerald-900 text-base flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600" /> Fast-Track Return
+                      </h4>
+                      <p className="text-sm font-semibold text-emerald-800">
+                        Customer has a high trust score. No AI photo was required. Just perform a basic physical check.
+                      </p>
+                  </div>
+                )}
+
+
+
+                {/* Checklist */}
+                <div className="space-y-4">
+                  <h4 className="font-black text-slate-900 text-sm flex items-center gap-2">
+                    <CheckSquare className="w-5 h-5 text-slate-400" /> Physical Checks
+                  </h4>
+                  
+                  <div className="bg-white rounded-[2rem] p-3 border border-slate-200 shadow-sm">
+                    {[
+                      `Item matches ${activePickup.products?.title}`,
+                      "Original packaging is included",
+                      "No severe unmentioned physical damage"
+                    ].map((item, i) => (
+                      <div 
+                        key={i} 
+                        onClick={() => setPhysicalChecks(prev => ({ ...prev, [i]: !prev[i] }))}
+                        className="flex items-center gap-4 p-4 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors rounded-2xl cursor-pointer select-none"
+                      >
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${physicalChecks[i] ? 'bg-emerald-500 border-emerald-500' : 'bg-slate-50 border-slate-300'}`}>
+                          {physicalChecks[i] && <CheckCircle2 className="w-4 h-4 text-white" />}
+                        </div>
+                        <span className={`text-sm font-bold ${physicalChecks[i] ? 'text-emerald-900' : 'text-slate-700'}`}>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Final Decision */}
+                <div className="space-y-4 pb-8">
+                  <h4 className="font-black text-slate-900 text-sm flex items-center gap-2">
+                    <Package className="w-5 h-5 text-slate-400" /> Final Assessment
+                  </h4>
+                  <div className="grid grid-cols-1 gap-3">
+                    <button 
+                      onClick={() => setAgentDecision("match")}
+                      className={`p-4 rounded-2xl border-2 text-left transition-all ${agentDecision === 'match' ? 'bg-emerald-50 border-emerald-500 shadow-sm' : 'bg-white border-slate-200 hover:border-emerald-300'}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${agentDecision === 'match' ? 'border-emerald-500' : 'border-slate-300'}`}>
+                          {agentDecision === 'match' && <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />}
+                        </div>
+                        <div>
+                          <p className={`font-bold text-sm ${agentDecision === 'match' ? 'text-emerald-900' : 'text-slate-700'}`}>Condition Matches AI</p>
+                          <p className="text-xs text-slate-500 mt-0.5">Proceed with standard pickup</p>
+                        </div>
+                      </div>
+                    </button>
+                    
+                    <button 
+                      onClick={() => setAgentDecision("mismatch")}
+                      className={`p-4 rounded-2xl border-2 text-left transition-all ${agentDecision === 'mismatch' ? 'bg-amber-50 border-amber-500 shadow-sm' : 'bg-white border-slate-200 hover:border-amber-300'}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${agentDecision === 'mismatch' ? 'border-amber-500' : 'border-slate-300'}`}>
+                          {agentDecision === 'mismatch' && <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />}
+                        </div>
+                        <div>
+                          <p className={`font-bold text-sm ${agentDecision === 'mismatch' ? 'text-amber-900' : 'text-slate-700'}`}>Discrepancies Found</p>
+                          <p className="text-xs text-slate-500 mt-0.5">Pick up, but flag for warehouse inspection</p>
+                        </div>
+                      </div>
+                    </button>
+
+                    <button 
+                      onClick={() => setAgentDecision("wrong_item")}
+                      className={`p-4 rounded-2xl border-2 text-left transition-all ${agentDecision === 'wrong_item' ? 'bg-red-50 border-red-500 shadow-sm' : 'bg-white border-slate-200 hover:border-red-300'}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${agentDecision === 'wrong_item' ? 'border-red-500' : 'border-slate-300'}`}>
+                          {agentDecision === 'wrong_item' && <div className="w-2.5 h-2.5 rounded-full bg-red-500" />}
+                        </div>
+                        <div>
+                          <p className={`font-bold text-sm ${agentDecision === 'wrong_item' ? 'text-red-900' : 'text-slate-700'}`}>Wrong Item / Severe Damage</p>
+                          <p className="text-xs text-slate-500 mt-0.5">Reject pickup entirely</p>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Action Bottom Bar */}
+              <div className="bg-white/90 backdrop-blur-md border-t border-slate-200 p-4 md:p-6 fixed bottom-0 left-0 right-0 md:absolute z-30 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.05)] md:rounded-br-[2.5rem]">
+                <div className="max-w-2xl mx-auto flex">
+                  <Button 
+                    disabled={actionLoading || !agentDecision}
+                    onClick={processPickup}
+                    className={`flex-1 font-black py-7 rounded-2xl text-base transition-transform active:scale-[0.98] shadow-lg ${agentDecision === 'wrong_item' ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-600/20' : agentDecision === 'mismatch' ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'} ${!agentDecision ? 'opacity-50 grayscale cursor-not-allowed shadow-none' : ''}`}
+                  >
+                    {actionLoading ? (
+                      "Processing..."
+                    ) : agentDecision === 'wrong_item' ? (
+                      <><XCircle className="w-5 h-5 mr-2" /> Complete & Reject</>
+                    ) : agentDecision === 'mismatch' ? (
+                      <><AlertTriangle className="w-5 h-5 mr-2" /> Pick Up & Flag</>
+                    ) : (
+                      <><CheckCircle2 className="w-5 h-5 mr-2" /> Complete Pickup</>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Action Bottom Bar */}
-        <div className="bg-white border-t border-slate-200 p-4 fixed bottom-0 left-0 right-0 sm:absolute max-w-[480px] mx-auto z-30 pb-safe">
-          <div className="flex flex-col gap-2.5">
-            <Button 
-              disabled={actionLoading}
-              onClick={() => processPickup("accept")}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-7 rounded-2xl text-sm transition-transform active:scale-[0.98] shadow-lg shadow-emerald-600/20"
-            >
-              <CheckCircle2 className="w-5 h-5 mr-2" />
-              Verified — Accept Pickup
-            </Button>
+      </div>
+
+      {/* Barcode Scanner Modal */}
+      {scannerOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2rem] p-6 w-full max-w-sm shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-black text-xl text-slate-900 flex items-center gap-2">
+                <ScanLine className="w-5 h-5 text-blue-600" /> Scan Package
+              </h3>
+              <button onClick={() => setScannerOpen(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 cursor-pointer">
+                <XCircle className="w-5 h-5 text-slate-600" />
+              </button>
+            </div>
             
-            <div className="flex gap-2.5">
+            <div className="bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl h-40 flex items-center justify-center mb-6 relative overflow-hidden">
+              <div className="absolute top-1/2 left-0 w-full h-0.5 bg-blue-500/50 shadow-[0_0_12px_rgba(59,130,246,0.8)] animate-[pulse_1.5s_ease-in-out_infinite]"></div>
+              <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0%,rgba(59,130,246,0.05)_50%,transparent_100%)] animate-[pulse_2s_ease-in-out_infinite]"></div>
+              <p className="text-slate-400 font-bold text-sm z-10">Align barcode within frame</p>
+            </div>
+            
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200"></div>
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-white px-2 text-slate-500 font-bold uppercase tracking-wider">Or enter manually</span>
+              </div>
+            </div>
+            
+            <div className="mt-6 flex gap-2">
+              <input 
+                type="text" 
+                placeholder="e.g. AWB-UUID1234"
+                value={scannedAwb}
+                onChange={e => setScannedAwb(e.target.value.toUpperCase())}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    const match = pickups.find(p => getAWB(p.id) === scannedAwb);
+                    if (match) {
+                      setScannerOpen(false);
+                      setScannedAwb("");
+                      handleSelectPickup(match);
+                    } else {
+                      alert("AWB not found in today's route.");
+                    }
+                  }
+                }}
+                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 font-mono font-bold text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 uppercase"
+              />
               <Button 
-                disabled={actionLoading}
-                onClick={() => processPickup("flag")}
-                variant="outline"
-                className="flex-1 bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-800 font-black py-7 rounded-2xl transition-transform active:scale-[0.98]"
+                onClick={() => {
+                  const match = pickups.find(p => getAWB(p.id) === scannedAwb);
+                  if (match) {
+                    setScannerOpen(false);
+                    setScannedAwb("");
+                    handleSelectPickup(match);
+                  } else {
+                    alert("AWB not found in today's route.");
+                  }
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl px-6"
               >
-                <AlertTriangle className="w-5 h-5 mr-1" />
-                Flag
-              </Button>
-              <Button 
-                disabled={actionLoading}
-                onClick={() => processPickup("reject")}
-                variant="outline"
-                className="flex-1 bg-red-50 hover:bg-red-100 border-red-200 text-red-700 font-black py-7 rounded-2xl transition-transform active:scale-[0.98]"
-              >
-                <XCircle className="w-5 h-5 mr-1" />
-                Reject
+                Find
               </Button>
             </div>
           </div>
         </div>
-      </MobileContainer>
-    );
-  }
-
-  // ==========================================
-  // SCREEN 3: SUCCESS
-  // ==========================================
-  if (screen === "success") {
-    return (
-      <MobileContainer>
-        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-6">
-          <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center animate-in zoom-in duration-500">
-            <CheckCircle2 className="w-12 h-12 text-emerald-600" />
-          </div>
-          
-          <div className="space-y-2">
-            <h2 className="text-2xl font-black text-slate-900">Done!</h2>
-            <p className="text-slate-600 font-medium leading-relaxed">{successMessage}</p>
-          </div>
-
-          <Button 
-            onClick={() => {
-              setScreen("queue");
-              setActivePickup(null);
-              fetchPickups();
-            }}
-            className="w-full max-w-[240px] bg-slate-900 text-white font-bold py-6 rounded-2xl mt-8"
-          >
-            Back to Queue
-          </Button>
-        </div>
-      </MobileContainer>
-    );
-  }
-
-  return null;
+      )}
+    </div>
+  );
 }
