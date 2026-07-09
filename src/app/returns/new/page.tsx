@@ -19,6 +19,7 @@ export default function NewReturnPage() {
   // Form State
   const [selectedProductId, setSelectedProductId] = useState("");
   const [returnReason, setReturnReason] = useState("");
+  const [returnDescription, setReturnDescription] = useState("");
 
   const fastTrackReasons = [
     "Size too small / doesn't fit",
@@ -33,8 +34,9 @@ export default function NewReturnPage() {
     "Wrong item or accessory missing",
   ];
 
+  const allReasons = [...fastTrackReasons, ...aiInspectionReasons];
+  
   const isFastTrack = fastTrackReasons.includes(returnReason);
-  const isAiInspection = aiInspectionReasons.includes(returnReason);
   
   // Angle Config
   type AngleKeys = "front" | "back" | "side" | "damage";
@@ -62,11 +64,11 @@ export default function NewReturnPage() {
   
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [generatedAwb, setGeneratedAwb] = useState("");
 
   // Load products to select
   useEffect(() => {
     async function loadProducts() {
-      // Fetch actual products the user has ordered
       const { data, error } = await supabase
         .from("orders")
         .select("*, products(*)")
@@ -78,7 +80,6 @@ export default function NewReturnPage() {
           .map((order: any) => Array.isArray(order.products) ? order.products[0] : order.products)
           .filter(Boolean);
           
-        // Deduplicate in case they ordered the same item multiple times
         const uniqueProducts: any[] = [];
         const seenIds = new Set();
         for (const p of orderedProducts) {
@@ -105,7 +106,6 @@ export default function NewReturnPage() {
       }
       setLoadingProducts(false);
       
-      // Auto-select product if coming from orders page
       if (typeof window !== "undefined") {
         const params = new URLSearchParams(window.location.search);
         const pid = params.get("productId");
@@ -121,7 +121,6 @@ export default function NewReturnPage() {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
     
-    // Update local state immediately
     const preview = URL.createObjectURL(file);
     setPhotos(prev => ({
       ...prev,
@@ -140,7 +139,6 @@ export default function NewReturnPage() {
     };
     
     try {
-      // 1. Upload to S3 via Presigned URL
       const presignRes = await fetch("/api/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -157,7 +155,6 @@ export default function NewReturnPage() {
       });
       if (!uploadRes.ok) throw new Error("S3 Upload failed");
       
-      // 2. Run AI Quality Check
       updateStatus("checking", { s3Url: fileUrl });
       
       const selectedProduct = products.find(p => p.id === selectedProductId);
@@ -179,7 +176,6 @@ export default function NewReturnPage() {
         const detailedReason = `${qcData.reason} ${failedLabels ? `(${failedLabels})` : ""}`;
         updateStatus("failed", { qcReason: detailedReason });
       }
-      
     } catch (err: any) {
       console.error(err);
       updateStatus("failed", { qcReason: err.message || "Network error. Please try again." });
@@ -193,8 +189,46 @@ export default function NewReturnPage() {
     }));
   };
 
-  const handleSubmit = async () => {
-    // Validate all 4 are passed
+  const handleFastTrackSubmit = async () => {
+    if (!returnReason || !returnDescription.trim() || !selectedProductId) {
+      setSubmitError("Please fill out all fields.");
+      return;
+    }
+    setSubmitting(true);
+    setSubmitError("");
+    
+    try {
+      const { data: insertData, error: insertError } = await supabase.from("returns").insert({
+        buyer_id: "00000000-0000-0000-0000-000000000002",
+        product_id: selectedProductId,
+        status: "inspected",
+        reason: returnReason,
+        ai_grade: "A",
+        ai_score: 98,
+        ai_confidence: "High",
+        ai_routing_decision: "standard_return",
+        return_photo_urls: [],
+        flaws_json: {
+          flaws: [],
+          buyer_description: returnDescription,
+          is_fast_track: true
+        }
+      }).select("id").single();
+      
+      if (insertError) throw insertError;
+      if (!insertData || !insertData.id) throw new Error("Failed to retrieve new return ID.");
+      
+      setGeneratedAwb(`AWB-${insertData.id.replace(/-/g, "").substring(0, 8).toUpperCase()}`);
+      setStep(3);
+      setSubmitting(false);
+    } catch (err: any) {
+      console.error("Submit Error:", err);
+      setSubmitError(err.message || "Failed to submit return request.");
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubmitPhotos = async () => {
     const allPassed = angleOrder.every(key => photos[key].qcStatus === "passed");
     if (!allPassed) {
       setSubmitError("You must successfully capture all 4 angles before submitting.");
@@ -205,19 +239,20 @@ export default function NewReturnPage() {
     setSubmitError("");
     
     try {
-      // 1. Create the return request
       const { data: insertData, error: insertError } = await supabase.from("returns").insert({
         buyer_id: "00000000-0000-0000-0000-000000000002",
         product_id: selectedProductId,
         status: "processing",
         reason: returnReason,
         return_photo_urls: angleOrder.map(key => photos[key].s3Url),
+        flaws_json: {
+          buyer_description: returnDescription
+        }
       }).select("id").single();
       
       if (insertError) throw insertError;
       if (!insertData || !insertData.id) throw new Error("Failed to retrieve new return ID.");
       
-      // 2. Automatically run the AI Inspection pipeline
       const demoTrustScore = typeof window !== 'undefined' ? localStorage.getItem("DEMO_TRUST_OVERRIDE") : null;
       
       const processRes = await fetch("/api/process-return-ai", {
@@ -230,12 +265,9 @@ export default function NewReturnPage() {
       });
 
       if (!processRes.ok) {
-        // We do not want to block the buyer if AI is temporarily down,
-        // it just means the seller will see it as "processing" and can manually run it later or we can retry.
         console.warn("AI processing failed, but return was submitted:", await processRes.text());
       }
       
-      // 3. Redirect to success
       router.push("/returns/success");
       
     } catch (err: any) {
@@ -245,11 +277,9 @@ export default function NewReturnPage() {
     }
   };
 
-  // Logic to determine if a block should be unlocked
   const isUnlocked = (key: AngleKeys) => {
     const idx = angleOrder.indexOf(key);
-    if (idx === 0) return true; // first is always unlocked
-    // Unlocked if the previous one is 'passed'
+    if (idx === 0) return true;
     const prevKey = angleOrder[idx - 1];
     return photos[prevKey].qcStatus === "passed";
   };
@@ -258,15 +288,13 @@ export default function NewReturnPage() {
     <main className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6">
       <div className="max-w-xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         
-        {/* Header */}
         <div className="bg-slate-900 p-6 text-white text-center">
           <h1 className="text-2xl font-bold">Start a Return</h1>
-          <p className="text-slate-400 mt-2 text-sm">Follow the guided capture to submit your return.</p>
+          <p className="text-slate-400 mt-2 text-sm">Follow the guided process to submit your return.</p>
         </div>
         
         <div className="p-6 sm:p-8">
           
-          {/* STEP 1: Product Selection */}
           {step === 1 && (
             <div className="space-y-6">
               <h2 className="text-lg font-bold border-b pb-2">Step 1: Item Details</h2>
@@ -292,80 +320,79 @@ export default function NewReturnPage() {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Why are you returning this item?</label>
                 <select
-                  className="w-full p-3 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-slate-800"
+                  className="w-full p-3 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-slate-800"
                   value={returnReason}
                   onChange={(e) => setReturnReason(e.target.value)}
                 >
                   <option value="">-- Choose return reason --</option>
-                  <optgroup label="Fit & Style (No Damage — Fast Track)">
-                    {fastTrackReasons.map((reason) => (
-                      <option key={reason} value={reason}>
-                        {reason}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Damage & Quality (AI Inspection Required)">
-                    {aiInspectionReasons.map((reason) => (
-                      <option key={reason} value={reason}>
-                        {reason}
-                      </option>
-                    ))}
-                  </optgroup>
+                  {allReasons.map((reason) => (
+                    <option key={reason} value={reason}>
+                      {reason}
+                    </option>
+                  ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Description <span className="text-red-500">*</span></label>
+                <textarea
+                  className="w-full p-3 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm text-slate-800 resize-y"
+                  rows={3}
+                  placeholder="Please provide details about the issue..."
+                  value={returnDescription}
+                  onChange={(e) => setReturnDescription(e.target.value)}
+                />
               </div>
               
               <div className="pt-2">
-                {isFastTrack ? (
-                  <>
-                    <div className="bg-blue-50 border border-blue-200 text-blue-900 text-xs p-3.5 rounded-xl mb-4 leading-relaxed font-medium">
-                      ⚡ <strong>Fast-Track Eligible:</strong> No AI photo scan required for size/preference returns. Our pickup agent will perform a quick tag & unworn check at your doorstep.
-                    </div>
+                {selectedProductId && returnReason && returnDescription.trim() ? (
+                  isFastTrack ? (
                     <button
                       type="button"
-                      disabled={!selectedProductId}
-                      onClick={() => setStep(3)}
+                      disabled={submitting}
+                      onClick={handleFastTrackSubmit}
                       className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm text-sm transition-all cursor-pointer disabled:opacity-50"
                     >
-                      ⚡ Submit Fast-Track Return (Generate Barcode)
+                      {submitting ? "Submitting..." : "Submit Return"}
                     </button>
-                  </>
-                ) : isAiInspection ? (
-                  <>
-                    <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs p-3.5 rounded-xl mb-4 leading-relaxed font-medium">
-                      🤖 <strong>AI Grading Required:</strong> Please take 4 quick photos to verify damage severity and calculate your instant refund estimate.
-                    </div>
+                  ) : (
                     <button
                       type="button"
-                      disabled={!selectedProductId}
                       onClick={() => setStep(2)}
-                      className="w-full py-3.5 bg-slate-900 hover:bg-emerald-800 text-white font-bold rounded-xl shadow-sm text-sm transition-all cursor-pointer disabled:opacity-50"
+                      className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-sm text-sm transition-all cursor-pointer disabled:opacity-50"
                     >
-                      Next: Capture 4 Guided Photos for AI Grading
+                      Next: Capture Item Photos
                     </button>
-                  </>
+                  )
                 ) : (
                   <button
                     type="button"
                     disabled
                     className="w-full py-3.5 bg-slate-200 text-slate-400 font-bold rounded-xl shadow-sm text-sm cursor-not-allowed"
                   >
-                    Select a return reason to continue
+                    Provide all details to continue
                   </button>
+                )}
+                {submitError && (
+                  <div className="mt-4 p-3 bg-red-50 text-red-700 text-sm font-medium rounded-lg border border-red-200 flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    {submitError}
+                  </div>
                 )}
               </div>
             </div>
           )}
           
-          {/* STEP 2: Guided Photo Capture */}
+          {/* STEP 2: Guided Photo Capture (for non fast-track) */}
           {step === 2 && (
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b pb-2">
-                <h2 className="text-lg font-bold">Step 2: Guided Capture</h2>
+                <h2 className="text-lg font-bold">Step 2: Item Photos</h2>
                 <button onClick={() => setStep(1)} className="text-sm text-blue-600 hover:underline font-medium">Back</button>
               </div>
               
               <p className="text-sm text-slate-600">
-                Please capture the 4 required angles. Our AI instantly checks each photo to ensure clarity.
+                Please capture the 4 required angles. Our system checks each photo to ensure clarity.
               </p>
               
               <div className="space-y-4">
@@ -383,7 +410,7 @@ export default function NewReturnPage() {
                         state.qcStatus === 'failed' ? "border-red-300 bg-red-50" : "border-slate-300 bg-white shadow-sm"
                       }`}
                     >
-                      {!unlocked && <div className="absolute inset-0 z-10"></div>} {/* Invisible blocker */}
+                      {!unlocked && <div className="absolute inset-0 z-10"></div>}
                       
                       <div className="flex items-center justify-between mb-3">
                         <div>
@@ -396,7 +423,6 @@ export default function NewReturnPage() {
                         {state.qcStatus === "failed" && <AlertCircle className="w-6 h-6 text-red-500" />}
                       </div>
 
-                      {/* Display State */}
                       {state.qcStatus === "empty" || state.qcStatus === "failed" ? (
                         <div className="mt-2">
                           <input 
@@ -434,7 +460,7 @@ export default function NewReturnPage() {
                             {state.qcStatus === "checking" && (
                               <div className="flex items-center gap-2 text-sm text-blue-600 font-medium">
                                 <span className="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin"></span>
-                                AI Checking Clarity...
+                                Checking Clarity...
                               </div>
                             )}
                             {state.qcStatus === "passed" && (
@@ -462,14 +488,14 @@ export default function NewReturnPage() {
               
               <div className="pt-6 border-t mt-6">
                 <button 
-                  onClick={handleSubmit}
+                  onClick={handleSubmitPhotos}
                   disabled={submitting || !angleOrder.every(key => photos[key].qcStatus === "passed")}
                   className="w-full py-3.5 bg-slate-900 text-white font-bold rounded-xl disabled:opacity-50 disabled:bg-slate-400 flex justify-center items-center gap-2 hover:bg-slate-800 transition"
                 >
                   {submitting ? (
                     <>
                       <span className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin"></span>
-                      Running AI Inspection...
+                      Submitting...
                     </>
                   ) : "Submit Return Request"}
                 </button>
@@ -485,12 +511,9 @@ export default function NewReturnPage() {
                 <CheckCircle className="w-9 h-9" />
               </div>
               <div>
-                <span className="inline-block px-3 py-1 bg-blue-50 text-blue-800 border border-blue-200 text-xs font-bold rounded-full mb-2">
-                  ⚡ Fast-Track Manual Return Approved
-                </span>
                 <h2 className="text-xl font-extrabold text-slate-900">Return Request Initiated!</h2>
                 <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                  No AI photo upload needed. Our Doorstep Field Agent will inspect tag &amp; unworn condition at pickup.
+                  Our delivery agent will inspect the item at pickup.
                 </p>
               </div>
 
@@ -500,7 +523,6 @@ export default function NewReturnPage() {
                   Air Waybill Barcode
                 </div>
                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-2">
-                  {/* Visual Barcode Lines */}
                   <div className="h-14 flex items-center justify-center gap-1 overflow-hidden px-4">
                     {[4,2,6,1,3,2,5,1,2,4,3,1,5,2,4,1,3,2,4,2,5,1,3,4,2,1,3].map((w, i) => (
                       <div
@@ -511,7 +533,7 @@ export default function NewReturnPage() {
                     ))}
                   </div>
                   <div className="font-mono font-extrabold text-lg text-slate-900 tracking-widest">
-                    AWB-8821A9
+                    {generatedAwb}
                   </div>
                 </div>
                 <p className="text-[11px] text-slate-500 font-medium">
@@ -522,10 +544,10 @@ export default function NewReturnPage() {
               <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
                 <button
                   type="button"
-                  onClick={() => router.push("/pickup")}
+                  onClick={() => router.push("/orders")}
                   className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow-xs cursor-pointer"
                 >
-                  🚚 View Pickup Agent Terminal
+                  Track Return
                 </button>
                 <button
                   type="button"
