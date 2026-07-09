@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import SellerNav from "@/components/SellerNav";
 import { SellerAutomationProvider, useSellerAutomation } from "@/context/SellerAutomationContext";
-import AutomatedOverrideCard from "@/components/seller/AutomatedOverrideCard";
+
 import { calculateBuyerTrustScore } from "@/lib/trustScore";
 
 export default function AdminReturnsListPage() {
@@ -201,9 +201,9 @@ function AdminReturnsListPageContent() {
           </p>
         </header>
 
-        <SellerNav />
 
-        <AutomatedOverrideCard returns={returns} />
+
+
 
         {error && (
           <div className="mb-8 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-3 text-sm">

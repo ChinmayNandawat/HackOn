@@ -154,8 +154,9 @@ export default async function SellerAnalytics() {
   const maxWeekly = Math.max(...weeklyTrend.map(w => w.count), 1);
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto pb-12">
-      <div className="flex justify-between items-end mb-4">
+    <main className="min-h-screen bg-gray-50/50 p-6 md:p-8 font-sans">
+      <div className="space-y-8 max-w-5xl mx-auto">
+        <div className="flex justify-between items-end mb-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">Analytics & Intelligence</h1>
           <p className="text-slate-500 mt-1">AI-driven insights from your return data</p>
@@ -293,6 +294,7 @@ export default async function SellerAnalytics() {
       </div>
 
       <CategorizedAIInsights />
-    </div>
+      </div>
+    </main>
   );
 }

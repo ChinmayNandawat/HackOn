@@ -31,7 +31,8 @@ import {
   ShoppingBag,
   Clock,
   Percent,
-  CheckCircle2
+  CheckCircle2,
+  Settings
 } from "lucide-react";
 import { SellerAutomationProvider, useSellerAutomation } from "@/context/SellerAutomationContext";
 import { calculateBuyerTrustScore } from "@/lib/trustScore";
@@ -536,9 +537,18 @@ function AdminReturnDetailPageContent() {
                 </p>
               </div>
             </div>
-            <div className="bg-white border border-emerald-100 px-5 py-3 rounded-xl text-emerald-700 text-sm font-bold flex items-center gap-2 shadow-sm relative z-10 self-start md:self-center">
-              <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-              Resolved Automatically
+            <div className="flex flex-col md:flex-row items-center gap-3 self-start md:self-center">
+              <div className="bg-white border border-emerald-100 px-5 py-3 rounded-xl text-emerald-700 text-sm font-bold flex items-center gap-2 shadow-sm whitespace-nowrap">
+                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                Resolved Automatically
+              </div>
+              <Link 
+                href="/seller/automation"
+                className="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm transition-colors whitespace-nowrap"
+              >
+                <Settings className="w-4 h-4" />
+                Automation Settings
+              </Link>
             </div>
           </div>
         )}
@@ -561,9 +571,18 @@ function AdminReturnDetailPageContent() {
                 </p>
               </div>
             </div>
-            <div className="bg-white border border-amber-100 px-5 py-3 rounded-xl text-amber-700 text-sm font-bold flex items-center gap-2 shadow-sm relative z-10 self-start md:self-center whitespace-nowrap">
-              <Clock className="w-5 h-5 text-amber-500" />
-              Pending Auto-Approval
+            <div className="flex flex-col md:flex-row items-center gap-3 self-start md:self-center">
+              <div className="bg-white border border-amber-100 px-5 py-3 rounded-xl text-amber-700 text-sm font-bold flex items-center gap-2 shadow-sm whitespace-nowrap">
+                <Clock className="w-5 h-5 text-amber-500" />
+                Pending Auto-Approval
+              </div>
+              <Link 
+                href="/seller/automation"
+                className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm transition-colors whitespace-nowrap"
+              >
+                <Settings className="w-4 h-4" />
+                Automation Settings
+              </Link>
             </div>
           </div>
         )}

@@ -46,6 +46,7 @@ const DESTINATION_LABELS: Record<string, string> = {
  */
 export function isInPhysicalHandlingQueue(r: WarehouseReturnRecord): boolean {
   return (
+    r.status === 'accepted' &&
     r.flaws_json?.auto_approved === true &&
     r.ai_routing_decision !== null &&
     PHYSICAL_QUEUE_DECISIONS.includes(r.ai_routing_decision) &&

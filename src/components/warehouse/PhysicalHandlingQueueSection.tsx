@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { PackageCheck, ShieldAlert, X, AlertTriangle, CheckCircle2, ChevronRight } from "lucide-react";
+import { PackageCheck, ShieldAlert, X, AlertTriangle, CheckCircle2, ChevronRight, ShieldCheck, Box } from "lucide-react";
 import { WarehouseReturnRecord, getDestinationLabel } from "@/lib/warehouseQueues";
-import ProductHealthCard from "@/components/ProductHealthCard";
+import WarehouseInspectionCard from "./WarehouseInspectionCard";
 import { Product } from "@/types/database";
 
 /**
@@ -41,6 +41,9 @@ export default function PhysicalHandlingQueueSection({
   const [confirmingIds, setConfirmingIds] = useState<Set<string>>(new Set());
   const [activeItem, setActiveItem] = useState<PhysicalHandlingQueueItem | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<"match" | "fraud" | "downgrade" | null>(null);
+  const [selectedRoute, setSelectedRoute] = useState<string | null>(null);
+  const [routingSuccess, setRoutingSuccess] = useState<string | null>(null);
+  const [overrideGrade, setOverrideGrade] = useState<string | null>(null);
 
   const handleConfirmClick = (returnId: string) => {
     if (!verificationStatus) return;
@@ -48,21 +51,23 @@ export default function PhysicalHandlingQueueSection({
     onConfirm(returnId, verificationStatus);
     setActiveItem(null);
     setVerificationStatus(null);
+    setSelectedRoute(null);
+    setRoutingSuccess(null);
+    setOverrideGrade(null);
   };
 
   const closeModal = () => {
     setActiveItem(null);
     setVerificationStatus(null);
+    setSelectedRoute(null);
+    setRoutingSuccess(null);
+    setOverrideGrade(null);
   };
 
   return (
     <section>
-      <h2 className="text-lg font-extrabold text-gray-900 mb-3">
-        Inbound Verification & Binning (FC)
-      </h2>
-
       {records.length === 0 ? (
-        <div className="bg-white p-12 text-center rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-center">
+        <div className="p-12 text-center flex flex-col items-center justify-center">
           <PackageCheck className="w-12 h-12 text-gray-300 mb-3" />
           <p className="text-sm font-semibold text-gray-700">
             No items pending physical handling
@@ -72,7 +77,7 @@ export default function PhysicalHandlingQueueSection({
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="divide-y divide-gray-100">
           {records.map((record) => {
             const title = record.product?.title || "Unknown Product";
             const imageUrl = record.product?.image_url || null;
@@ -85,61 +90,73 @@ export default function PhysicalHandlingQueueSection({
             return (
               <div
                 key={record.id}
-                className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-start gap-4 hover:border-blue-300 transition-colors cursor-pointer"
-                onClick={() => !isConfirming && setActiveItem(record)}
+                className="group grid grid-cols-1 md:grid-cols-12 gap-4 items-center px-6 md:px-8 py-5 hover:bg-blue-50/50 transition-colors cursor-pointer"
+                onClick={() => {
+                  if (!isConfirming) {
+                    setActiveItem(record);
+                    setSelectedRoute(record.ai_routing_decision);
+                    setVerificationStatus("match");
+                  }
+                }}
               >
-                {/* Thumbnail */}
-                {imageUrl ? (
-                  <img
-                    src={imageUrl}
-                    alt={title}
-                    referrerPolicy="no-referrer"
-                    className="w-12 h-12 rounded-lg object-cover border border-gray-100 flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-lg bg-gray-100 text-gray-400 flex items-center justify-center flex-shrink-0 text-xs font-semibold uppercase">
-                    {title.substring(0, 2)}
-                  </div>
-                )}
-
-                {/* Main info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-extrabold text-gray-800 truncate">
-                        {title}
-                      </h3>
-                      {record.awb && (
-                        <span className="text-[10px] font-mono font-semibold bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200">
-                          {record.awb}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {record.ai_grade && (
-                        <span className={`px-2 py-0.5 rounded border text-[10px] font-bold ${gradeClass}`}>
-                          Grade {record.ai_grade}
-                        </span>
-                      )}
-                      {destinationLabel && (
-                        <span className="px-2 py-0.5 rounded border text-[10px] font-bold bg-blue-50 text-blue-700 border-blue-200">
-                          {destinationLabel}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {record.damage_origin !== null && (
-                    <div className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 w-fit">
-                      <ShieldAlert className="w-3.5 h-3.5" />
-                      <span>AI Suspects: {record.damage_origin.replace('_', ' ')}</span>
+                {/* Package / Item (Col 1-4) */}
+                <div className="col-span-4 flex items-center gap-5">
+                  {imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt={title}
+                      referrerPolicy="no-referrer"
+                      className="w-20 h-20 rounded-lg object-cover border border-gray-200 flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-lg bg-gray-100 text-gray-400 flex items-center justify-center flex-shrink-0 text-xs font-semibold uppercase">
+                      {title.substring(0, 2)}
                     </div>
                   )}
+                  <div className="min-w-0 flex flex-col gap-1">
+                    <h3 className="text-sm font-extrabold text-gray-900 truncate">
+                      {title}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                       {record.awb && (
+                         <span className="text-[10px] font-mono font-semibold bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                           {record.awb}
+                         </span>
+                       )}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Action */}
-                <div className="flex-shrink-0 self-center flex items-center text-blue-600 gap-1 text-xs font-bold">
-                  Inspect <ChevronRight className="w-4 h-4" />
+                {/* AI Grade (Col 5-6) */}
+                <div className="col-span-2 flex flex-col gap-1">
+                   <span className={`w-fit px-2.5 py-1 rounded-md text-[11px] font-extrabold tracking-wide uppercase ${gradeClass}`}>
+                     Grade {record.ai_grade}
+                   </span>
+                   <span className="text-[10px] text-gray-500 font-semibold">
+                     Score: {record.ai_score}/100
+                   </span>
+                </div>
+
+                {/* Target Route (Col 7-9) */}
+                <div className="col-span-3 flex flex-col gap-1">
+                   {destinationLabel && (
+                     <span className="text-xs font-bold text-gray-900">
+                       {destinationLabel}
+                     </span>
+                   )}
+                   {record.flaws_json?.pickup_flagged && (
+                     <div className="flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded w-fit border border-amber-200">
+                       <ShieldAlert className="w-3 h-3" />
+                       <span>Agent Flagged (Review Needed)</span>
+                     </div>
+                   )}
+                </div>
+
+                {/* Action (Col 10-12) */}
+                <div className="col-span-3 flex justify-end">
+                  <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 group-hover:bg-blue-600 text-gray-700 group-hover:text-white rounded-lg text-xs font-bold transition-colors">
+                    Inspect & Route <ChevronRight className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             );
@@ -147,147 +164,216 @@ export default function PhysicalHandlingQueueSection({
         </div>
       )}
 
-      {/* INSPECTION MODAL */}
+      {/* INSPECTION MODAL (FULL PAGE TERMINAL) */}
       {activeItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[95vh]">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-5 border-b border-gray-100 flex-shrink-0">
-              <h3 className="text-lg font-extrabold text-gray-900">Physical Inspection</h3>
-              <button onClick={closeModal} className="text-gray-400 hover:text-gray-600 transition">
-                <X className="w-5 h-5" />
-              </button>
+        <div className="fixed inset-0 z-50 bg-white overflow-y-auto animate-in fade-in duration-200 flex flex-col">
+          {/* Top Sticky Header */}
+          <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-gray-200 px-6 md:px-10 py-4 flex items-center justify-between shadow-2xs">
+            <div className="flex items-center gap-3.5">
+              <span className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center font-extrabold text-base">
+                🌱
+              </span>
+              <div>
+                <h3 className="text-base font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
+                  <span>ReLife Physical Inspection — FC Disposition Terminal</span>
+                  <span className="text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-md font-mono font-bold">
+                    ID: {activeItem.id.substring(0, 8)}
+                  </span>
+                </h3>
+                <p className="text-xs text-gray-500 font-medium mt-0.5">
+                  {activeItem.product?.title || "Unknown Product"} • Target Bin:{" "}
+                  <strong className="text-emerald-700">{getDestinationLabel(activeItem.ai_routing_decision)}</strong>
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={closeModal}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <X className="w-4 h-4" />
+              <span>Exit Terminal</span>
+            </button>
+          </div>
+
+          {/* Full-Page Workspace Body */}
+          <div className="flex-1 max-w-7xl mx-auto w-full p-6 md:p-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left Column (lg:col-span-7): Full AI Assessment & Health Card */}
+            <div className="lg:col-span-7 space-y-4">
+              <WarehouseInspectionCard item={activeItem} />
             </div>
 
-            {/* Modal Body - Scrollable */}
-            <div className="p-6 overflow-y-auto flex-1 flex flex-col lg:flex-row gap-6">
-              
-              {/* Left Column: AI Health Card */}
-              <div className="flex-1">
-                <h4 className="text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">AI Assessment</h4>
-                <div className="pointer-events-none">
-                  {/* Wrap in pointer-events-none so warehouse staff can't interact deeply if we don't want them to, though expanding images is fine. Let's allow pointer events. */}
-                </div>
-                <ProductHealthCard 
-                  product={{
-                    id: "temp",
-                    title: activeItem.product?.title || "Unknown Product",
-                    original_price: 0,
-                    category: "Return",
-                    image_url: activeItem.product?.image_url || "",
-                    created_at: activeItem.created_at || new Date().toISOString(),
-                    health_data: {
-                      grade: activeItem.ai_grade,
-                      score: activeItem.ai_score,
-                      confidence: "High",
-                      flaws: activeItem.flaws_json?.flaws || (activeItem.flaws_json?.note ? [{ name: "Condition Note", description: activeItem.flaws_json.note, severity: "minor" }] : []),
-                      return_photo_urls: activeItem.image_urls || (activeItem.product?.image_url ? [activeItem.product.image_url] : [])
-                    }
-                  } as unknown as Product}
-                  showFullDetail={true}
-                />
+            {/* Right Column (lg:col-span-5): Execution Console */}
+            <div className="lg:col-span-5 bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-6 sticky top-24">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                <h4 className="text-sm font-extrabold text-gray-900 uppercase tracking-wide flex items-center gap-2">
+                  <Box className="w-4 h-4 text-blue-600" />
+                  Execution Console
+                </h4>
               </div>
 
-              {/* Right Column: Verification Form */}
-              <div className="w-full lg:w-[380px] flex flex-col">
-                <h4 className="text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">Physical Check</h4>
-                
-                <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 mb-4">
-                  <div className="text-sm text-gray-600 flex flex-col gap-2">
-                    <span className="flex justify-between items-center">
-                      <strong>AI Damage Origin:</strong> 
-                      <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-100 text-xs font-bold">
-                        {activeItem.damage_origin?.replace('_', ' ') || "None"}
-                      </span>
-                    </span>
-                    <span className="flex justify-between items-center">
-                      <strong>Target Bin:</strong> 
-                      <span className="text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 text-xs font-bold">
-                        {getDestinationLabel(activeItem.ai_routing_decision)}
-                      </span>
-                    </span>
-                  </div>
-                </div>
+              {(() => {
+                  const currentGrade = overrideGrade || activeItem.ai_grade || "A";
+                  const routingOptions = [
+                    { id: "relist_as_refurbished", label: "Relist as Refurbished" },
+                    { id: "standard_return", label: "Standard Return" },
+                    { id: "keep_and_refund", label: "Keep & Partial Refund" },
+                    { id: "donate", label: "Donate" },
+                    { id: "recycle", label: "Recycle" },
+                    { id: "reject", label: "Reject Return" }
+                  ];
 
-                <p className="text-sm font-semibold text-gray-800 mb-3">Does the physical item match the AI's assessment above?</p>
-                
-                <div className="space-y-3 flex-1">
-                  <button
-                    onClick={() => setVerificationStatus("match")}
-                    className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-start gap-3 ${verificationStatus === 'match' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-emerald-200 hover:bg-gray-50'}`}
-                  >
-                    <CheckCircle2 className={`w-5 h-5 mt-0.5 ${verificationStatus === 'match' ? 'text-emerald-600' : 'text-gray-400'}`} />
-                    <div>
-                      <div className={`font-bold ${verificationStatus === 'match' ? 'text-emerald-900' : 'text-gray-700'}`}>Yes, Condition Matches</div>
-                      <div className={`text-xs mt-0.5 ${verificationStatus === 'match' ? 'text-emerald-700' : 'text-gray-500'}`}>The item has the exact flaws described by AI.</div>
-                    </div>
-                  </button>
+                  // Add dark store option for top-grade items
+                  if (currentGrade === "A+" || currentGrade === "A") {
+                    routingOptions.unshift({ 
+                      id: "hyperlocal_restock", 
+                      label: "Hyperlocal Restock"
+                    });
+                  }
 
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                      <div className="w-full border-t border-gray-200" />
-                    </div>
-                    <div className="relative flex justify-center">
-                      <span className="bg-white px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Overrides</span>
-                    </div>
-                  </div>
+                  const suggestedRouteId = activeItem.ai_routing_decision || routingOptions[0].id;
+                  const currentSelectedRoute = selectedRoute || suggestedRouteId;
 
-                  <button
-                    onClick={() => setVerificationStatus("fraud")}
-                    className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-start gap-3 ${verificationStatus === 'fraud' ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-red-200 hover:bg-gray-50'}`}
-                  >
-                    <AlertTriangle className={`w-5 h-5 mt-0.5 ${verificationStatus === 'fraud' ? 'text-red-600' : 'text-gray-400'}`} />
-                    <div>
-                      <div className={`font-bold ${verificationStatus === 'fraud' ? 'text-red-900' : 'text-gray-700'}`}>Fraud (Wrong Item / Empty Box)</div>
-                      <div className={`text-xs mt-0.5 ${verificationStatus === 'fraud' ? 'text-red-700' : 'text-gray-500'}`}>Halt refund. Route to Quarantine.</div>
-                    </div>
-                  </button>
-                  
-                  <button
-                    onClick={() => setVerificationStatus("downgrade")}
-                    className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-start gap-3 ${verificationStatus === 'downgrade' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:border-amber-200 hover:bg-gray-50'}`}
-                  >
-                    <ShieldAlert className={`w-5 h-5 mt-0.5 ${verificationStatus === 'downgrade' ? 'text-amber-600' : 'text-gray-400'}`} />
-                    <div>
-                      <div className={`font-bold ${verificationStatus === 'downgrade' ? 'text-amber-900' : 'text-gray-700'}`}>Condition Worse Than Expected</div>
-                      <div className={`text-xs mt-0.5 ${verificationStatus === 'downgrade' ? 'text-amber-700' : 'text-gray-500'}`}>AI missed major damage. Downgrade to Scrap/Liquidation.</div>
-                    </div>
-                  </button>
-                </div>
-              </div>
+                  return (
+                    <>
+                      <div className="space-y-4">
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Step 1: Final Warehouse Grade</p>
+                        <div className="grid grid-cols-5 gap-2">
+                          {(["A+", "A", "B", "C", "D"] as const).map((g) => (
+                              <button
+                                key={g}
+                                onClick={() => {
+                                  setOverrideGrade(g);
+                                  if (!selectedRoute) setSelectedRoute(suggestedRouteId);
+                                  setVerificationStatus("match");
+                                }}
+                                className={`py-3 rounded-xl font-black text-lg transition-all border-2 ${
+                                  currentGrade === g
+                                    ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm"
+                                    : "border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300"
+                                }`}
+                              >
+                                {g}
+                              </button>
+                          ))}
+                        </div>
+                        {overrideGrade && overrideGrade !== activeItem.ai_grade && (
+                            <p className="text-[11px] font-bold text-amber-700 bg-amber-50 px-3 py-2 rounded-lg inline-flex items-center gap-2 border border-amber-200">
+                              <AlertTriangle className="w-4 h-4 shrink-0" />
+                              <span>Grade manually overridden from <strong>{activeItem.ai_grade}</strong> to <strong>{overrideGrade}</strong></span>
+                            </p>
+                        )}
+                      </div>
 
+                      <div className="space-y-4">
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Step 2: Routing Destination</p>
+                        
+                        <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4">
+                           <div className="flex items-center gap-2 mb-3">
+                             <CheckCircle2 className="w-4 h-4 text-blue-600" />
+                             <span className="text-xs font-bold text-blue-800 uppercase tracking-wider">System / Seller Authorized Route</span>
+                           </div>
+                           <button
+                             onClick={() => { setSelectedRoute(suggestedRouteId); setVerificationStatus("match"); }}
+                             className={`w-full p-4 rounded-xl text-left font-bold transition-all border-2 ${
+                               currentSelectedRoute === suggestedRouteId
+                                 ? "border-blue-500 bg-white text-blue-900 shadow-sm"
+                                 : "border-blue-200 bg-blue-50 text-blue-700 hover:bg-white"
+                             }`}
+                           >
+                             {routingOptions.find(o => o.id === suggestedRouteId)?.label || suggestedRouteId}
+                           </button>
+                        </div>
+
+                        <div className="pt-2">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 block">Manual Overrides</span>
+                          <div className="grid grid-cols-2 gap-2">
+                            {routingOptions.filter(opt => opt.id !== suggestedRouteId).map(opt => {
+                              const isHyperlocal = opt.id === "hyperlocal_restock";
+                              const isSelected = currentSelectedRoute === opt.id;
+
+                              let baseStyle = "";
+                              if (isHyperlocal) {
+                                baseStyle = isSelected
+                                  ? "border-emerald-500 bg-emerald-500 text-white shadow-sm"
+                                  : "border-emerald-200 bg-emerald-50 text-emerald-800 hover:border-emerald-300 hover:bg-emerald-100";
+                              } else {
+                                baseStyle = isSelected
+                                  ? "border-amber-500 bg-amber-50 text-amber-800"
+                                  : "border-gray-200 hover:border-gray-300 bg-white text-gray-600";
+                              }
+
+                              return (
+                                <button
+                                    key={opt.id}
+                                    onClick={() => { setSelectedRoute(opt.id); setVerificationStatus("match"); }}
+                                    className={`w-full p-3 rounded-xl text-left transition-all border-2 flex flex-col justify-center min-h-[3.5rem] ${baseStyle}`}
+                                >
+                                  {isHyperlocal && (
+                                    <span className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1 ${isSelected ? 'text-emerald-100' : 'text-emerald-600'}`}>
+                                      <Box className="w-3 h-3" />
+                                      NearDrop Eligible
+                                    </span>
+                                  )}
+                                  <div className="flex items-center justify-between w-full">
+                                    <span className={`text-xs font-bold ${isHyperlocal ? 'text-sm' : ''}`}>
+                                      {opt.label}
+                                    </span>
+                                    {isHyperlocal && (
+                                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isSelected ? 'bg-emerald-600 text-emerald-50' : 'bg-emerald-100 text-emerald-700'}`}>
+                                        2.4 mi
+                                      </span>
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-4 border-t border-gray-100 space-y-3">
+                        {routingSuccess && (
+                          <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-xl text-xs font-bold flex items-center gap-2">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                            <span>{routingSuccess}</span>
+                          </div>
+                        )}
+                        <button
+                          disabled={!verificationStatus && !activeItem.ai_routing_decision && !selectedRoute}
+                          onClick={() => {
+                            if (verificationStatus === "match" || (!verificationStatus && (selectedRoute || activeItem.ai_routing_decision))) {
+                              setVerificationStatus("match");
+                              setRoutingSuccess(`Route confirmed and inventory updated.`);
+                              setTimeout(() => handleConfirmClick(activeItem.id), 1200);
+                            } else {
+                              handleConfirmClick(activeItem.id);
+                            }
+                          }}
+                          className={`w-full py-4 rounded-xl font-bold text-sm flex justify-center items-center gap-2 transition-all shadow-sm ${
+                              currentSelectedRoute 
+                                ? "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer" 
+                                : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                            }`}
+                        >
+                          Confirm & Execute Route
+                        </button>
+                      </div>
+                    </>
+                  );
+              })()}
             </div>
+          </div>
 
-            {/* Modal Footer */}
-            <div className="p-5 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 flex-shrink-0">
-              <button
-                onClick={closeModal}
-                className="px-4 py-2 rounded-lg text-sm font-bold text-gray-600 hover:bg-gray-200 transition"
-              >
-                Cancel
-              </button>
-              <button
-                disabled={!verificationStatus}
-                onClick={() => handleConfirmClick(activeItem.id)}
-                className={`px-5 py-2 rounded-lg text-sm font-bold shadow-sm transition flex items-center gap-2 ${
-                  !verificationStatus 
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : verificationStatus === 'match'
-                      ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                      : verificationStatus === 'fraud'
-                        ? 'bg-red-600 text-white hover:bg-red-700'
-                        : 'bg-amber-600 text-white hover:bg-amber-700'
-                }`}
-              >
-                {verificationStatus === 'match' 
-                  ? `Confirm Move to: ${getDestinationLabel(activeItem.ai_routing_decision)}` 
-                  : verificationStatus === 'fraud' 
-                    ? 'Submit to Quarantine' 
-                    : verificationStatus === 'downgrade' 
-                      ? 'Downgrade & Reroute' 
-                      : 'Select an option'}
-              </button>
-            </div>
+          {/* Full-Width Sticky Footer Bar */}
+          <div className="sticky bottom-0 z-20 bg-gray-50 border-t border-gray-200 px-6 md:px-10 py-4 flex justify-between items-center mt-auto">
+            <button
+              type="button"
+              onClick={closeModal}
+              className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-200 transition cursor-pointer flex items-center gap-2"
+            >
+              <X className="w-4 h-4" /> Cancel Assessment
+            </button>
           </div>
         </div>
       )}
