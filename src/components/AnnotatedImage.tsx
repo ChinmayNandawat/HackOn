@@ -113,6 +113,10 @@ export default function AnnotatedImage({
     return () => {
       img.onload = null;
       window.removeEventListener("resize", handleResize);
+      if (canvasRef.current) {
+        const ctx = canvasRef.current.getContext("2d");
+        ctx?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      }
     };
   }, [imageUrl, flaws, width, height]);
 
@@ -137,6 +141,7 @@ export default function AnnotatedImage({
       }}
     >
       <img
+        key={imageUrl}
         ref={imageRef}
         src={imageUrl}
         alt="Annotated Return"

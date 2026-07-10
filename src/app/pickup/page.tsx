@@ -123,6 +123,7 @@ export default function PickupAgentApp() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scannedAwb, setScannedAwb] = useState("");
+  const [expandedImage, setExpandedImage] = useState<any | null>(null);
 
   // Interactive Checklist States
   const [aiChecks, setAiChecks] = useState<Record<string, boolean>>({});
@@ -222,7 +223,7 @@ export default function PickupAgentApp() {
   const isDetailsVisible = screen === "verification" || screen === "success";
 
   // Variables for Annotated Image Carousel
-  const return_photo_urls = activePickup?.flaws_json?.return_photo_urls || [];
+  const return_photo_urls = activePickup?.return_photo_urls || activePickup?.flaws_json?.return_photo_urls || [];
   const displayImages = return_photo_urls.length > 0 ? return_photo_urls : [activePickup?.products?.image_url || ''];
   const currentImageUrl = displayImages[currentImageIndex] || displayImages[0];
   const flawsToDraw = (activePickup?.flaws_json?.flaws || []).filter((f: any) => f.image_index === currentImageIndex || (f.image_index === undefined && currentImageIndex === 0));
@@ -397,8 +398,11 @@ export default function PickupAgentApp() {
                    {/* AI Evidence Carousel & Image-Specific Checklist */}
                    {currentImageUrl && (
                      <div className="w-full max-w-sm mx-auto bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm">
-                        <div className="relative group p-2 flex justify-center">
-                          <AnnotatedImage imageUrl={currentImageUrl} flaws={flawsToDraw} width={300} height={300} />
+                         <div 
+                           className="relative group p-2 flex justify-center cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all rounded-[2rem]"
+                           onClick={() => setExpandedImage({ url: currentImageUrl, imageFlaws: flawsToDraw, originalIndex: currentImageIndex })}
+                         >
+                           <AnnotatedImage imageUrl={currentImageUrl} flaws={flawsToDraw} width={300} height={300} />
                           
                           {displayImages.length > 1 && (
                             <>
@@ -682,6 +686,42 @@ export default function PickupAgentApp() {
               >
                 Find
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox Modal */}
+      {expandedImage && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/95 backdrop-blur-sm p-4 md:p-12 animate-in fade-in duration-200 cursor-pointer"
+          onClick={() => setExpandedImage(null)}
+        >
+          <div
+            className="relative w-full max-w-4xl aspect-square bg-slate-900 rounded-2xl overflow-hidden flex items-center justify-center shadow-2xl cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-4 right-4 bg-black/50 hover:bg-black text-white rounded-full p-2 z-50 transition-colors"
+              onClick={() => setExpandedImage(null)}
+            >
+              <XCircle className="w-8 h-8" />
+            </button>
+            <AnnotatedImage
+              imageUrl={expandedImage.url}
+              flaws={expandedImage.imageFlaws || []}
+              width={1000}
+              height={1000}
+            />
+            <div className="absolute bottom-6 left-6 flex gap-3 z-50">
+              <span className="bg-black/80 text-white text-sm px-4 py-2 rounded-lg font-bold shadow-lg backdrop-blur-md">
+                Angle {expandedImage.originalIndex + 1}
+              </span>
+              {expandedImage.imageFlaws && expandedImage.imageFlaws.length > 0 && (
+                <span className="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg font-bold shadow-lg shadow-blue-900/50">
+                  {expandedImage.imageFlaws.length} Defect{expandedImage.imageFlaws.length > 1 ? 's' : ''} Highlighted
+                </span>
+              )}
             </div>
           </div>
         </div>

@@ -836,7 +836,7 @@ function AdminReturnDetailPageContent() {
                 </div>
 
                 {/* Section 4: Action Bar */}
-                {record.status !== "completed" && record.status !== "relisted" && record.status !== "rejected" ? (
+                {!(record.status === "completed" || record.status === "relisted" || record.status === "rejected" || record.flaws_json?.seller_approved || record.flaws_json?.auto_approved) ? (
                   <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Dashboard Actions</h3>
 
@@ -993,7 +993,7 @@ function AdminReturnDetailPageContent() {
                 ) : (
                   <div className="bg-green-50 p-4 border border-green-200 text-green-700 font-bold rounded-xl text-center text-xs flex flex-col items-center justify-center gap-2">
                     <Check className="w-6 h-6 text-green-500" />
-                    Return Finalized & Resolved
+                    Decision Finalized
                     {relistSuccess && (
                       <Link
                         href={`/product/${relistSuccess.newProductId}`}
