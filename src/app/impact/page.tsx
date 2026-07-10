@@ -49,7 +49,7 @@ export default function ImpactPage() {
                   Welcome back,
                 </div>
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900">
-                  Conscious Circular Buyer
+                  Abhnish
                 </h1>
                 <div className="flex flex-wrap items-center gap-2 pt-1">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-600 text-white shadow-2xs">
