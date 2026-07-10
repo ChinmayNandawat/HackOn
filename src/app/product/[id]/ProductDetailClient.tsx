@@ -5,7 +5,7 @@ import Link from "next/link";
 import ProductHealthCard from "@/components/ProductHealthCard";
 import ReturnPreventionBanner from "@/components/ReturnPreventionBanner";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, ChevronLeft, ChevronRight, ShieldCheck, Star, Sparkles, Check } from "lucide-react";
+import { ShoppingBag, ChevronLeft, ChevronRight, ShieldCheck, Star, Sparkles, Check, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -297,9 +297,10 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
             return (
               <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-3">
                 {/* AI Fit Advisor Banner */}
-                <div className="bg-emerald-50/80 border border-emerald-200 text-emerald-900 text-xs font-semibold p-3.5 rounded-xl mb-3 flex items-center justify-between shadow-sm">
+                <div className="bg-emerald-50/80 border border-emerald-200 text-emerald-900 text-xs font-semibold p-3.5 rounded-xl mb-3 flex items-start gap-2 shadow-sm">
+                  <Sparkles className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                   <span>
-                    ✨ AI Fit Advisor: Based on your Fit Profile ({userFitProfileSize}) and real customer return data, Size &apos;{aiMatchSize}&apos; is your Perfect Match!
+                    <span className="font-bold">AI Fit Advisor:</span> Based on your Fit Profile ({userFitProfileSize}) and return data, Size &apos;{aiMatchSize}&apos; is recommended.
                   </span>
                 </div>
 
@@ -336,7 +337,8 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
                   <div className="pt-1">
                     {selectedSize === aiMatchSize ? (
                       <div className="inline-flex items-center gap-1.5 bg-emerald-100/80 border border-emerald-300/80 text-emerald-900 text-xs font-bold px-3.5 py-1.5 rounded-lg">
-                        ✅ Perfect Match Selected — Guaranteed fit, zero return hassle
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>Matches your Fit Profile</span>
                       </div>
                     ) : (() => {
                       const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
@@ -345,9 +347,12 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
                       const isSmaller = selIdx !== -1 && matchIdx !== -1 ? selIdx < matchIdx : false;
                       return (
                         <div className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold px-3.5 py-1.5 rounded-lg">
-                          {isSmaller
-                            ? `⚠️ Runs small: Switch to Size '${aiMatchSize}' for guaranteed fit.`
-                            : `⚠️ Runs large: Switch to Size '${aiMatchSize}' for guaranteed fit.`}
+                          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                          <span>
+                            {isSmaller
+                              ? `Runs small: Consider Size '${aiMatchSize}' based on your profile.`
+                              : `Runs large: Consider Size '${aiMatchSize}' based on your profile.`}
+                          </span>
                         </div>
                       );
                     })()}

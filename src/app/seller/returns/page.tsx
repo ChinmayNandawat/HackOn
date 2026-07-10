@@ -382,6 +382,8 @@ function AdminReturnsListPageContent() {
               else if (item.status === "inspected") {
                 if (item.routing_decision === "keep_and_refund" && (item as any).flaws_json?.offer_sent_to_buyer) {
                   currentStatusLabel = "Pending Buyer Response";
+                } else if ((item as any).flaws_json?.seller_approved || (item as any).flaws_json?.auto_approved) {
+                  currentStatusLabel = "Decision Finalized";
                 } else {
                   currentStatusLabel = "Needs Seller Review";
                 }

@@ -293,11 +293,7 @@ export default function CartDrawer() {
                           </div>
 
                           {/* Smart Fit Interceptor Banner */}
-                          {(switchedFitItems[item.id] || switchedFitItems[item.product.id]) && item.selectedSize === "L" ? (
-                            <div className="mt-2 text-xs font-semibold text-emerald-900 bg-emerald-50 border border-emerald-300 p-2.5 rounded-xl">
-                              ✅ Switched to Size &apos;L&apos; — Perfect Fit Guaranteed
-                            </div>
-                          ) : isFashion(item) && item.selectedSize === "L" ? (
+                          {isFashion(item) && item.selectedSize === "L" ? (
                             /* No prevention warning if buyer chose perfect match Size L */
                             null
                           ) : isFashion(item) && item.selectedSize && item.selectedSize !== "L" ? (() => {
@@ -306,11 +302,14 @@ export default function CartDrawer() {
                             const matchIdx = SIZES.indexOf("L");
                             const isSmaller = selIdx !== -1 && matchIdx !== -1 ? selIdx < matchIdx : false;
                             return (
-                              <div className="mt-2 text-xs text-amber-900 bg-amber-50 border border-amber-300 p-3 rounded-xl space-y-2">
-                                <div className="font-semibold leading-snug">
-                                  {isSmaller
-                                    ? "⚠️ Runs small: Switch to Size 'L' for guaranteed fit."
-                                    : "⚠️ Runs large: Switch to Size 'L' for guaranteed fit."}
+                              <div className="mt-2 text-[10px] text-amber-900 bg-amber-50 border border-amber-300 p-2 rounded-lg flex items-center justify-between gap-2">
+                                <div className="font-semibold leading-snug flex items-center gap-1.5">
+                                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                  <span>
+                                    {isSmaller
+                                      ? "Runs small: Consider Size 'L'."
+                                      : "Runs large: Consider Size 'L'."}
+                                  </span>
                                 </div>
                               <button
                                 type="button"
@@ -323,9 +322,9 @@ export default function CartDrawer() {
                                     [item.product.id]: true,
                                   }));
                                 }}
-                                className="w-full bg-slate-900 hover:bg-emerald-800 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition-all cursor-pointer"
+                                className="shrink-0 bg-slate-900 hover:bg-emerald-800 text-white font-bold py-1 px-2.5 rounded text-[10px] transition-all cursor-pointer whitespace-nowrap"
                               >
-                                Switch to Size L
+                                Switch to L
                               </button>
                             </div>
                           );

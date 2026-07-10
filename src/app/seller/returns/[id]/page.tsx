@@ -444,6 +444,8 @@ function AdminReturnDetailPageContent() {
   else if (record.status === "inspected") {
     if (record.routing_decision === "keep_and_refund" && (record as any).flaws_json?.offer_sent_to_buyer) {
       currentStatusLabel = "Pending Buyer Response";
+    } else if ((record as any).flaws_json?.seller_approved || (record as any).flaws_json?.auto_approved) {
+      currentStatusLabel = "Decision Finalized";
     } else {
       currentStatusLabel = "Needs Seller Review";
     }
