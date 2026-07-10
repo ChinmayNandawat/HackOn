@@ -22,6 +22,7 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
   const [userFitProfileSize, setUserFitProfileSize] = useState<string>("M");
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setNow(Date.now());
     const handleLocationChange = () => {
