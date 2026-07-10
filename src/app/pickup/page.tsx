@@ -213,7 +213,7 @@ export default function PickupAgentApp() {
     }
   };
 
-  const getAWB = (id: string) => `AWB-${id.substring(0, 8).toUpperCase()}`;
+  const getAWB = (pickup: any) => pickup.flaws_json?.awb_override || `AWB-${pickup.id.substring(0, 8).toUpperCase()}`;
 
   // CSS classes for responsive layout
   // On Mobile: Only one section is visible at a time
@@ -285,7 +285,7 @@ export default function PickupAgentApp() {
             ) : (
               pickups.map(pickup => {
                 const product = Array.isArray(pickup.products) ? pickup.products[0] : pickup.products;
-                const awb = getAWB(pickup.id);
+                const awb = getAWB(pickup);
                 const isActive = activePickup?.id === pickup.id;
                 
                 return (
@@ -382,14 +382,14 @@ export default function PickupAgentApp() {
                 </button>
                 <div className="flex-1">
                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Verify Pickup</p>
-                  <h2 className="text-lg font-black text-slate-900">{getAWB(activePickup.id)}</h2>
+                  <h2 className="text-lg font-black text-slate-900">{getAWB(activePickup)}</h2>
                 </div>
               </div>
 
               {/* Desktop Header */}
               <div className="hidden md:block bg-white border-b border-slate-200 p-8">
                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Return Verification</p>
-                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">{getAWB(activePickup.id)}</h2>
+                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">{getAWB(activePickup)}</h2>
               </div>
 
               <div className="flex-1 overflow-y-auto p-5 md:p-8 space-y-8 pb-40 md:pb-32">
@@ -631,7 +631,7 @@ export default function PickupAgentApp() {
             
             <div className="bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl min-h-[200px] flex items-center justify-center mb-6 relative overflow-hidden p-2">
               <PickupScanner onScan={(text) => {
-                const match = pickups.find(p => getAWB(p.id) === text);
+                const match = pickups.find(p => getAWB(p) === text);
                 if (match) {
                   setScannerOpen(false);
                   setScannedAwb("");
@@ -659,7 +659,7 @@ export default function PickupAgentApp() {
                 onChange={e => setScannedAwb(e.target.value.toUpperCase())}
                 onKeyDown={e => {
                   if (e.key === 'Enter') {
-                    const match = pickups.find(p => getAWB(p.id) === scannedAwb);
+                    const match = pickups.find(p => getAWB(p) === scannedAwb);
                     if (match) {
                       setScannerOpen(false);
                       setScannedAwb("");
@@ -673,7 +673,7 @@ export default function PickupAgentApp() {
               />
               <Button 
                 onClick={() => {
-                  const match = pickups.find(p => getAWB(p.id) === scannedAwb);
+                  const match = pickups.find(p => getAWB(p) === scannedAwb);
                   if (match) {
                     setScannerOpen(false);
                     setScannedAwb("");
