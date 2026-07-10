@@ -293,30 +293,43 @@ export default function CartDrawer() {
                           </div>
 
                           {/* Smart Fit Interceptor Banner */}
-                          {switchedFitItems[item.id] ? (
+                          {(switchedFitItems[item.id] || switchedFitItems[item.product.id]) && item.selectedSize === "L" ? (
                             <div className="mt-2 text-xs font-semibold text-emerald-900 bg-emerald-50 border border-emerald-300 p-2.5 rounded-xl">
                               ✅ Switched to Size &apos;L&apos; — Perfect Fit Guaranteed
                             </div>
                           ) : isFashion(item) && item.selectedSize === "L" ? (
                             /* No prevention warning if buyer chose perfect match Size L */
                             null
-                          ) : isFashion(item) && item.selectedSize && item.selectedSize !== "L" ? (
-                            <div className="mt-2 text-xs text-amber-900 bg-amber-50 border border-amber-300 p-3 rounded-xl space-y-2">
-                              <div className="font-semibold leading-snug">
-                                ⚠️ Fit Interceptor Alert: You selected Size &apos;{item.selectedSize}&apos;, but this item runs small. Switch to Size &apos;L&apos; (Your AI Match) for guaranteed comfort and to avoid return pickup delays!
-                              </div>
+                          ) : isFashion(item) && item.selectedSize && item.selectedSize !== "L" ? (() => {
+                            const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+                            const selIdx = SIZES.indexOf(item.selectedSize);
+                            const matchIdx = SIZES.indexOf("L");
+                            const isSmaller = selIdx !== -1 && matchIdx !== -1 ? selIdx < matchIdx : false;
+                            return (
+                              <div className="mt-2 text-xs text-amber-900 bg-amber-50 border border-amber-300 p-3 rounded-xl space-y-2">
+                                <div className="font-semibold leading-snug">
+                                  {isSmaller
+                                    ? "⚠️ Runs small: Switch to Size 'L' for guaranteed fit."
+                                    : "⚠️ Runs large: Switch to Size 'L' for guaranteed fit."}
+                                </div>
                               <button
                                 type="button"
                                 onClick={() => {
+                                  const newId = `${item.product.id}-L`;
                                   updateSize(item.id, "L");
-                                  setSwitchedFitItems((prev) => ({ ...prev, [item.id]: true }));
+                                  setSwitchedFitItems((prev) => ({
+                                    ...prev,
+                                    [newId]: true,
+                                    [item.product.id]: true,
+                                  }));
                                 }}
                                 className="w-full bg-slate-900 hover:bg-emerald-800 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition-all cursor-pointer"
                               >
                                 Switch to Size L
                               </button>
                             </div>
-                          ) : sizeAdviceMap[item.id] && (!isFashion(item) || item.selectedSize !== "L") ? (
+                          );
+                        })() : sizeAdviceMap[item.id] && (!isFashion(item) || item.selectedSize !== "L") ? (
                             <div className="mt-2 text-[10px] text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded-lg leading-snug">
                               {sizeAdviceMap[item.id]}
                             </div>

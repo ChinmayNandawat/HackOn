@@ -118,7 +118,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           .filter((item) => item.id !== cartItemId)
           .map((item) =>
             item.id === newId
-              ? { ...item, quantity: item.quantity + targetItem.quantity }
+              ? { ...item, quantity: item.quantity + targetItem.quantity, selectedSize: newSize }
               : item
           );
       } else {

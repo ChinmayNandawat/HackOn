@@ -299,7 +299,7 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
                 {/* AI Fit Advisor Banner */}
                 <div className="bg-emerald-50/80 border border-emerald-200 text-emerald-900 text-xs font-semibold p-3.5 rounded-xl mb-3 flex items-center justify-between shadow-sm">
                   <span>
-                    ✨ AI Fit Advisor: Based on your Fit Profile ({userFitProfileSize}) and real customer return data, Size &apos;{aiMatchSize}&apos; is your 98% Perfect Match!
+                    ✨ AI Fit Advisor: Based on your Fit Profile ({userFitProfileSize}) and real customer return data, Size &apos;{aiMatchSize}&apos; is your Perfect Match!
                   </span>
                 </div>
 
@@ -338,11 +338,19 @@ export default function ProductDetailClient({ product, riskData, refurbishedAlte
                       <div className="inline-flex items-center gap-1.5 bg-emerald-100/80 border border-emerald-300/80 text-emerald-900 text-xs font-bold px-3.5 py-1.5 rounded-lg">
                         ✅ Perfect Match Selected — Guaranteed fit, zero return hassle
                       </div>
-                    ) : (
-                      <div className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold px-3.5 py-1.5 rounded-lg">
-                        ⚠️ High Return Risk: This item runs small. We recommend Size &apos;{aiMatchSize}&apos; based on your Fit Profile!
-                      </div>
-                    )}
+                    ) : (() => {
+                      const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+                      const selIdx = SIZES.indexOf(selectedSize);
+                      const matchIdx = SIZES.indexOf(aiMatchSize);
+                      const isSmaller = selIdx !== -1 && matchIdx !== -1 ? selIdx < matchIdx : false;
+                      return (
+                        <div className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold px-3.5 py-1.5 rounded-lg">
+                          {isSmaller
+                            ? `⚠️ Runs small: Switch to Size '${aiMatchSize}' for guaranteed fit.`
+                            : `⚠️ Runs large: Switch to Size '${aiMatchSize}' for guaranteed fit.`}
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
               </div>

@@ -94,13 +94,13 @@ export default function CategorizedAIInsights() {
       <div className="p-6 md:p-8 border-b border-slate-100 bg-slate-50/50">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start gap-3.5">
-            <div className="p-3 bg-white rounded-xl text-indigo-600 border border-slate-200 shadow-sm">
+            <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600 border border-emerald-200 shadow-sm">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
                 Root Cause Analysis
-                <span className="px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-indigo-100 text-indigo-800 border border-indigo-200">
+                <span className="px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
                   Diagnostic AI
                 </span>
               </h2>
@@ -114,28 +114,28 @@ export default function CategorizedAIInsights() {
           <div className="flex items-center gap-1.5 bg-white p-1.5 rounded-xl self-start md:self-center border border-slate-200 shadow-sm text-sm font-bold mt-4 md:mt-0">
             <button
               onClick={() => setActiveTab("all")}
-              className={`px-4 py-2 rounded-lg transition-all ${activeTab === "all" ? "bg-slate-100 text-slate-900" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+              className={`px-4 py-2 rounded-lg transition-all ${activeTab === "all" ? "bg-emerald-600 text-white shadow-xs font-bold" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                 }`}
             >
               All
             </button>
             <button
               onClick={() => setActiveTab("apparel")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${activeTab === "apparel" ? "bg-indigo-50 text-indigo-700" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${activeTab === "apparel" ? "bg-emerald-50 text-emerald-800 border border-emerald-200" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                 }`}
             >
               <Shirt className="w-4 h-4" /> Apparel
             </button>
             <button
               onClick={() => setActiveTab("electronics")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${activeTab === "electronics" ? "bg-blue-50 text-blue-700" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${activeTab === "electronics" ? "bg-teal-50 text-teal-800 border border-teal-200" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                 }`}
             >
               <Smartphone className="w-4 h-4" /> Electronics
             </button>
             <button
               onClick={() => setActiveTab("footwear")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${activeTab === "footwear" ? "bg-emerald-50 text-emerald-700" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${activeTab === "footwear" ? "bg-emerald-50 text-emerald-800 border border-emerald-200" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                 }`}
             >
               <Footprints className="w-4 h-4" /> Footwear
@@ -153,21 +153,21 @@ export default function CategorizedAIInsights() {
             const isOpen = openSuggestions[item.id] || false;
 
             const categoryIcon = {
-              apparel: <Shirt className="w-4 h-4 text-indigo-600" />,
-              electronics: <Smartphone className="w-4 h-4 text-blue-600" />,
+              apparel: <Shirt className="w-4 h-4 text-emerald-600" />,
+              electronics: <Smartphone className="w-4 h-4 text-teal-600" />,
               footwear: <Footprints className="w-4 h-4 text-emerald-600" />
             }[item.category];
 
             const categoryBg = {
-              apparel: "bg-indigo-50 border-indigo-100",
-              electronics: "bg-blue-50 border-blue-100",
-              footwear: "bg-emerald-50 border-emerald-100"
+              apparel: "bg-emerald-50 border-emerald-200 text-emerald-800",
+              electronics: "bg-teal-50 border-teal-200 text-teal-800",
+              footwear: "bg-emerald-50 border-emerald-200 text-emerald-800"
             }[item.category];
 
             const severityBadge = {
               high: "bg-red-50 text-red-700 border-red-200",
               medium: "bg-amber-50 text-amber-800 border-amber-200",
-              optimization: "bg-slate-100 text-slate-700 border-slate-300",
+              optimization: "bg-emerald-50 text-emerald-800 border-emerald-200",
             }[item.severity];
 
             const severityLabel = {
@@ -179,7 +179,7 @@ export default function CategorizedAIInsights() {
             const returnRateBg = {
               high: "bg-red-50 text-red-700 border-red-200",
               medium: "bg-amber-50 text-amber-700 border-amber-200",
-              optimization: "bg-slate-50 text-slate-700 border-slate-200",
+              optimization: "bg-emerald-50 text-emerald-700 border-emerald-200",
             }[item.severity];
 
             return (
@@ -203,7 +203,7 @@ export default function CategorizedAIInsights() {
                         </div>
                         <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{item.category}</span>
                       </div>
-                      <h3 className="text-base md:text-lg font-bold text-slate-900 group-hover:text-indigo-700 transition-colors line-clamp-2" title={item.productName}>
+                      <h3 className="text-base md:text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition-colors line-clamp-2" title={item.productName}>
                         {item.productName}
                       </h3>
                     </div>
@@ -229,12 +229,12 @@ export default function CategorizedAIInsights() {
                     <button 
                       className={`w-10 h-10 rounded-full flex items-center justify-center border transition-colors shadow-sm ${
                         isOpen 
-                          ? "bg-amber-50 border-amber-200 text-amber-600" 
-                          : "bg-white border-slate-200 text-amber-500 group-hover:bg-amber-50 group-hover:border-amber-200 group-hover:text-amber-600"
+                          ? "bg-emerald-600 border-emerald-600 text-white" 
+                          : "bg-white border-slate-200 text-emerald-600 group-hover:bg-emerald-50 group-hover:border-emerald-200 group-hover:text-emerald-700"
                       }`}
                       title="View ReLife Suggestion"
                     >
-                      <Lightbulb className={`w-5 h-5 ${isOpen ? "fill-amber-500" : ""}`} />
+                      <Lightbulb className={`w-5 h-5 ${isOpen ? "fill-white" : ""}`} />
                     </button>
                   </div>
                 </div>
@@ -242,9 +242,9 @@ export default function CategorizedAIInsights() {
                 {/* Expanded AI Suggestion */}
                 {isOpen && (
                   <div className="px-6 md:px-8 pb-8 pt-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="p-6 rounded-xl border flex flex-col md:flex-row md:items-center justify-between gap-5 bg-white border-slate-200 shadow-sm">
+                    <div className="p-6 rounded-xl border flex flex-col md:flex-row md:items-center justify-between gap-5 bg-emerald-50/40 border-emerald-200 shadow-sm">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 font-bold text-indigo-700 mb-3">
+                        <div className="flex items-center gap-2 font-bold text-emerald-800 mb-3">
                           <Lightbulb className="w-5 h-5" />
                           <span className="text-base">ReLife Suggestion</span>
                         </div>
