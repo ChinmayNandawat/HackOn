@@ -186,8 +186,8 @@ function AdminReturnsListPageContent() {
   const filteredReturns = returns.filter((item) => {
     if (filter === "all") return true;
     if (filter === "auto-approved") return isReturnAutoApproved(item) || (item as any).flaws_json?.auto_approved === true;
-    // Hide auto-approved items from the manual queue since they require no seller action
-    if (filter === "inspected" && (item as any).flaws_json?.auto_approved) {
+    // Hide auto-approved and seller-approved items from the manual queue since they require no action
+    if (filter === "inspected" && ((item as any).flaws_json?.auto_approved || (item as any).flaws_json?.seller_approved)) {
       return false;
     }
     if (filter === "donated") return item.status === "completed" && item.routing_decision === "donate";

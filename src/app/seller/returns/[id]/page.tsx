@@ -188,12 +188,16 @@ function AdminReturnDetailPageContent() {
     setSuccessMessage(null);
 
     try {
-      // DB CHECK constraint restricts status to: processing, decision_ready, completed
-      // Map 'relisted' and 'rejected' -> 'completed' (resolved status)
+      const currentFlawsJson = record.flaws_json || {};
+      const updatedFlawsJson = {
+        ...currentFlawsJson,
+        seller_approved: true
+      };
+
       const { error: updateError } = await supabase
         .from("returns")
         .update({
-          status: "completed",
+          flaws_json: updatedFlawsJson,
         })
         .eq("id", id);
 
@@ -203,13 +207,13 @@ function AdminReturnDetailPageContent() {
         if (!prev) return null;
         return {
           ...prev,
-          status: "completed",
+          flaws_json: updatedFlawsJson,
         };
       });
-      setSuccessMessage("Routing decision accepted and finalized in database!");
+      setSuccessMessage("Routing decision accepted and routed to pickup!");
     } catch (err: any) {
       console.error("[api/route-decision] Accept Error:", err);
-      setError("Failed to finalize return status: " + err.message);
+      setError("Failed to finalize return decision: " + err.message);
     }
   };
 
@@ -270,31 +274,36 @@ function AdminReturnDetailPageContent() {
     setSuccessMessage(null);
 
     try {
-      const response = await fetch('/api/relist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ returnId: id }),
-      });
+      const currentFlawsJson = record.flaws_json || {};
+      const updatedFlawsJson = {
+        ...currentFlawsJson,
+        seller_approved: true
+      };
 
-      const data = await response.json();
+      const { error: updateError } = await supabase
+        .from("returns")
+        .update({
+          ai_routing_decision: "relist_as_refurbished",
+          flaws_json: updatedFlawsJson,
+        })
+        .eq("id", id);
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || "Failed to relist product");
-      }
+      if (updateError) throw updateError;
 
-      setRelistSuccess({ newProductId: data.newProductId, title: data.generatedTitle });
-
+      setSuccessMessage("Return marked for relisting! Item will be processed upon warehouse receipt.");
       setRecord((prev) => {
         if (!prev) return null;
         return {
           ...prev,
-          status: "relisted",
+          routing_decision: "relist_as_refurbished",
+          flaws_json: updatedFlawsJson,
         };
       });
     } catch (err: any) {
       console.error("Relist error:", err);
-      setRelistError(err.message || "An unexpected error occurred during relisting");
-      // Intentionally not setting isRelisting to false here so the 'Try Again' button handles it
+      setRelistError(err.message || "An unexpected error occurred marking for relisting");
+    } finally {
+      setIsRelisting(false);
     }
   };
 
@@ -305,16 +314,22 @@ function AdminReturnDetailPageContent() {
     setSuccessMessage(null);
 
     try {
+      const currentFlawsJson = record.flaws_json || {};
+      const updatedFlawsJson = {
+        ...currentFlawsJson,
+        seller_approved: true
+      };
+
       const { error: updateError } = await supabase
         .from("returns")
-        .update({ status: "rejected" })
+        .update({ status: "rejected", flaws_json: updatedFlawsJson })
         .eq("id", id);
 
       if (updateError) throw updateError;
 
       setRecord((prev) => {
         if (!prev) return null;
-        return { ...prev, status: "rejected" };
+        return { ...prev, status: "rejected", flaws_json: updatedFlawsJson };
       });
       setSuccessMessage("Return request has been declined.");
     } catch (err: any) {

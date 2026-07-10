@@ -16,59 +16,100 @@ type Screen = "queue" | "verification" | "success";
 // Temporary dummy data for UI testing
 const DUMMY_PICKUPS = [
   {
-    id: "uuid-1234-5678-abc1",
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+    id: "uuid-1111-aaaa",
+    created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
     status: "inspected",
     ai_grade: "B",
     flaws_json: {
-      buyer_description: "There is a small scratch on the screen.",
-      summary: "Detected 1 minor scratch (1.2cm) on the display. Functionality is intact.",
+      seller_approved: true,
+      buyer_description: "Zipper on the front pocket is stuck.",
+      summary: "Detected issue with front zipper mechanism. Fabric is pristine.",
       is_fast_track: false,
-      return_photo_urls: [
-        "https://m.media-amazon.com/images/I/61jLiCovxVL._SX679_.jpg",
-        "https://m.media-amazon.com/images/I/71Y5VM-LxQL._SX679_.jpg"
-      ],
+      return_photo_urls: ["https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_t.png"],
       flaws: [
-        {
-          name: "Screen Scratch",
-          severity: "moderate",
-          image_index: 0,
-          x_percent: 45,
-          y_percent: 30,
-          width_percent: 15,
-          height_percent: 10
-        },
-        {
-          name: "Edge Dent",
-          severity: "minor",
-          image_index: 1,
-          x_percent: 10,
-          y_percent: 10,
-          width_percent: 25,
-          height_percent: 25
-        }
+        { name: "Zipper Stuck", severity: "minor", image_index: 0, x_percent: 50, y_percent: 60, width_percent: 15, height_percent: 10 }
       ]
     },
-    products: {
-      title: "Apple iPhone 13 Pro (128GB)",
-      category: "Smartphone",
-      image_url: "https://m.media-amazon.com/images/I/61jLiCovxVL._SX679_.jpg"
-    }
+    products: { title: "Fjallraven - Foldsack No. 1 Backpack", category: "Bags", image_url: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_t.png" }
   },
   {
-    id: "uuid-9876-5432-xyz9",
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
+    id: "uuid-2222-bbbb",
+    created_at: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
     status: "inspected",
     ai_grade: "A",
     flaws_json: {
-      buyer_description: "Product is unopened, I just changed my mind.",
-      is_fast_track: true
+      auto_approved: true,
+      buyer_description: "Size is too small, never worn.",
+      is_fast_track: true,
+      return_photo_urls: ["https://fakestoreapi.com/img/71-3HjGNDUL._AC_SY879._SX._UX._SY._UY_t.png"]
     },
-    products: {
-      title: "Sony WH-1000XM5 Headphones",
-      category: "Audio",
-      image_url: "https://m.media-amazon.com/images/I/51aXvjzcukL._SX522_.jpg"
-    }
+    products: { title: "Mens Casual Slim Fit T-Shirt", category: "Apparel", image_url: "https://fakestoreapi.com/img/71-3HjGNDUL._AC_SY879._SX._UX._SY._UY_t.png" }
+  },
+  {
+    id: "uuid-3333-cccc",
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
+    status: "inspected",
+    ai_grade: "C",
+    flaws_json: {
+      seller_approved: true,
+      buyer_description: "Button is missing on the left cuff.",
+      summary: "Cuff button missing. Slight fraying around the buttonhole.",
+      is_fast_track: false,
+      return_photo_urls: ["https://fakestoreapi.com/img/71li-ujtlUL._AC_UX679_t.png"],
+      flaws: [
+        { name: "Missing Button", severity: "major", image_index: 0, x_percent: 20, y_percent: 80, width_percent: 10, height_percent: 10 }
+      ]
+    },
+    products: { title: "Mens Cotton Jacket", category: "Apparel", image_url: "https://fakestoreapi.com/img/71li-ujtlUL._AC_UX679_t.png" }
+  },
+  {
+    id: "uuid-4444-dddd",
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
+    status: "inspected",
+    ai_grade: "A",
+    flaws_json: {
+      auto_approved: true,
+      buyer_description: "Ordered wrong color.",
+      summary: "Item is in pristine condition. No visible wear.",
+      is_fast_track: false,
+      return_photo_urls: ["https://fakestoreapi.com/img/51Y5NI-I5jL._AC_UX679_t.png"],
+      flaws: []
+    },
+    products: { title: "Womens Winter Coat", category: "Apparel", image_url: "https://fakestoreapi.com/img/51Y5NI-I5jL._AC_UX679_t.png" }
+  },
+  {
+    id: "uuid-5555-eeee",
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
+    status: "inspected",
+    ai_grade: "B",
+    flaws_json: {
+      seller_approved: true,
+      buyer_description: "Small stain on the sleeve.",
+      summary: "Detected 1 minor stain (0.5cm) on the left sleeve. Otherwise flawless.",
+      is_fast_track: false,
+      return_photo_urls: ["https://fakestoreapi.com/img/51eg55uWmdL._AC_UX679_t.png"],
+      flaws: [
+        { name: "Sleeve Stain", severity: "minor", image_index: 0, x_percent: 80, y_percent: 50, width_percent: 10, height_percent: 10 }
+      ]
+    },
+    products: { title: "Womens Short Sleeve T-Shirt", category: "Apparel", image_url: "https://fakestoreapi.com/img/51eg55uWmdL._AC_UX679_t.png" }
+  },
+  {
+    id: "uuid-6666-ffff",
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+    status: "inspected",
+    ai_grade: "B",
+    flaws_json: {
+      auto_approved: true,
+      buyer_description: "Ring size is too large.",
+      summary: "Slight micro-scratches on the band. Stones are secure.",
+      is_fast_track: false,
+      return_photo_urls: ["https://fakestoreapi.com/img/61sbMiUnoGL._AC_UL640_QL65_ML3_t.png"],
+      flaws: [
+        { name: "Micro-scratches", severity: "moderate", image_index: 0, x_percent: 50, y_percent: 50, width_percent: 25, height_percent: 25 }
+      ]
+    },
+    products: { title: "Solid Gold Petite Micropave Ring", category: "Jewelry", image_url: "https://fakestoreapi.com/img/61sbMiUnoGL._AC_UL640_QL65_ML3_t.png" }
   }
 ];
 
@@ -102,12 +143,13 @@ export default function PickupAgentApp() {
       
       if (data) {
         const filtered = data.filter(r => {
+           const isApproved = r.flaws_json?.auto_approved || r.flaws_json?.seller_approved;
            const decision = r.ai_routing_decision || r.routing_decision || "";
-           return !decision.includes("keep");
+           return isApproved && !decision.includes("keep");
         });
         
-        // Use real data if it exists, otherwise fallback to dummy data for UI testing
-        setPickups(filtered.length > 0 ? filtered : DUMMY_PICKUPS);
+        // Append dummy data to real data to ensure the UI feels populated for demo purposes
+        setPickups([...filtered, ...DUMMY_PICKUPS]);
       }
     } catch (err) {
       console.error(err);
@@ -149,19 +191,6 @@ export default function PickupAgentApp() {
         let updateData: any = {};
         if (agentDecision === "match") {
           updateData = { status: "accepted" };
-          if (activePickup.flaws_json?.auto_approved) {
-            if (activePickup.ai_routing_decision === "donate" || activePickup.ai_routing_decision === "recycle") {
-              updateData.status = "completed";
-            }
-            if (activePickup.ai_routing_decision === "relist_as_refurbished") {
-              // Trigger relist immediately in the background since it was auto-approved
-              fetch(`/api/relist`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ returnId: activePickup.id })
-              }).catch(err => console.error("[Pickup] Auto-relist trigger failed:", err));
-            }
-          }
         }
         else if (agentDecision === "mismatch") updateData = { status: "accepted", flaws_json: { ...activePickup.flaws_json, pickup_flagged: true } };
         else if (agentDecision === "wrong_item") updateData = { status: "rejected" };

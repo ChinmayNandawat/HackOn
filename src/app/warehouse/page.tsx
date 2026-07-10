@@ -56,22 +56,22 @@ const DUMMY_WAREHOUSE_QUEUE: WarehouseRow[] = [
     ai_routing_decision: "relist_as_refurbished",
     warehouse_confirmed_at: null,
     flaws_json: {
-      auto_approved: true,
+      seller_approved: true,
       pickup_flagged: false,
       flaws: [
-        { name: "Screen Scratch", severity: "moderate", image_index: 0, x_percent: 45, y_percent: 30, width_percent: 15, height_percent: 10 }
+        { name: "Zipper Stuck", severity: "minor", image_index: 0, x_percent: 50, y_percent: 60, width_percent: 15, height_percent: 10 }
       ],
-      return_photo_urls: ["https://m.media-amazon.com/images/I/61jLiCovxVL._SX679_.jpg"]
+      return_photo_urls: ["https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_t.png"]
     },
     damage_origin: "consumer_usage",
     ai_grade: "B",
-    ai_score: 82,
-    created_at: new Date().toISOString(),
-    awb: "AWB-WHTEST01",
-    image_urls: ["https://m.media-amazon.com/images/I/61jLiCovxVL._SX679_.jpg"],
+    ai_score: 85,
+    created_at: new Date(Date.now() - 3600000).toISOString(),
+    awb: "AWB-WHBAG001",
+    image_urls: ["https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_t.png"],
     product: {
-      title: "Apple iPhone 13 Pro",
-      image_url: "https://m.media-amazon.com/images/I/61jLiCovxVL._SX679_.jpg"
+      title: "Fjallraven - Foldsack No. 1 Backpack",
+      image_url: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_t.png"
     }
   },
   {
@@ -82,19 +82,114 @@ const DUMMY_WAREHOUSE_QUEUE: WarehouseRow[] = [
     flaws_json: {
       auto_approved: true,
       pickup_flagged: true,
-      pickup_agent_notes: "Item has more visible wear than AI stated. Requires manual grade verification.",
+      pickup_agent_notes: "Item looks worn and has a small tear not reported by AI.",
       flaws: [],
-      return_photo_urls: ["https://m.media-amazon.com/images/I/71Y5VM-LxQL._SX679_.jpg"]
+      return_photo_urls: ["https://fakestoreapi.com/img/71-3HjGNDUL._AC_SY879._SX._UX._SY._UY_t.png"]
     },
     damage_origin: null,
     ai_grade: "A",
     ai_score: 95,
-    created_at: new Date(Date.now() - 3600000).toISOString(),
-    awb: "AWB-WHTEST02",
-    image_urls: ["https://m.media-amazon.com/images/I/71Y5VM-LxQL._SX679_.jpg"],
+    created_at: new Date(Date.now() - 7200000).toISOString(),
+    awb: "AWB-WHSHIRT2",
+    image_urls: ["https://fakestoreapi.com/img/71-3HjGNDUL._AC_SY879._SX._UX._SY._UY_t.png"],
     product: {
-      title: "Sony WH-1000XM5",
-      image_url: "https://m.media-amazon.com/images/I/71Y5VM-LxQL._SX679_.jpg"
+      title: "Mens Casual Slim Fit T-Shirt",
+      image_url: "https://fakestoreapi.com/img/71-3HjGNDUL._AC_SY879._SX._UX._SY._UY_t.png"
+    }
+  },
+  {
+    id: "uuid-wh-dummy-3",
+    status: "accepted",
+    ai_routing_decision: "donate",
+    warehouse_confirmed_at: null,
+    flaws_json: {
+      seller_approved: true,
+      pickup_flagged: false,
+      flaws: [
+        { name: "Missing Button", severity: "major", image_index: 0, x_percent: 20, y_percent: 80, width_percent: 10, height_percent: 10 }
+      ],
+      return_photo_urls: ["https://fakestoreapi.com/img/71li-ujtlUL._AC_UX679_t.png"]
+    },
+    damage_origin: "transit_damage",
+    ai_grade: "C",
+    ai_score: 55,
+    created_at: new Date(Date.now() - 10800000).toISOString(),
+    awb: "AWB-WHJACKET",
+    image_urls: ["https://fakestoreapi.com/img/71li-ujtlUL._AC_UX679_t.png"],
+    product: {
+      title: "Mens Cotton Jacket",
+      image_url: "https://fakestoreapi.com/img/71li-ujtlUL._AC_UX679_t.png"
+    }
+  },
+  {
+    id: "uuid-wh-dummy-4",
+    status: "accepted",
+    ai_routing_decision: "standard_return",
+    warehouse_confirmed_at: null,
+    flaws_json: {
+      auto_approved: true,
+      pickup_flagged: false,
+      flaws: [],
+      return_photo_urls: ["https://fakestoreapi.com/img/51Y5NI-I5jL._AC_UX679_t.png"]
+    },
+    damage_origin: null,
+    ai_grade: "A",
+    ai_score: 100,
+    created_at: new Date(Date.now() - 14400000).toISOString(),
+    awb: "AWB-WHCOAT04",
+    image_urls: ["https://fakestoreapi.com/img/51Y5NI-I5jL._AC_UX679_t.png"],
+    product: {
+      title: "Womens Winter Coat",
+      image_url: "https://fakestoreapi.com/img/51Y5NI-I5jL._AC_UX679_t.png"
+    }
+  },
+  {
+    id: "uuid-wh-dummy-5",
+    status: "accepted",
+    ai_routing_decision: "relist_as_refurbished",
+    warehouse_confirmed_at: null,
+    flaws_json: {
+      seller_approved: true,
+      pickup_flagged: true,
+      pickup_agent_notes: "Stain looks darker in person, might need cleaning before relist.",
+      flaws: [
+        { name: "Sleeve Stain", severity: "minor", image_index: 0, x_percent: 80, y_percent: 50, width_percent: 10, height_percent: 10 }
+      ],
+      return_photo_urls: ["https://fakestoreapi.com/img/51eg55uWmdL._AC_UX679_t.png"]
+    },
+    damage_origin: "consumer_usage",
+    ai_grade: "B",
+    ai_score: 78,
+    created_at: new Date(Date.now() - 18000000).toISOString(),
+    awb: "AWB-WHTEE005",
+    image_urls: ["https://fakestoreapi.com/img/51eg55uWmdL._AC_UX679_t.png"],
+    product: {
+      title: "Womens Short Sleeve T-Shirt",
+      image_url: "https://fakestoreapi.com/img/51eg55uWmdL._AC_UX679_t.png"
+    }
+  },
+  {
+    id: "uuid-wh-dummy-6",
+    status: "accepted",
+    ai_routing_decision: "relist_as_refurbished",
+    warehouse_confirmed_at: null,
+    flaws_json: {
+      auto_approved: true,
+      pickup_flagged: false,
+      flaws: [
+        { name: "Micro-scratches", severity: "moderate", image_index: 0, x_percent: 50, y_percent: 50, width_percent: 25, height_percent: 25 }
+      ],
+      return_photo_urls: ["https://fakestoreapi.com/img/61sbMiUnoGL._AC_UL640_QL65_ML3_t.png"]
+    },
+    damage_origin: "manufacturing_defect",
+    ai_grade: "B",
+    ai_score: 80,
+    created_at: new Date(Date.now() - 21600000).toISOString(),
+    awb: "AWB-WHRING06",
+    image_urls: ["https://fakestoreapi.com/img/61sbMiUnoGL._AC_UL640_QL65_ML3_t.png"],
+    product: {
+      title: "Solid Gold Petite Micropave Ring",
+      image_url: "https://fakestoreapi.com/img/61sbMiUnoGL._AC_UL640_QL65_ML3_t.png"
     }
   }
 ];
@@ -188,6 +283,9 @@ export default function WarehouseQueuePage() {
 
       if (action === "match" || !action) {
         updatePayload = { warehouse_confirmed_at: new Date().toISOString() };
+        if (target.ai_routing_decision === "donate" || target.ai_routing_decision === "recycle") {
+          updatePayload.status = "completed";
+        }
       } else if (action === "fraud") {
         updatePayload = {
           status: "inspected", // Put it in escalated queue
@@ -208,6 +306,14 @@ export default function WarehouseQueuePage() {
 
       if (updateErr) {
         throw updateErr;
+      }
+
+      if ((action === "match" || !action) && target.ai_routing_decision === "relist_as_refurbished") {
+        fetch('/api/relist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ returnId: returnId }),
+        }).catch(err => console.error("[Warehouse] Failed to execute auto-relist:", err));
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
@@ -279,19 +385,19 @@ export default function WarehouseQueuePage() {
             </div>
           </div>
           
-          {/* Hackathon Theme Analytics Header */}
+          {/* Warehouse Operations Analytics Header */}
           <div className="flex items-center gap-4 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
             <div className="flex flex-col px-3 border-r border-gray-100">
-              <span className="text-[10px] uppercase font-bold text-gray-400 flex items-center gap-1"><Activity className="w-3 h-3 text-emerald-500" /> Avg AI Inspection</span>
-              <span className="text-lg font-black text-gray-800">12s <span className="text-xs font-semibold text-gray-400 line-through">4m avg</span></span>
+              <span className="text-[10px] uppercase font-bold text-gray-400 flex items-center gap-1"><Activity className="w-3 h-3 text-emerald-500" /> Avg Processing Time</span>
+              <span className="text-lg font-black text-gray-800">45s <span className="text-xs font-semibold text-gray-400 line-through">3m avg</span></span>
             </div>
             <div className="flex flex-col px-3 border-r border-gray-100">
-              <span className="text-[10px] uppercase font-bold text-gray-400 flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-blue-500" /> Fraud Prevented</span>
-              <span className="text-lg font-black text-gray-800">₹45,200</span>
+              <span className="text-[10px] uppercase font-bold text-gray-400 flex items-center gap-1"><AlertCircle className="w-3 h-3 text-amber-500" /> Active Escalations</span>
+              <span className="text-lg font-black text-gray-800">{escalatedQueueItems.length}</span>
             </div>
             <div className="flex flex-col px-3">
               <span className="text-[10px] uppercase font-bold text-gray-400 flex items-center gap-1"><Box className="w-3 h-3 text-purple-500" /> Binned Today</span>
-              <span className="text-lg font-black text-gray-800">142</span>
+              <span className="text-lg font-black text-gray-800">14</span>
             </div>
           </div>
         </header>

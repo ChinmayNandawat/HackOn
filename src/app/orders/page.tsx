@@ -125,7 +125,10 @@ export default function OrdersPage() {
     if (isKeep) {
       steps = ["Requested", "Approved", "Refund"];
       if (ret.status === "processing") activeStepIndex = 0;
-      else if (ret.status === "inspected") activeStepIndex = 2; // Approved is done, waiting on Refund action
+      else if (ret.status === "inspected") {
+        if (ret.flaws_json?.auto_approved || ret.flaws_json?.seller_approved) activeStepIndex = 2; // Waiting on Refund action
+        else activeStepIndex = 1; // Waiting for seller review
+      }
       else if (["completed", "relisted", "rejected", "standard_refund"].includes(ret.status)) {
         activeStepIndex = 2;
         isCompleted = true;
@@ -134,7 +137,10 @@ export default function OrdersPage() {
     } else {
       steps = ["Requested", "Approved", "Pick Up", "Refund"];
       if (ret.status === "processing") activeStepIndex = 0;
-      else if (ret.status === "inspected") activeStepIndex = 2; // Approved is done, waiting on Pick Up
+      else if (ret.status === "inspected") {
+        if (ret.flaws_json?.auto_approved || ret.flaws_json?.seller_approved) activeStepIndex = 2; // Waiting on Pick Up
+        else activeStepIndex = 1; // Waiting for seller review
+      }
       else if (ret.status === "accepted" && !ret.warehouse_confirmed_at) activeStepIndex = 3; // Pick Up is done, waiting on Refund/Warehouse
       else if (ret.status === "accepted" && ret.warehouse_confirmed_at) activeStepIndex = 3;
       else if (["completed", "relisted", "rejected", "standard_refund"].includes(ret.status)) {
@@ -343,14 +349,24 @@ export default function OrdersPage() {
                                 </div>
                               )}
                             </div>
-                          ) : (
+                          ) : ret.flaws_json?.auto_approved || ret.flaws_json?.seller_approved ? (
                             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-4 items-center">
                               <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
                                 <Package className="w-5 h-5 text-blue-600" />
                               </div>
                               <div>
                                 <h4 className="font-bold text-blue-900 text-base">Pickup Scheduled</h4>
-                                <p className="text-xs font-medium text-blue-700 mt-1">Our agent will pick up the item at your doorstep for verification.</p>
+                                <p className="text-xs font-medium text-blue-700 mt-1">Your return is approved! Our agent will pick up the item at your doorstep for verification.</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex gap-4 items-center">
+                              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                                <Clock className="w-5 h-5 text-slate-500" />
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-slate-900 text-base">Under Seller Review</h4>
+                                <p className="text-xs font-medium text-slate-600 mt-1">The seller is reviewing your return request. We will notify you once a decision is made.</p>
                               </div>
                             </div>
                           )}
